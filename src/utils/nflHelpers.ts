@@ -61,7 +61,7 @@ export function formatDownAndDistance(situation?: NFLSituation | null): string {
       down === 1 ? '1st' : down === 2 ? '2nd' : down === 3 ? '3rd' : '4th'
 
     let distText: string
-    if (distance === 0 || (typeof yardLine === 'number' && yardLine <= distance && distance <= 10)) {
+    if (distance === 0 || (typeof yardLine === 'number' && Number.isFinite(yardLine) && yardLine <= distance && distance <= 10)) {
       distText = 'Goal'
     } else if (distance === 1) {
       distText = '1'

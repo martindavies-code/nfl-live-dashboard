@@ -6,12 +6,26 @@ import { calculateWinProbability } from '../utils/winProbability'
 interface WinProbabilityBarProps {
   homeWinPercentage?: number | null
   awayWinPercentage?: number | null
-  homeCompetitor: NFLCompetitor
-  awayCompetitor: NFLCompetitor
+  homeCompetitor?: NFLCompetitor | null
+  awayCompetitor?: NFLCompetitor | null
   gameState?: 'pre' | 'in' | 'post'
   status?: NFLStatus
   situation?: NFLSituation | null
   odds?: NFLOdds[]
+}
+
+const DEFAULT_HOME_COMP: NFLCompetitor = {
+  id: 'home',
+  homeAway: 'home',
+  score: '0',
+  team: { id: 'home', name: 'Home', displayName: 'Home Team', abbreviation: 'HOME', color: '1e3a8a', logo: '' },
+}
+
+const DEFAULT_AWAY_COMP: NFLCompetitor = {
+  id: 'away',
+  homeAway: 'away',
+  score: '0',
+  team: { id: 'away', name: 'Away', displayName: 'Away Team', abbreviation: 'AWAY', color: 'b91c1c', logo: '' },
 }
 
 export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
@@ -24,11 +38,14 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
   situation,
   odds,
 }) => {
-  const homeColor = sanitizeHexColor(homeCompetitor?.team?.color, '#1e3a8a')
-  const awayColor = sanitizeHexColor(awayCompetitor?.team?.color, '#b91c1c')
+  const safeHomeComp = homeCompetitor || DEFAULT_HOME_COMP
+  const safeAwayComp = awayCompetitor || DEFAULT_AWAY_COMP
 
-  const homeAbbr = homeCompetitor?.team?.abbreviation || 'HOME'
-  const awayAbbr = awayCompetitor?.team?.abbreviation || 'AWAY'
+  const homeColor = sanitizeHexColor(safeHomeComp?.team?.color, '#1e3a8a')
+  const awayColor = sanitizeHexColor(safeAwayComp?.team?.color, '#b91c1c')
+
+  const homeAbbr = safeHomeComp?.team?.abbreviation || 'HOME'
+  const awayAbbr = safeAwayComp?.team?.abbreviation || 'AWAY'
 
   const {
     homePct,
@@ -41,8 +58,8 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
   } = calculateWinProbability({
     homeWinPercentage,
     awayWinPercentage,
-    homeCompetitor,
-    awayCompetitor,
+    homeCompetitor: safeHomeComp,
+    awayCompetitor: safeAwayComp,
     gameState,
     status,
     situation,
@@ -120,7 +137,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
         <div className="truncate min-w-0 mr-2">
           {isHomeFavored || isAwayFavored ? (
             <span>
-              <strong className="text-white font-medium">{favoredName}</strong> favoured by{' '}
+              <strong className="text-white font-medium">{favoredName}</strong> favored by{' '}
               <span className="font-mono font-bold text-emerald-400">+{spreadPct}%</span>
             </span>
           ) : (

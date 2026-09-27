@@ -383,12 +383,20 @@ export const Dashboard: React.FC = () => {
               <AlertTriangle className="h-4 w-4 text-rose-400 flex-shrink-0" />
               <span>{error}</span>
             </div>
-            <button
-              onClick={() => loadData(true)}
-              className="rounded bg-rose-800/80 px-2.5 py-1 text-xs font-semibold text-white hover:bg-rose-700 transition-colors"
-            >
-              Retry Sync
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setUseDemoMode(true)}
+                className="rounded bg-emerald-700/80 hover:bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white transition-colors shadow-sm"
+              >
+                Launch Simulation
+              </button>
+              <button
+                onClick={() => loadData(true)}
+                className="rounded bg-rose-800/80 px-2.5 py-1 text-xs font-semibold text-white hover:bg-rose-700 transition-colors"
+              >
+                Retry Sync
+              </button>
+            </div>
           </div>
         )}
 

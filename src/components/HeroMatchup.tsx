@@ -55,8 +55,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
       }`
     : ''
 
-  const homeTimeouts = typeof situation?.homeTimeouts === 'number' ? situation.homeTimeouts : 3
-  const awayTimeouts = typeof situation?.awayTimeouts === 'number' ? situation.awayTimeouts : 3
+  const homeTimeouts = typeof situation?.homeTimeouts === 'number' && Number.isFinite(situation.homeTimeouts) ? situation.homeTimeouts : 3
+  const awayTimeouts = typeof situation?.awayTimeouts === 'number' && Number.isFinite(situation.awayTimeouts) ? situation.awayTimeouts : 3
 
   const downAndDistance = formatDownAndDistance(situation)
 

@@ -11,6 +11,7 @@
 // -----------------------------------------------------------------------------
 
 import { HISTORICAL_OCCURRED, TOTAL_UNIQUE_SCORIGAMIS } from './scorigamiHistoricalData.ts'
+import { isHalftimeSituation } from './nflHelpers.ts'
 
 export interface ScorigamiInfo {
   /** True if the current score pair has never occurred in NFL history */
@@ -75,8 +76,13 @@ export function getGameSecondsRemaining(
   if (gameState === 'pre') return 3600
   if (gameState === 'post') return 0
 
-  const period = typeof status?.period === 'number' ? status.period : 1
-  const clock = typeof status?.clock === 'number' ? status.clock : 900
+  // Halftime intermission always has exactly 2 quarters remaining (1,800 seconds)
+  if (isHalftimeSituation(status)) {
+    return 1800
+  }
+
+  const period = typeof status?.period === 'number' && Number.isFinite(status.period) ? status.period : 1
+  const clock = typeof status?.clock === 'number' && Number.isFinite(status.clock) ? status.clock : 900
 
   // Regulation quarters 1-4 (15 minutes / 900s each)
   if (period >= 1 && period <= 4) {

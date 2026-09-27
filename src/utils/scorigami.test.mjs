@@ -109,3 +109,27 @@ test('Post-game genuine scorigami announces historical novelty', () => {
   assert.equal(postNovel.mostLikelyNovel, '43-29')
   assert.match(postNovel.whenScenario, /Final: Novel score #\d+ in NFL history!/)
 })
+
+test('Historic outlier scores and defensive resilience in Scorigami engine', () => {
+  // 73-0 (1940 NFL Championship Game) occurred
+  assert.equal(hasOccurred(73, 0), true)
+  const rec73 = getHistoricalRecord(73, 0)
+  assert.ok(rec73 !== null)
+  assert.equal(rec73[1], 1940)
+
+  // 70-20 (Dolphins vs Broncos 2023) occurred
+  assert.equal(hasOccurred(70, 20), true)
+  const rec70 = getHistoricalRecord(70, 20)
+  assert.ok(rec70 !== null)
+  assert.equal(rec70[1], 2023)
+
+  // 2-0 safety game occurred
+  assert.equal(hasOccurred(2, 0), true)
+
+  // Defensive input handling: negative numbers and NaN do not throw
+  const nanRes = getScorigamiInfo(NaN, -10, -500, 'in')
+  assert.ok(nanRes)
+  assert.ok(Number.isFinite(nanRes.chancePct))
+  assert.ok(nanRes.chanceLabel.length > 0)
+})
+

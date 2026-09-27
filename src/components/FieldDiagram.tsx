@@ -34,7 +34,8 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
     situation &&
     typeof situation.yardLine === 'number' &&
     Number.isFinite(situation.yardLine) &&
-    situation.down !== undefined
+    typeof situation.down === 'number' &&
+    Number.isFinite(situation.down)
   )
 
   const { offensiveTeam, direction } = getOffensiveDrive(situation, competitors)
@@ -46,12 +47,15 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   // x = 100..1100: Playing field (100 yards, 10 units per yard)
   // x = 1100..1200: Away Endzone (10 yards)
   const yardLineRaw = hasSituation ? situation!.yardLine : 50
-  const yardLineClamped = Math.max(0, Math.min(100, yardLineRaw))
+  const yardLineClamped = Math.max(0, Math.min(100, Number.isFinite(yardLineRaw) ? yardLineRaw : 50))
   const scrimmageX = 100 + yardLineClamped * 10
 
-  // First down calculations (Only valid if down > 0)
-  const isRegularPlay = hasSituation && situation!.down > 0
-  const distance = hasSituation && situation!.distance > 0 ? situation!.distance : 10
+  const isHalftime = isHalftimeSituation(status, situation)
+  const inRedZone = isRedZoneSituation(situation, status, competitors)
+
+  // First down calculations (Only valid on active scrimmage downs during live play)
+  const isRegularPlay = hasSituation && situation!.down > 0 && !isHalftime && gameState === 'in'
+  const distance = hasSituation && typeof situation!.distance === 'number' && Number.isFinite(situation!.distance) && situation!.distance > 0 ? situation!.distance : 10
 
   let firstDownYardLine = yardLineClamped
   if (direction === 'right') {
@@ -59,15 +63,12 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   } else {
     firstDownYardLine = Math.max(0, yardLineClamped - distance)
   }
-  const firstDownX = 100 + firstDownYardLine * 10
+  const firstDownX = 100 + (Number.isFinite(firstDownYardLine) ? firstDownYardLine : 50) * 10
 
   const isGoalToGo =
     isRegularPlay &&
     ((direction === 'right' && yardLineClamped + distance >= 100) ||
       (direction === 'left' && yardLineClamped - distance <= 0))
-
-  const inRedZone = isRedZoneSituation(situation, status, competitors)
-  const isHalftime = isHalftimeSituation(status, situation)
 
   // Direct label text
   const losLabel = situation?.possessionText || `${yardLineClamped} YD`
@@ -80,8 +81,9 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   const turfGradId = `turf-grad-${uniqueId}`
   const turfPatternId = `turf-pat-${uniqueId}`
 
+  const offensiveAbbr = offensiveTeam?.team?.abbreviation || 'Offense'
   const accessibilityDesc = hasSituation
-    ? `Football field diagram: Ball at ${losLabel}, ${situation?.downDistanceText || 'Active play'}, ${offensiveTeam?.team?.abbreviation || 'Offense'} driving towards ${direction === 'right' ? awayAbbr : homeAbbr}.`
+    ? `Football field diagram: Ball at ${losLabel}, ${situation?.downDistanceText || 'Active play'}, ${offensiveAbbr} driving towards ${direction === 'right' ? awayAbbr : homeAbbr}.`
     : `Football field view: ${gameState === 'pre' ? 'Pregame' : gameState === 'post' ? 'Game Over' : 'Field preview'}`
 
   return (
@@ -123,7 +125,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
             </span>
             <span className="text-slate-500">•</span>
             <span className="text-slate-300">
-              <strong className="text-white">{offensiveTeam?.team?.abbreviation}</strong> Driving{' '}
+              <strong className="text-white">{offensiveTeam?.team?.abbreviation || 'Offense'}</strong> Driving{' '}
               <span className="text-amber-400 font-mono">{direction === 'right' ? '➔' : '⬅'}</span>
             </span>
           </div>
@@ -374,21 +376,62 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 </text>
               </g>
 
-              {/* Play Direction Arrow */}
-              <g transform={`translate(${scrimmageX}, 170)`}>
-                <path
-                  d={
-                    direction === 'right'
-                      ? 'M 20,-14 L 38,0 L 20,14'
-                      : 'M -20,-14 L -38,0 L -20,14'
-                  }
-                  fill="none"
-                  stroke="#eab308"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </g>
+              {/* Play Direction Arrow (Only on active scrimmage plays) */}
+              {isRegularPlay && (
+                <g transform={`translate(${scrimmageX}, 170)`}>
+                  <path
+                    d={
+                      direction === 'right'
+                        ? 'M 20,-14 L 38,0 L 20,14'
+                        : 'M -20,-14 L -38,0 L -20,14'
+                    }
+                    fill="none"
+                    stroke="#eab308"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              )}
+
+              {/* Halftime Intermission Banner on Field */}
+              {isHalftime && (
+                <g transform="translate(600, 170)">
+                  <rect
+                    x="-140"
+                    y="-24"
+                    width="280"
+                    height="48"
+                    rx="8"
+                    fill="#090d16"
+                    stroke="#f59e0b"
+                    strokeWidth="1.5"
+                  />
+                  <text
+                    x="0"
+                    y="-4"
+                    fill="#fbbf24"
+                    fontSize="13"
+                    fontWeight="800"
+                    fontFamily="var(--font-display)"
+                    letterSpacing="1"
+                    textAnchor="middle"
+                  >
+                    ⏸️ AT HALFTIME
+                  </text>
+                  <text
+                    x="0"
+                    y="14"
+                    fill="#cbd5e1"
+                    fontSize="10"
+                    fontWeight="600"
+                    fontFamily="var(--font-mono)"
+                    textAnchor="middle"
+                  >
+                    2nd Half Kickoff Upcoming
+                  </text>
+                </g>
+              )}
 
               {/* Football positioned at exact yard line */}
               <g
@@ -487,12 +530,12 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-sm bg-sky-400" />
-            <strong className="text-slate-300">Scrimmage:</strong> {hasSituation ? losLabel : '50 YD'}
+            <strong className="text-slate-300">Scrimmage:</strong> {isHalftime ? 'At Halftime' : hasSituation ? losLabel : '50 YD'}
           </span>
           <span className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-sm bg-yellow-400" />
             <strong className="text-slate-300">Target:</strong>{' '}
-            {isRegularPlay ? firstDownLabel : hasSituation ? 'Kickoff / PAT' : '10 Yds'}
+            {isHalftime ? '2nd Half Kickoff' : isRegularPlay ? firstDownLabel : hasSituation ? 'Kickoff / PAT' : '10 Yds'}
           </span>
         </div>
 

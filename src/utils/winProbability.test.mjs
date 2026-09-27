@@ -139,3 +139,61 @@ test('Pre-game without Vegas odds: returns Pregame Projection with home-field ba
   assert.equal(res.isHomeFavored, true)
   assert.equal(res.modelSource, 'Pregame Projection')
 })
+
+test('In-game analytic model at Halftime: treats 2nd half as 1800s remaining and ignores previous drive field position', () => {
+  const homeComp = { id: '5', score: '10', team: { displayName: 'Browns', abbreviation: 'CLE' } }
+  const awayComp = { id: '29', score: '3', team: { displayName: 'Panthers', abbreviation: 'CAR' } }
+
+  const halftimeStatus = {
+    period: 2,
+    clock: 0,
+    displayClock: '0:00',
+    type: { state: 'in', name: 'STATUS_HALFTIME', detail: 'Halftime' },
+  }
+
+  // Previous 2nd-quarter situation with CLE on own 17
+  const situation = {
+    down: 1,
+    distance: 11,
+    yardLine: 17,
+    possession: '5',
+    isRedZone: false,
+  }
+
+  const res = calculateWinProbability({
+    homeCompetitor: homeComp,
+    awayCompetitor: awayComp,
+    gameState: 'in',
+    status: halftimeStatus,
+    situation,
+  })
+
+  // Browns lead 10-3 (+7) at Halftime. Expected win probability should be around ~70-78% for home team
+  assert.ok(res.homePct >= 68 && res.homePct <= 80, `Expected ~70-78% but got ${res.homePct}`)
+  assert.equal(res.homePct + res.awayPct, 100)
+  assert.equal(res.isHomeFavored, true)
+  assert.equal(res.modelSource, 'Live Analytic Model')
+})
+
+test('Boundary & Chaos Testing: calculateWinProbability never returns NaN or out-of-bounds percentages', () => {
+  const homeComp = { id: '1', score: '-5', team: { displayName: 'Team A' } }
+  const awayComp = { id: '2', score: 'NaN', team: { displayName: 'Team B' } }
+
+  const res = calculateWinProbability({
+    homeWinPercentage: -0.5,
+    awayWinPercentage: 1.8,
+    homeCompetitor: homeComp,
+    awayCompetitor: awayComp,
+    gameState: 'in',
+    status: null,
+    situation: null,
+    odds: [{ spread: Infinity }],
+  })
+
+  assert.ok(Number.isFinite(res.homePct))
+  assert.ok(Number.isFinite(res.awayPct))
+  assert.ok(res.homePct >= 0 && res.homePct <= 100)
+  assert.ok(res.awayPct >= 0 && res.awayPct <= 100)
+  assert.equal(Math.round((res.homePct + res.awayPct) * 10) / 10, 100)
+})
+

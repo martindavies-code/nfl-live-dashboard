@@ -1,5 +1,5 @@
 import type { NFLCompetitor, NFLSituation, NFLStatus, NFLOdds } from '../types/nfl'
-import { safeParseInt } from './nflHelpers.ts'
+import { safeParseInt, isHalftimeSituation } from './nflHelpers.ts'
 
 /**
  * Standard Normal Cumulative Distribution Function (Abramowitz & Stegun 7.1.26)
@@ -183,13 +183,13 @@ export function calculateWinProbability({
     }
 
     // Attempt B: Point Spread via Normal CDF (NFL σ ≈ 13.45 pts)
-    const spreadVal = typeof primaryOdds.spread === 'number' ? primaryOdds.spread : null
-    if (spreadVal !== null && Number.isFinite(spreadVal)) {
+    const spreadVal = typeof primaryOdds.spread === 'number' && Number.isFinite(primaryOdds.spread) ? primaryOdds.spread : null
+    if (spreadVal !== null) {
       // In ESPN odds, spread is negative when home team is favored (e.g. -7.5)
       const expectedMargin = -spreadVal
       const z = expectedMargin / 13.45
       const homeRaw = normalCdf(z) * 100
-      const homePct = Math.max(1, Math.min(99, Math.round(homeRaw * 10) / 10))
+      const homePct = Math.max(1, Math.min(99, Math.round((Number.isFinite(homeRaw) ? homeRaw : 50) * 10) / 10))
       const awayPct = Math.round((100 - homePct) * 10) / 10
       const isHome = homePct > awayPct
       const isAway = awayPct > homePct
@@ -224,25 +224,32 @@ export function calculateWinProbability({
   // 4. IN-GAME HIGH-PRECISION DYNAMIC ANALYTIC MODEL
   // (Used when ESPN probability is unavailable or during simulation mode)
   // Calculates remaining time in regulation (4 quarters x 900s = 3600s)
-  const period = status?.period || 1
-  const clockSeconds = typeof status?.clock === 'number' ? status.clock : 900
+  const isHalftime = isHalftimeSituation(status, situation)
   let secondsRemaining = 3600
 
-  if (period >= 1 && period <= 4) {
-    secondsRemaining = Math.max(1, (4 - period) * 900 + clockSeconds)
-  } else if (period >= 5) {
-    // Overtime
-    secondsRemaining = Math.max(1, clockSeconds)
+  if (isHalftime) {
+    // Halftime intermission always represents exactly 2 regulation quarters remaining
+    secondsRemaining = 1800
+  } else {
+    const period = typeof status?.period === 'number' && Number.isFinite(status.period) ? status.period : 1
+    const clockSeconds = typeof status?.clock === 'number' && Number.isFinite(status.clock) ? status.clock : 900
+
+    if (period >= 1 && period <= 4) {
+      secondsRemaining = Math.max(1, (4 - period) * 900 + clockSeconds)
+    } else if (period >= 5) {
+      // Overtime
+      secondsRemaining = Math.max(1, clockSeconds)
+    }
   }
 
   // Time-adjusted volatility: score variance scales with the square root of time remaining
   const timeRatio = Math.max(0.01, secondsRemaining / 3600)
   const sigmaRemaining = 13.45 * Math.sqrt(timeRatio)
 
-  // Expected Points from field position & possession
+  // Expected Points from field position & possession (inactive at Halftime because 2nd half begins with kickoff)
   let expectedPointsAdvantage = 0
-  if (situation && situation.down !== undefined && situation.down > 0) {
-    const yardLine = typeof situation.yardLine === 'number' ? situation.yardLine : 50
+  if (situation && situation.down !== undefined && situation.down > 0 && !isHalftime) {
+    const yardLine = typeof situation.yardLine === 'number' && Number.isFinite(situation.yardLine) ? situation.yardLine : 50
     // ESPN coordinates: 0 is Home goal, 100 is Away goal
     const isHomeDriving = situation.possession === homeCompetitor?.id
     const isAwayDriving = situation.possession === awayCompetitor?.id
@@ -260,7 +267,7 @@ export function calculateWinProbability({
 
   // Pre-game spread prior decays linearly to 0 by fourth quarter
   let spreadPrior = 0
-  if (primaryOdds && typeof primaryOdds.spread === 'number') {
+  if (primaryOdds && typeof primaryOdds.spread === 'number' && Number.isFinite(primaryOdds.spread)) {
     spreadPrior = -primaryOdds.spread * timeRatio * 0.5
   }
 
@@ -269,10 +276,11 @@ export function calculateWinProbability({
 
   // Compute standard normal deviate
   const zScore = effectiveMargin / Math.max(1.5, sigmaRemaining)
-  const calculatedHome = normalCdf(zScore) * 100
+  const calculatedHome = normalCdf(Number.isFinite(zScore) ? zScore : 0) * 100
+  const safeHome = Number.isFinite(calculatedHome) ? calculatedHome : 50
 
   // Apply reasonable bounds for active games
-  const homePct = Math.max(0.1, Math.min(99.9, Math.round(calculatedHome * 10) / 10))
+  const homePct = Math.max(0.1, Math.min(99.9, Math.round(safeHome * 10) / 10))
   const awayPct = Math.round((100 - homePct) * 10) / 10
   const isHome = homePct > awayPct
   const isAway = awayPct > homePct
