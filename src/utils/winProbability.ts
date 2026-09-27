@@ -43,7 +43,7 @@ export interface CalculatedWinProbability {
   isAwayFavored: boolean
   spreadPct: string // Absolute differential e.g. "35.4"
   favoredName: string
-  modelSource: 'ESPN FPI' | 'Vegas Moneyline' | 'Vegas Spread' | 'Live Analytic Model' | 'Final'
+  modelSource: 'ESPN FPI' | 'Vegas Moneyline' | 'Vegas Spread' | 'Pregame Projection' | 'Live Analytic Model' | 'Final'
 }
 
 interface CalculateOptions {
@@ -203,6 +203,21 @@ export function calculateWinProbability({
         favoredName: isHome ? homeName : isAway ? awayName : 'Even',
         modelSource: 'Vegas Spread',
       }
+    }
+  }
+
+  // Pre-game fallback when no Vegas odds are available: assign canonical NFL home-field baseline (~53.5% home win expectation)
+  if (gameState === 'pre') {
+    const homePct = 53.5
+    const awayPct = 46.5
+    return {
+      homePct,
+      awayPct,
+      isHomeFavored: true,
+      isAwayFavored: false,
+      spreadPct: '7.0',
+      favoredName: homeName,
+      modelSource: 'Pregame Projection',
     }
   }
 

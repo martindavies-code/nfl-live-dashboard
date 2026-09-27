@@ -215,15 +215,7 @@ export const Dashboard: React.FC = () => {
       if (found) return found
     }
 
-    // 3. Fallback to any live game in red zone even if auto-toggle was disabled
-    const rzGame = events.find((e) => {
-      const comp = e.competitions?.[0]
-      const isLive = (e.status?.type?.state || comp?.status?.type?.state) === 'in'
-      return isLive && comp?.situation?.isRedZone
-    })
-    if (rzGame) return rzGame
-
-    // 4. Fallback to any live game
+    // 3. Fallback to any live game
     const liveGame = events.find((e) => {
       const comp = e.competitions?.[0]
       return (e.status?.type?.state || comp?.status?.type?.state) === 'in'

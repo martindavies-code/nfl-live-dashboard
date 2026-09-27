@@ -89,6 +89,7 @@ const _sim = { step: 0 }
 const SIMULATION_SCENARIOS = [
   {
     clock: '1:44',
+    clockSeconds: 104,
     period: 4,
     down: 3,
     distance: 4,
@@ -104,6 +105,7 @@ const SIMULATION_SCENARIOS = [
   },
   {
     clock: '1:18',
+    clockSeconds: 78,
     period: 4,
     down: 1,
     distance: 8,
@@ -119,6 +121,7 @@ const SIMULATION_SCENARIOS = [
   },
   {
     clock: '0:52',
+    clockSeconds: 52,
     period: 4,
     down: 2,
     distance: 3,
@@ -134,6 +137,7 @@ const SIMULATION_SCENARIOS = [
   },
   {
     clock: '0:44',
+    clockSeconds: 44,
     period: 4,
     down: -1,
     distance: 0,
@@ -149,6 +153,7 @@ const SIMULATION_SCENARIOS = [
   },
   {
     clock: '0:35',
+    clockSeconds: 35,
     period: 4,
     down: 1,
     distance: 10,
@@ -181,7 +186,7 @@ export function getMockLiveGames(): NFLEvent[] {
           uid: 's:20~l:28~e:mock1~c:1',
           date: new Date().toISOString(),
           status: {
-            clock: 44,
+            clock: currentScenario.clockSeconds,
             displayClock: currentScenario.clock,
             period: currentScenario.period,
             type: {
@@ -255,7 +260,7 @@ export function getMockLiveGames(): NFLEvent[] {
         },
       ],
       status: {
-        clock: 44,
+        clock: currentScenario.clockSeconds,
         displayClock: currentScenario.clock,
         period: currentScenario.period,
         type: {
@@ -448,6 +453,98 @@ export function getMockLiveGames(): NFLEvent[] {
           description: 'Final',
           detail: 'Final',
           shortDetail: 'Final',
+        },
+      },
+    },
+    {
+      id: 'mock-4',
+      uid: 's:20~l:28~e:mock4',
+      date: new Date(Date.now() + 86400000).toISOString(),
+      name: 'Baltimore Ravens at Cincinnati Bengals',
+      shortName: 'BAL @ CIN',
+      competitions: [
+        {
+          id: 'mock-4-comp',
+          uid: 's:20~l:28~e:mock4~c:1',
+          date: new Date(Date.now() + 86400000).toISOString(),
+          status: {
+            clock: 900,
+            displayClock: '15:00',
+            period: 1,
+            type: {
+              id: '1',
+              name: 'STATUS_SCHEDULED',
+              state: 'pre',
+              completed: false,
+              description: 'Scheduled',
+              detail: 'Sunday Night Football - 8:20 PM ET',
+              shortDetail: 'Sun, 8:20 PM',
+            },
+          },
+          competitors: [
+            {
+              id: '4',
+              homeAway: 'home',
+              score: '0',
+              records: [{ summary: '10-5' }],
+              team: {
+                id: '4',
+                name: 'Bengals',
+                displayName: 'Cincinnati Bengals',
+                abbreviation: 'CIN',
+                color: 'fb4f14',
+                alternateColor: '000000',
+                logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/cin.png',
+              },
+            },
+            {
+              id: '33',
+              homeAway: 'away',
+              score: '0',
+              records: [{ summary: '11-4' }],
+              team: {
+                id: '33',
+                name: 'Ravens',
+                displayName: 'Baltimore Ravens',
+                abbreviation: 'BAL',
+                color: '241773',
+                alternateColor: '9e7c0c',
+                logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/bal.png',
+              },
+            },
+          ],
+          situation: null,
+          broadcasts: [{ market: 'National', names: ['NBC'] }],
+          venue: {
+            fullName: 'Paycor Stadium',
+            address: { city: 'Cincinnati', state: 'OH' },
+          },
+          odds: [
+            {
+              provider: { id: 'draftkings', name: 'DraftKings', displayName: 'DraftKings' },
+              details: 'CIN -2.5',
+              overUnder: 48.5,
+              spread: -2.5,
+              moneyline: {
+                home: { close: { odds: '-135' } },
+                away: { close: { odds: '+115' } },
+              },
+            },
+          ],
+        },
+      ],
+      status: {
+        clock: 900,
+        displayClock: '15:00',
+        period: 1,
+        type: {
+          id: '1',
+          name: 'STATUS_SCHEDULED',
+          state: 'pre',
+          completed: false,
+          description: 'Scheduled',
+          detail: 'Sunday Night Football - 8:20 PM ET',
+          shortDetail: 'Sun, 8:20 PM',
         },
       },
     },

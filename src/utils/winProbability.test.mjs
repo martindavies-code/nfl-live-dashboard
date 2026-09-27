@@ -123,3 +123,19 @@ test('In-game analytic model: time decay properly increases lead confidence', ()
   assert.ok(q4Res.homePct >= 90)
   assert.equal(q1Res.modelSource, 'Live Analytic Model')
 })
+
+test('Pre-game without Vegas odds: returns Pregame Projection with home-field baseline', () => {
+  const homeComp = { id: '1', score: '0', team: { displayName: 'Miami Dolphins', abbreviation: 'MIA' } }
+  const awayComp = { id: '2', score: '0', team: { displayName: 'New York Jets', abbreviation: 'NYJ' } }
+
+  const res = calculateWinProbability({
+    homeCompetitor: homeComp,
+    awayCompetitor: awayComp,
+    gameState: 'pre',
+  })
+
+  assert.equal(res.homePct, 53.5)
+  assert.equal(res.awayPct, 46.5)
+  assert.equal(res.isHomeFavored, true)
+  assert.equal(res.modelSource, 'Pregame Projection')
+})

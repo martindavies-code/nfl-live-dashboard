@@ -96,7 +96,7 @@ export function getOffensiveDrive(
   const homeAbbr = homeComp?.team?.abbreviation || 'HOME'
   const awayAbbr = awayComp?.team?.abbreviation || 'AWAY'
 
-  const possessionId = situation?.possession
+  const possessionId = situation?.possession || situation?.lastPlay?.team?.id
   const isHomePossession = Boolean(
     possessionId && (homeComp?.id === possessionId || homeComp?.team?.id === possessionId)
   )

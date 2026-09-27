@@ -317,8 +317,8 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                     strokeDasharray={isGoalToGo ? '6,3' : undefined}
                   />
 
-                  {/* Direct 1st Down Label Tag */}
-                  <g transform={`translate(${firstDownX}, 18)`}>
+                  {/* Direct 1st Down Label Tag (offset to bottom on short-yardage plays to eliminate collision with LOS badge) */}
+                  <g transform={`translate(${firstDownX}, ${Math.abs(firstDownX - scrimmageX) < 55 ? 322 : 18})`}>
                     <rect x="-24" y="-12" width="48" height="20" rx="4" fill="#eab308" />
                     <text
                       x="0"

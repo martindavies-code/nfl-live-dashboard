@@ -67,12 +67,22 @@ export const GameCard: React.FC<GameCardProps> = memo(({
     competition.broadcasts?.[0]?.names?.join(', ') ||
     (event as any).broadcast
 
-  // Format kick-off date for pre-game
-  const formattedKickoff = new Date(event.date).toLocaleDateString('en-US', {
-    weekday: 'short',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  // Format kick-off date for pre-game with resilience against null/invalid dates
+  let formattedKickoff = 'Upcoming'
+  try {
+    if (event.date) {
+      const d = new Date(event.date)
+      if (!isNaN(d.getTime())) {
+        formattedKickoff = d.toLocaleDateString('en-US', {
+          weekday: 'short',
+          hour: 'numeric',
+          minute: '2-digit',
+        })
+      }
+    }
+  } catch {
+    formattedKickoff = 'Upcoming'
+  }
 
   const downAndDistance = formatDownAndDistance(situation)
 
