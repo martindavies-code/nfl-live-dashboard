@@ -172,12 +172,12 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                 </span>
               )}
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-sm text-white">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="font-bold text-sm text-white truncate">
                   {awayComp?.team?.displayName || awayComp?.team?.name}
                 </span>
-                <span className="font-mono text-xs text-slate-400 font-semibold">
+                <span className="font-mono text-xs text-slate-400 font-semibold shrink-0">
                   {awayComp?.team?.abbreviation}
                 </span>
               </div>
@@ -199,14 +199,14 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </div>
           </div>
 
-          <span className="font-['Oswald'] text-2xl sm:text-3xl font-bold tracking-tight text-white tabular-nums">
+          <span className="font-['Oswald'] text-2xl sm:text-3xl font-bold tracking-tight text-white tabular-nums shrink-0 ml-3">
             {awayComp?.score ?? '-'}
           </span>
         </div>
 
         {/* Home Team */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="relative h-9 w-9 flex-shrink-0">
               <img
                 src={homeComp?.team?.logo || DEFAULT_NFL_LOGO}
@@ -227,12 +227,12 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                 </span>
               )}
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-sm text-white">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="font-bold text-sm text-white truncate">
                   {homeComp?.team?.displayName || homeComp?.team?.name}
                 </span>
-                <span className="font-mono text-xs text-slate-400 font-semibold">
+                <span className="font-mono text-xs text-slate-400 font-semibold shrink-0">
                   {homeComp?.team?.abbreviation}
                 </span>
               </div>
@@ -254,7 +254,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </div>
           </div>
 
-          <span className="font-['Oswald'] text-2xl sm:text-3xl font-bold tracking-tight text-white tabular-nums">
+          <span className="font-['Oswald'] text-2xl sm:text-3xl font-bold tracking-tight text-white tabular-nums shrink-0 ml-3">
             {homeComp?.score ?? '-'}
           </span>
         </div>
@@ -262,15 +262,15 @@ export const GameCard: React.FC<GameCardProps> = memo(({
 
       {/* Situational Callout Strip */}
       {isLive && downAndDistance && (
-        <div className="mx-4 mb-3 rounded-lg border border-white/[0.06] bg-[#070c16] px-3 py-2 text-xs flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-slate-300">
+        <div className="mx-4 mb-3 rounded-lg border border-white/[0.06] bg-[#070c16] px-3 py-2 text-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-slate-300 shrink-0">
             <Activity className="h-3 w-3 text-sky-400" />
             <span className="font-mono font-bold text-amber-300">
               {downAndDistance}
             </span>
           </div>
           {situation?.possession && situation?.possessionText && (
-            <span className="text-[11px] text-slate-400">
+            <span className="text-[11px] text-slate-400 truncate text-right">
               Ball on <strong className="text-white">{situation.possessionText}</strong>
             </span>
           )}
@@ -294,8 +294,8 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               : 'border-white/[0.06] bg-[#070c16] text-slate-400'
           }`}>
             <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold tracking-wide uppercase text-[10px]">
-                {scorigamiInfo.isCurrentScorigami ? '✨ Scorigami!' : 'Scorigami'}
+              <span className="font-semibold tracking-wide uppercase text-[10px] text-slate-400">
+                {scorigamiInfo.isCurrentScorigami ? '✨ Scorigami!' : 'Scorigami Chance'}
               </span>
               <span className={`font-mono font-bold tabular-nums ${
                 scorigamiInfo.isCurrentScorigami ? 'text-violet-200' : 'text-slate-300'
@@ -304,9 +304,9 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               </span>
             </div>
             {scorigamiInfo.mostLikelyNovel && !scorigamiInfo.isCurrentScorigami && (
-              <div className="mt-1 text-[11px] text-slate-500">
+              <div className="mt-1 text-[11px] text-slate-400 truncate">
                 Most likely novel score:{' '}
-                <strong className="text-slate-300">{scorigamiInfo.mostLikelyLabel}</strong>
+                <strong className="text-slate-200">{scorigamiInfo.mostLikelyLabel}</strong>
               </div>
             )}
           </div>
