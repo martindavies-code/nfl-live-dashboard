@@ -285,6 +285,9 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           homeCompetitor={homeComp}
           awayCompetitor={awayComp}
           gameState={state}
+          status={status}
+          situation={situation}
+          odds={competition.odds}
         />
         {/* Scorigami Badge */}
         {(isLive || isFinal) && (

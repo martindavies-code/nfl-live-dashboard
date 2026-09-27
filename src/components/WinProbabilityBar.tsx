@@ -1,6 +1,7 @@
 import React, { memo } from 'react'
-import type { NFLCompetitor } from '../types/nfl'
-import { safeParseInt, sanitizeHexColor } from '../utils/nflHelpers'
+import type { NFLCompetitor, NFLSituation, NFLStatus, NFLOdds } from '../types/nfl'
+import { sanitizeHexColor } from '../utils/nflHelpers'
+import { calculateWinProbability } from '../utils/winProbability'
 
 interface WinProbabilityBarProps {
   homeWinPercentage?: number | null
@@ -8,6 +9,9 @@ interface WinProbabilityBarProps {
   homeCompetitor: NFLCompetitor
   awayCompetitor: NFLCompetitor
   gameState?: 'pre' | 'in' | 'post'
+  status?: NFLStatus
+  situation?: NFLSituation | null
+  odds?: NFLOdds[]
 }
 
 export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
@@ -16,68 +20,40 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
   homeCompetitor,
   awayCompetitor,
   gameState = 'in',
+  status,
+  situation,
+  odds,
 }) => {
   const homeColor = sanitizeHexColor(homeCompetitor?.team?.color, '#1e3a8a')
   const awayColor = sanitizeHexColor(awayCompetitor?.team?.color, '#b91c1c')
 
   const homeAbbr = homeCompetitor?.team?.abbreviation || 'HOME'
   const awayAbbr = awayCompetitor?.team?.abbreviation || 'AWAY'
-  const homeName = homeCompetitor?.team?.displayName || homeAbbr
-  const awayName = awayCompetitor?.team?.displayName || awayAbbr
 
-  let homePct = 50
-  let awayPct = 50
-
-  if (gameState === 'post') {
-    const homeScore = safeParseInt(homeCompetitor?.score, 0)
-    const awayScore = safeParseInt(awayCompetitor?.score, 0)
-    if (homeScore > awayScore) {
-      homePct = 100
-      awayPct = 0
-    } else if (awayScore > homeScore) {
-      homePct = 0
-      awayPct = 100
-    } else {
-      homePct = 50
-      awayPct = 50
-    }
-  } else if (typeof homeWinPercentage === 'number' && Number.isFinite(homeWinPercentage)) {
-    // If it's a decimal (0.0 to 1.0), multiply by 100
-    homePct = homeWinPercentage <= 1 ? homeWinPercentage * 100 : homeWinPercentage
-    if (typeof awayWinPercentage === 'number' && Number.isFinite(awayWinPercentage)) {
-      awayPct = awayWinPercentage <= 1 ? awayWinPercentage * 100 : awayWinPercentage
-    } else {
-      awayPct = 100 - homePct
-    }
-  } else if (gameState === 'in') {
-    // Fallback live estimate from score differential
-    const homeScore = safeParseInt(homeCompetitor?.score, 0)
-    const awayScore = safeParseInt(awayCompetitor?.score, 0)
-    const diff = homeScore - awayScore
-    const estimate = 50 + Math.max(-42, Math.min(42, diff * 3.5))
-    homePct = Number.isFinite(estimate) ? estimate : 50
-    awayPct = 100 - homePct
-  }
-
-  // Ensure safe numbers
-  if (!Number.isFinite(homePct) || !Number.isFinite(awayPct)) {
-    homePct = 50
-    awayPct = 50
-  }
-
-  // Clamping to visually sensible bounds — always ensure home + away = 100
-  homePct = Math.max(2, Math.min(98, Math.round(homePct * 10) / 10))
-  awayPct = Math.round((100 - homePct) * 10) / 10
-
-  const isHomeFavored = homePct > awayPct
-  const isAwayFavored = awayPct > homePct
-  const spread = Math.abs(homePct - awayPct).toFixed(1)
+  const {
+    homePct,
+    awayPct,
+    isHomeFavored,
+    isAwayFavored,
+    spreadPct,
+    favoredName,
+    modelSource,
+  } = calculateWinProbability({
+    homeWinPercentage,
+    awayWinPercentage,
+    homeCompetitor,
+    awayCompetitor,
+    gameState,
+    status,
+    situation,
+    odds,
+  })
 
   return (
     <div
       className="w-full rounded-xl border border-white/[0.08] bg-[#0c121e] p-3 select-none"
       role="region"
-      aria-label={`Win probability: ${homeAbbr} ${homePct.toFixed(1)}%, ${awayAbbr} ${awayPct.toFixed(1)}%`}
+      aria-label={`Win probability: ${homeAbbr} ${homePct.toFixed(1)}%, ${awayAbbr} ${awayPct.toFixed(1)}% (${modelSource})`}
     >
       {/* Probability Numbers Header */}
       <div className="mb-2 flex items-center justify-between text-xs">
@@ -142,22 +118,17 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
       {/* Favored / Projected Insight — Dedicated line below the bar with full card width */}
       <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400">
         <div className="truncate min-w-0 mr-2">
-          {isHomeFavored ? (
+          {isHomeFavored || isAwayFavored ? (
             <span>
-              <strong className="text-white font-medium">{homeName}</strong> favoured by{' '}
-              <span className="font-mono font-bold text-emerald-400">+{spread}%</span>
-            </span>
-          ) : isAwayFavored ? (
-            <span>
-              <strong className="text-white font-medium">{awayName}</strong> favoured by{' '}
-              <span className="font-mono font-bold text-emerald-400">+{spread}%</span>
+              <strong className="text-white font-medium">{favoredName}</strong> favoured by{' '}
+              <span className="font-mono font-bold text-emerald-400">+{spreadPct}%</span>
             </span>
           ) : (
             <span className="text-slate-400 font-medium">Even matchup (50 / 50)</span>
           )}
         </div>
         <span className="text-[10px] font-mono font-medium text-slate-400 uppercase shrink-0">
-          {gameState === 'post' ? 'Final' : 'ESPN Live'}
+          {modelSource}
         </span>
       </div>
     </div>

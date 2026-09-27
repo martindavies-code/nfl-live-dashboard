@@ -294,6 +294,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             homeCompetitor={homeComp}
             awayCompetitor={awayComp}
             gameState={state}
+            status={status}
+            situation={situation}
+            odds={competition.odds}
           />
         </div>
 

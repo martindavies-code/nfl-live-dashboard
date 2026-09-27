@@ -89,6 +89,35 @@ export interface NFLBroadcast {
   names: string[]
 }
 
+export interface NFLOdds {
+  provider?: {
+    id?: string
+    name?: string
+    displayName?: string
+  }
+  details?: string
+  overUnder?: number
+  spread?: number
+  awayTeamOdds?: {
+    favorite?: boolean
+    underdog?: boolean
+  }
+  homeTeamOdds?: {
+    favorite?: boolean
+    underdog?: boolean
+  }
+  moneyline?: {
+    home?: {
+      close?: { odds?: string }
+      open?: { odds?: string }
+    }
+    away?: {
+      close?: { odds?: string }
+      open?: { odds?: string }
+    }
+  }
+}
+
 export interface NFLCompetition {
   id: string
   uid: string
@@ -97,6 +126,7 @@ export interface NFLCompetition {
   competitors: NFLCompetitor[]
   status: NFLStatus
   situation?: NFLSituation | null
+  odds?: NFLOdds[]
   broadcasts?: Array<{
     market: string
     names: string[]
