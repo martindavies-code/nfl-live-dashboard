@@ -2,8 +2,9 @@ import React from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive } from '../utils/nflHelpers'
-import { Radio, Flame, Tv, MapPin, Compass } from 'lucide-react'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt } from '../utils/nflHelpers'
+import { Radio, Flame, Tv, MapPin, Compass, Sparkles } from 'lucide-react'
+import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 
 interface HeroMatchupProps {
   event: NFLEvent
@@ -55,6 +56,19 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   const awayTimeouts = typeof situation?.awayTimeouts === 'number' ? situation.awayTimeouts : 3
 
   const downAndDistance = formatDownAndDistance(situation)
+
+  // Derive true regulation seconds remaining for accurate scorigami probability
+  const secondsLeft = getGameSecondsRemaining(status, state)
+  const homeAbbr = homeComp?.team?.abbreviation || 'Home'
+  const awayAbbr = awayComp?.team?.abbreviation || 'Away'
+  const scorigamiInfo = getScorigamiInfo(
+    safeParseInt(homeComp?.score, 0),
+    safeParseInt(awayComp?.score, 0),
+    secondsLeft,
+    state,
+    homeAbbr,
+    awayAbbr
+  )
 
   return (
     <section
@@ -298,6 +312,45 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             situation={situation}
             odds={competition.odds}
           />
+
+          {/* Spotlight Scorigami Novelty & Projection Section */}
+          <div
+            className={`rounded-xl border p-3.5 text-xs transition-colors ${
+              scorigamiInfo.isCurrentScorigami
+                ? 'border-violet-500/50 bg-gradient-to-r from-violet-950/70 to-purple-950/60 text-violet-200 shadow-md shadow-violet-950/50'
+                : 'border-white/[0.08] bg-[#090e18] text-slate-300'
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-2 mb-2">
+              <span className="flex items-center gap-1.5 font-bold tracking-wider uppercase text-[11px] text-slate-400">
+                <Sparkles className={`h-3.5 w-3.5 ${scorigamiInfo.isCurrentScorigami ? 'text-violet-400 animate-pulse' : 'text-slate-500'}`} />
+                {scorigamiInfo.isCurrentScorigami ? '✨ Live Scorigami in Progress' : 'Scorigami Probability'}
+              </span>
+              <span
+                className={`font-mono font-bold text-xs tabular-nums px-2 py-0.5 rounded ${
+                  scorigamiInfo.isCurrentScorigami
+                    ? 'bg-violet-500/20 text-violet-200 border border-violet-500/40'
+                    : 'bg-white/[0.06] text-slate-200 border border-white/[0.08]'
+                }`}
+              >
+                {scorigamiInfo.chanceLabel}
+              </span>
+            </div>
+
+            {scorigamiInfo.mostLikelyNovel && (
+              <div className="flex items-center justify-between py-1">
+                <span className="text-slate-400 text-xs">Most Likely Scorigami:</span>
+                <span className="font-mono text-sm font-bold text-violet-300 bg-violet-950/80 px-2 py-0.5 rounded border border-violet-700/50">
+                  {scorigamiInfo.mostLikelyLabel}
+                </span>
+              </div>
+            )}
+
+            <div className="mt-1.5 text-xs leading-relaxed text-slate-400">
+              <span className="font-semibold text-slate-200">When: </span>
+              {scorigamiInfo.whenScenario}
+            </div>
+          </div>
         </div>
 
         {/* Right Column: Full Dynamic 100-Yard Field Radar */}

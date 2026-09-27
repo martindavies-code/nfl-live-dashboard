@@ -10,9 +10,10 @@ import {
   ChevronUp, 
   Clock, 
   Activity,
-  Maximize2
+  Maximize2,
+  Sparkles
 } from 'lucide-react'
-import { getScorigamiInfo } from '../utils/scorigami'
+import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 
 interface GameCardProps {
   event: NFLEvent
@@ -43,13 +44,17 @@ export const GameCard: React.FC<GameCardProps> = memo(({
 
   const situation = competition.situation
 
-  // Derive seconds remaining for scorigami probability (ESPN clock is in seconds)
-  const secondsLeft = typeof status?.clock === 'number' ? status.clock : 0
+  // Derive true regulation seconds remaining for accurate scorigami probability
+  const secondsLeft = getGameSecondsRemaining(status, state)
+  const homeAbbr = homeComp?.team?.abbreviation || 'Home'
+  const awayAbbr = awayComp?.team?.abbreviation || 'Away'
   const scorigamiInfo = getScorigamiInfo(
     safeParseInt(homeComp?.score, 0),
     safeParseInt(awayComp?.score, 0),
     secondsLeft,
-    state
+    state,
+    homeAbbr,
+    awayAbbr
   )
 
   // Check possession with helper (only active during live games)
@@ -289,31 +294,44 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           situation={situation}
           odds={competition.odds}
         />
-        {/* Scorigami Badge */}
-        {(isLive || isFinal) && (
-          <div className={`mt-2 rounded-lg border px-3 py-2 text-xs ${
+        {/* Scorigami Novelty & Projection Section */}
+        <div
+          className={`mt-2.5 rounded-lg border px-3 py-2 text-xs transition-colors ${
             scorigamiInfo.isCurrentScorigami
-              ? 'border-violet-500/40 bg-violet-950/40 text-violet-300'
-              : 'border-white/[0.06] bg-[#070c16] text-slate-400'
-          }`}>
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold tracking-wide uppercase text-[10px] text-slate-400">
-                {scorigamiInfo.isCurrentScorigami ? '✨ Scorigami!' : 'Scorigami Chance'}
-              </span>
-              <span className={`font-mono font-bold tabular-nums ${
-                scorigamiInfo.isCurrentScorigami ? 'text-violet-200' : 'text-slate-300'
-              }`}>
-                {scorigamiInfo.chanceLabel}
-              </span>
-            </div>
-            {scorigamiInfo.mostLikelyNovel && !scorigamiInfo.isCurrentScorigami && (
-              <div className="mt-1 text-[11px] text-slate-400 truncate">
-                Most likely novel score:{' '}
-                <strong className="text-slate-200">{scorigamiInfo.mostLikelyLabel}</strong>
-              </div>
-            )}
+              ? 'border-violet-500/50 bg-gradient-to-r from-violet-950/70 to-purple-950/60 text-violet-200 shadow-sm shadow-violet-950/50'
+              : 'border-white/[0.08] bg-[#070c16] text-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] pb-1.5 mb-1.5">
+            <span className="flex items-center gap-1.5 font-bold tracking-wider uppercase text-[10px] text-slate-400">
+              <Sparkles className={`h-3 w-3 ${scorigamiInfo.isCurrentScorigami ? 'text-violet-400 animate-pulse' : 'text-slate-500'}`} />
+              {scorigamiInfo.isCurrentScorigami ? '✨ Active Scorigami' : 'Scorigami Chance'}
+            </span>
+            <span
+              className={`font-mono font-bold text-xs tabular-nums px-1.5 py-0.5 rounded ${
+                scorigamiInfo.isCurrentScorigami
+                  ? 'bg-violet-500/20 text-violet-200 border border-violet-500/40'
+                  : 'bg-white/[0.04] text-slate-300'
+              }`}
+            >
+              {scorigamiInfo.chanceLabel}
+            </span>
           </div>
-        )}
+
+          {scorigamiInfo.mostLikelyNovel && (
+            <div className="flex items-center justify-between text-[11px] font-medium text-slate-300">
+              <span className="text-slate-400">Most Likely Scorigami:</span>
+              <strong className="font-mono text-xs font-bold text-violet-300 bg-violet-950/60 px-1.5 py-0.5 rounded border border-violet-800/40">
+                {scorigamiInfo.mostLikelyLabel}
+              </strong>
+            </div>
+          )}
+
+          <div className="mt-1 text-[11px] leading-relaxed text-slate-400">
+            <span className="font-semibold text-slate-300">When: </span>
+            {scorigamiInfo.whenScenario}
+          </div>
+        </div>
       </div>
 
       {/* Expandable Field Radar Toggle */}
