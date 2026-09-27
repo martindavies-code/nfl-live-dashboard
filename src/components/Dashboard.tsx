@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import type { GameFilter, NFLScoreboardData, NFLEvent } from '../types/nfl'
 import { fetchNFLScoreboard, getMockLiveGames } from '../services/espnApi'
-import { isRedZoneSituation } from '../utils/nflHelpers'
+import { isRedZoneSituation, isHalftimeSituation } from '../utils/nflHelpers'
 import { HeroMatchup } from './HeroMatchup'
 import { GameCard } from './GameCard'
 import {
@@ -12,6 +12,7 @@ import {
   WifiOff,
   X,
   Flame,
+  Pause,
 } from 'lucide-react'
 
 export const Dashboard: React.FC = () => {
@@ -171,6 +172,10 @@ export const Dashboard: React.FC = () => {
         const isRz = isRedZoneSituation(comp?.situation, ev.status || comp?.status, comp?.competitors || [])
         if (!isRz) return false
       }
+      if (filter === 'halftime') {
+        const isHalf = isHalftimeSituation(ev.status || comp?.status, comp?.situation)
+        if (!isHalf) return false
+      }
       if (filter === 'upcoming' && state !== 'pre') return false
       if (filter === 'final' && state !== 'post') return false
 
@@ -242,6 +247,11 @@ export const Dashboard: React.FC = () => {
   const redZoneCount = events.filter((e) => {
     const comp = e.competitions?.[0]
     return isRedZoneSituation(comp?.situation, e.status || comp?.status, comp?.competitors || [])
+  }).length
+
+  const halftimeCount = events.filter((e) => {
+    const comp = e.competitions?.[0]
+    return isHalftimeSituation(e.status || comp?.status, comp?.situation)
   }).length
 
   const upcomingCount = events.filter(
@@ -454,6 +464,19 @@ export const Dashboard: React.FC = () => {
                 </button>
                 <button
                   role="tab"
+                  aria-selected={filter === 'halftime'}
+                  onClick={() => setFilter('halftime')}
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all focus:outline-none ${
+                    filter === 'halftime'
+                      ? 'bg-amber-600 text-white shadow-sm ring-1 ring-white/20'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Pause className={`h-3 w-3 ${filter === 'halftime' ? 'text-amber-200 fill-amber-200' : halftimeCount > 0 ? 'text-amber-400' : 'text-slate-400'}`} />
+                  <span>At Halftime ({halftimeCount})</span>
+                </button>
+                <button
+                  role="tab"
                   aria-selected={filter === 'upcoming'}
                   onClick={() => setFilter('upcoming')}
                   className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all focus:outline-none ${
@@ -527,13 +550,19 @@ export const Dashboard: React.FC = () => {
           {/* Empty Search / Filter State */}
           {!isLoading && filteredEvents.length === 0 && (
             <div className="my-10 flex flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.08] bg-[#0c121e]/50 p-10 text-center">
-              <span className="text-3xl mb-2">{filter === 'redzone' ? '🔥' : '🏈'}</span>
+              <span className="text-3xl mb-2">{filter === 'redzone' ? '🔥' : filter === 'halftime' ? '⏸️' : '🏈'}</span>
               <h3 className="text-sm font-bold text-white">
-                {filter === 'redzone' ? 'No Games Currently in the Red Zone' : 'No Matchups Found'}
+                {filter === 'redzone'
+                  ? 'No Games Currently in the Red Zone'
+                  : filter === 'halftime'
+                  ? 'No Games Currently at Halftime'
+                  : 'No Matchups Found'}
               </h3>
               <p className="mt-1 text-xs text-slate-400 max-w-sm">
                 {filter === 'redzone'
                   ? 'No teams are currently driving inside the 20-yard line. Games will automatically appear here the moment an offense crosses the 20, or toggle Simulation Mode to watch a live drive!'
+                  : filter === 'halftime'
+                  ? 'No games are currently in intermission between the 2nd and 3rd quarters. Games will appear here automatically when the 2nd quarter clock reaches 0:00.'
                   : filter === 'live'
                   ? 'No games are currently in progress right now. Try switching to "All" or toggle Simulation Mode to preview live field animations.'
                   : 'No games match your query.'}

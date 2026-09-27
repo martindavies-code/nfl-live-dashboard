@@ -2,8 +2,8 @@ import React from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation } from '../utils/nflHelpers'
-import { Radio, Flame, Tv, MapPin, Compass, Sparkles } from 'lucide-react'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation } from '../utils/nflHelpers'
+import { Radio, Flame, Tv, MapPin, Compass, Sparkles, Pause } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 
 interface HeroMatchupProps {
@@ -42,6 +42,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   )
 
   const isRedZone = isRedZoneSituation(situation, status, competitors)
+  const isHalftime = isHalftimeSituation(status, situation)
 
   const broadcastNetwork =
     competition.broadcasts?.[0]?.names?.join(', ') ||
@@ -92,7 +93,12 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             </span>
           )}
 
-          {isLive ? (
+          {isHalftime ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-bold text-amber-300 border border-amber-500/30">
+              <Pause className="h-3.5 w-3.5 text-amber-400" />
+              AT HALFTIME
+            </span>
+          ) : isLive ? (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/20 px-2.5 py-1 text-xs font-bold text-rose-300 border border-rose-500/30">
               <Radio className="h-3.5 w-3.5 animate-pulse" />
               LIVE IN PROGRESS
@@ -152,13 +158,22 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
           {/* Quarter & Game Clock Banner */}
           <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold text-white bg-slate-800/80 px-2 py-0.5 rounded">
-                {isLive ? `Quarter ${status.period}` : status.type?.detail || 'Match Details'}
-              </span>
-              {isLive && (
-                <span className="font-mono text-sm font-extrabold text-emerald-400 tabular-nums">
-                  {status.displayClock}
+              {isHalftime ? (
+                <span className="font-mono text-xs font-extrabold text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded border border-amber-500/40 uppercase tracking-wider flex items-center gap-1.5">
+                  <Pause className="h-3.5 w-3.5 text-amber-400" />
+                  AT HALFTIME
                 </span>
+              ) : (
+                <>
+                  <span className="font-mono text-xs font-bold text-white bg-slate-800/80 px-2 py-0.5 rounded">
+                    {isLive ? `Quarter ${status.period}` : status.type?.detail || 'Match Details'}
+                  </span>
+                  {isLive && (
+                    <span className="font-mono text-sm font-extrabold text-emerald-400 tabular-nums">
+                      {status.displayClock}
+                    </span>
+                  )}
+                </>
               )}
             </div>
 
@@ -288,10 +303,10 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             <div className="rounded-xl border border-white/[0.08] bg-[#090e18] p-3.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold uppercase tracking-wider text-slate-400">
-                  Active Play Situation
+                  {isHalftime ? 'Game State' : 'Active Play Situation'}
                 </span>
-                <span className="font-mono font-bold text-amber-300 text-sm">
-                  {downAndDistance}
+                <span className={`font-mono font-bold text-sm ${isHalftime ? 'text-amber-400' : 'text-amber-300'}`}>
+                  {isHalftime ? 'Halftime Intermission' : downAndDistance}
                 </span>
               </div>
               {situation?.lastPlay?.text && (
@@ -361,7 +376,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             situation={situation}
             competitors={competitors}
             gameState={state}
-            gameStatusDetail={status?.type?.detail}
+            gameStatusDetail={isHalftime ? 'At Halftime' : status?.type?.detail}
             isHero={true}
             status={status}
           />

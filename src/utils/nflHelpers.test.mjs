@@ -7,6 +7,7 @@ import {
   formatDownAndDistance,
   getOffensiveDrive,
   isRedZoneSituation,
+  isHalftimeSituation,
 } from './nflHelpers.ts'
 
 test('safeParseInt handles numbers, strings, dashes, nulls, and undefined', () => {
@@ -280,4 +281,85 @@ test('isRedZoneSituation correctly confirms genuine Red Zone situations', () => 
     'Away team at opponent 15 yard line MUST be recognized as red zone'
   )
 })
+
+test('isHalftimeSituation accurately identifies Halftime states', () => {
+  // 1. Explicit STATUS_HALFTIME
+  assert.equal(
+    isHalftimeSituation({
+      clock: 0,
+      period: 2,
+      type: { state: 'in', name: 'STATUS_HALFTIME', detail: 'Halftime' },
+    }),
+    true
+  )
+
+  // 2. Detail is Halftime
+  assert.equal(
+    isHalftimeSituation({
+      clock: 0,
+      period: 2,
+      type: { state: 'in', name: 'STATUS_IN_PROGRESS', detail: 'Halftime' },
+    }),
+    true
+  )
+
+  // 3. Quarter 2 at 0:00 (exact screenshot case)
+  assert.equal(
+    isHalftimeSituation(
+      {
+        clock: 0,
+        displayClock: '0:00',
+        period: 2,
+        type: { state: 'in', name: 'STATUS_IN_PROGRESS', detail: '0:00 - 2nd Quarter' },
+      },
+      {
+        lastPlay: { text: 'END QUARTER 2' },
+      }
+    ),
+    true
+  )
+
+  // 4. Active 2nd quarter play (4:30 remaining) -> NOT Halftime
+  assert.equal(
+    isHalftimeSituation({
+      clock: 270,
+      displayClock: '4:30',
+      period: 2,
+      type: { state: 'in', name: 'STATUS_IN_PROGRESS', detail: '4:30 - 2nd Quarter' },
+    }),
+    false
+  )
+
+  // 5. End of 1st Quarter (clock 0:00, period 1) -> NOT Halftime
+  assert.equal(
+    isHalftimeSituation({
+      clock: 0,
+      displayClock: '0:00',
+      period: 1,
+      type: { state: 'in', name: 'STATUS_END_PERIOD', detail: 'End of 1st Quarter' },
+    }),
+    false
+  )
+
+  // 6. Final game -> NOT Halftime
+  assert.equal(
+    isHalftimeSituation({
+      clock: 0,
+      period: 4,
+      type: { state: 'post', completed: true, name: 'STATUS_FINAL', detail: 'Final' },
+    }),
+    false
+  )
+
+  // 7. Pregame -> NOT Halftime
+  assert.equal(
+    isHalftimeSituation({
+      clock: 900,
+      period: 1,
+      type: { state: 'pre', completed: false, name: 'STATUS_SCHEDULED', detail: 'Scheduled' },
+    }),
+    false
+  )
+})
+
 

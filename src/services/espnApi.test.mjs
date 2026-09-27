@@ -2,9 +2,9 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { getMockLiveGames } from './espnApi.ts'
 
-test('getMockLiveGames returns 4 valid events covering live, final, and upcoming phases', () => {
+test('getMockLiveGames returns 5 valid events covering live, halftime, final, and upcoming phases', () => {
   const games = getMockLiveGames()
-  assert.equal(games.length, 4)
+  assert.equal(games.length, 5)
 
   const chiefsBills = games[0]
   assert.equal(chiefsBills.shortName, 'KC @ BUF')
@@ -21,6 +21,12 @@ test('getMockLiveGames returns 4 valid events covering live, final, and upcoming
   assert.equal(upcoming.shortName, 'BAL @ CIN')
   assert.equal(upcoming.status.type.state, 'pre')
   assert.ok(upcoming.competitions[0].odds)
+
+  // Verify halftime game (mock-5)
+  const halftimeGame = games[4]
+  assert.equal(halftimeGame.shortName, 'CAR @ CLE')
+  assert.equal(halftimeGame.status.type.name, 'STATUS_HALFTIME')
+  assert.equal(halftimeGame.status.type.detail, 'Halftime')
 })
 
 test('getMockLiveGames advances sequence across sequential calls', () => {

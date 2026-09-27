@@ -216,3 +216,61 @@ export function isRedZoneSituation(
 
   return false
 }
+
+/**
+ * Detects whether a game is currently in Halftime intermission.
+ * Checks ESPN status names, detail descriptions, quarter/clock combinations,
+ * and play-by-play markers.
+ */
+export function isHalftimeSituation(
+  status: NFLStatus | null | undefined,
+  situation?: NFLSituation | null | undefined
+): boolean {
+  if (!status) return false
+  if (status.type?.completed) return false
+
+  // 1. Explicit status name from ESPN API
+  const statusName = (status.type?.name || '').toUpperCase()
+  if (statusName === 'STATUS_HALFTIME') {
+    return true
+  }
+
+  // 2. Explicit text in detail or description (e.g. "Halftime", "At Halftime", "End of 1st Half")
+  const detail = (
+    status.type?.detail ||
+    status.type?.shortDetail ||
+    status.type?.description ||
+    ''
+  ).toLowerCase()
+
+  if (detail === 'halftime' || detail.startsWith('halftime') || detail.includes('at halftime')) {
+    return true
+  }
+  if (detail.includes('end of 1st half') || detail.includes('end of half')) {
+    return true
+  }
+  if (detail.includes('half') && !detail.includes('1st half') && !detail.includes('2nd half')) {
+    return true
+  }
+
+  // 3. Game is in progress, 2nd quarter, and clock is 0:00 (period 2 ended, period 3 hasn't begun)
+  const isSecondQuarter = status.period === 2
+  const isClockZero = status.clock === 0 || status.displayClock === '0:00'
+  const isLiveState = status.type?.state === 'in'
+
+  if (isSecondQuarter && isClockZero && isLiveState) {
+    return true
+  }
+
+  // 4. Play-by-play indicates end of quarter 2 or 1st half while at clock 0:00 or period 2
+  if (
+    isSecondQuarter &&
+    situation?.lastPlay?.text &&
+    /end\s+(of\s+)?(quarter\s*2|2nd\s*quarter|1st\s*half|half)/i.test(situation.lastPlay.text)
+  ) {
+    return true
+  }
+
+  return false
+}
+

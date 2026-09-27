@@ -1,6 +1,6 @@
 import React, { useId, memo } from 'react'
 import type { NFLSituation, NFLCompetitor, NFLStatus } from '../types/nfl'
-import { sanitizeHexColor, getOffensiveDrive, isRedZoneSituation } from '../utils/nflHelpers'
+import { sanitizeHexColor, getOffensiveDrive, isRedZoneSituation, isHalftimeSituation } from '../utils/nflHelpers'
 
 interface FieldDiagramProps {
   situation?: NFLSituation | null
@@ -67,6 +67,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
       (direction === 'left' && yardLineClamped - distance <= 0))
 
   const inRedZone = isRedZoneSituation(situation, status, competitors)
+  const isHalftime = isHalftimeSituation(status, situation)
 
   // Direct label text
   const losLabel = situation?.possessionText || `${yardLineClamped} YD`
@@ -102,9 +103,20 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               RED ZONE
             </span>
           )}
+          {isHalftime && (
+            <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30">
+              HALFTIME
+            </span>
+          )}
         </div>
 
-        {hasSituation ? (
+        {isHalftime ? (
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            <span className="text-amber-300 font-mono">AT HALFTIME</span>
+            <span className="text-slate-500">•</span>
+            <span className="text-slate-300">2nd Half Kickoff Upcoming</span>
+          </div>
+        ) : hasSituation ? (
           <div className="flex items-center gap-2 text-xs font-semibold">
             <span className="text-amber-300 font-mono">
               {situation?.downDistanceText || `${situation?.shortDownDistanceText || 'Current Drive'}`}

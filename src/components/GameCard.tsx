@@ -2,7 +2,7 @@ import React, { useState, memo } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation } from '../utils/nflHelpers'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation } from '../utils/nflHelpers'
 import { 
   Tv, 
   Flame, 
@@ -11,7 +11,8 @@ import {
   Clock, 
   Activity,
   Maximize2,
-  Sparkles
+  Sparkles,
+  Pause,
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 
@@ -64,6 +65,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   )
 
   const isRedZone = isRedZoneSituation(situation, status, competitors)
+  const isHalftime = isHalftimeSituation(status, situation)
 
   const broadcastNetwork =
     competition.broadcasts?.[0]?.names?.join(', ') ||
@@ -121,10 +123,17 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           )}
 
           {isLive && (
-            <div className="flex items-center gap-1 font-mono text-xs font-bold text-white">
-              <span className="text-slate-400">Q{status.period}</span>
-              <span className="text-emerald-400 tabular-nums">{status.displayClock}</span>
-            </div>
+            isHalftime ? (
+              <span className="inline-flex items-center gap-1 rounded bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 text-[11px] font-bold text-amber-300">
+                <Pause className="h-3 w-3 text-amber-400" />
+                AT HALFTIME
+              </span>
+            ) : (
+              <div className="flex items-center gap-1 font-mono text-xs font-bold text-white">
+                <span className="text-slate-400">Q{status.period}</span>
+                <span className="text-emerald-400 tabular-nums">{status.displayClock}</span>
+              </div>
+            )
           )}
 
           {isFinal && status.type?.detail && (
@@ -365,7 +374,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               situation={situation}
               competitors={competitors}
               gameState={state}
-              gameStatusDetail={status?.type?.detail}
+              gameStatusDetail={isHalftime ? 'At Halftime' : status?.type?.detail}
               status={status}
             />
           </div>
