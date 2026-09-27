@@ -149,4 +149,4 @@ export interface NFLScoreboardData {
   events: NFLEvent[]
 }
 
-export type GameFilter = 'all' | 'live' | 'upcoming' | 'final'
+export type GameFilter = 'all' | 'live' | 'redzone' | 'upcoming' | 'final'

@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   WifiOff,
   X,
+  Flame,
 } from 'lucide-react'
 
 export const Dashboard: React.FC = () => {
@@ -23,6 +24,7 @@ export const Dashboard: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [useDemoMode, setUseDemoMode] = useState<boolean>(false)
   const [selectedHeroId, setSelectedHeroId] = useState<string | null>(null)
+  const [autoRedZoneSpotlight, setAutoRedZoneSpotlight] = useState<boolean>(true)
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true)
 
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -164,6 +166,11 @@ export const Dashboard: React.FC = () => {
       const state = ev.status?.type?.state || comp?.status?.type?.state || 'pre'
 
       if (filter === 'live' && state !== 'in') return false
+      if (filter === 'redzone') {
+        const isLive = state === 'in'
+        const isRz = Boolean(comp?.situation?.isRedZone)
+        if (!isLive || !isRz) return false
+      }
       if (filter === 'upcoming' && state !== 'pre') return false
       if (filter === 'final' && state !== 'post') return false
 
@@ -192,12 +199,23 @@ export const Dashboard: React.FC = () => {
   const heroMatchup: NFLEvent | null = (() => {
     if (events.length === 0) return null
 
+    // 1. If autoRedZoneSpotlight is active, dynamically follow any live Red Zone scoring threat!
+    if (autoRedZoneSpotlight) {
+      const rzGame = events.find((e) => {
+        const comp = e.competitions?.[0]
+        const isLive = (e.status?.type?.state || comp?.status?.type?.state) === 'in'
+        return isLive && comp?.situation?.isRedZone
+      })
+      if (rzGame) return rzGame
+    }
+
+    // 2. User pinned matchup
     if (selectedHeroId) {
       const found = events.find((e) => e.id === selectedHeroId)
       if (found) return found
     }
 
-    // Prefer live game in red zone
+    // 3. Fallback to any live game in red zone even if auto-toggle was disabled
     const rzGame = events.find((e) => {
       const comp = e.competitions?.[0]
       const isLive = (e.status?.type?.state || comp?.status?.type?.state) === 'in'
@@ -205,7 +223,7 @@ export const Dashboard: React.FC = () => {
     })
     if (rzGame) return rzGame
 
-    // Prefer any live game
+    // 4. Fallback to any live game
     const liveGame = events.find((e) => {
       const comp = e.competitions?.[0]
       return (e.status?.type?.state || comp?.status?.type?.state) === 'in'
@@ -215,9 +233,23 @@ export const Dashboard: React.FC = () => {
     return events[0]
   })()
 
+  // Track if current hero is being spotlighted due to auto-redzone
+  const isAutoSelectedRedZone = Boolean(
+    autoRedZoneSpotlight &&
+    heroMatchup &&
+    heroMatchup.competitions?.[0]?.situation?.isRedZone &&
+    ((heroMatchup.status?.type?.state || heroMatchup.competitions?.[0]?.status?.type?.state) === 'in')
+  )
+
   const liveCount = events.filter(
     (e) => (e.status?.type?.state || e.competitions?.[0]?.status?.type?.state) === 'in'
   ).length
+
+  const redZoneCount = events.filter((e) => {
+    const comp = e.competitions?.[0]
+    const isLive = (e.status?.type?.state || comp?.status?.type?.state) === 'in'
+    return isLive && comp?.situation?.isRedZone
+  }).length
 
   const upcomingCount = events.filter(
     (e) => (e.status?.type?.state || e.competitions?.[0]?.status?.type?.state) === 'pre'
@@ -359,7 +391,12 @@ export const Dashboard: React.FC = () => {
 
         {/* SECTION 1: HERO SPOTLIGHT */}
         {!isLoading && heroMatchup && (
-          <HeroMatchup event={heroMatchup} />
+          <HeroMatchup
+            event={heroMatchup}
+            autoRedZone={autoRedZoneSpotlight}
+            onToggleAutoRedZone={() => setAutoRedZoneSpotlight((prev) => !prev)}
+            isAutoSelectedRedZone={isAutoSelectedRedZone}
+          />
         )}
 
         {/* SECTION 2: SLATE DIRECTORY TOOLBAR */}
@@ -408,6 +445,19 @@ export const Dashboard: React.FC = () => {
                 >
                   {liveCount > 0 && <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />}
                   Live ({liveCount})
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={filter === 'redzone'}
+                  onClick={() => setFilter('redzone')}
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all focus:outline-none ${
+                    filter === 'redzone'
+                      ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-sm ring-1 ring-white/20'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Flame className={`h-3 w-3 ${filter === 'redzone' ? 'text-amber-300 fill-amber-300' : redZoneCount > 0 ? 'text-rose-400 fill-rose-400 animate-pulse' : 'text-slate-400'}`} />
+                  <span>Red Zone ({redZoneCount})</span>
                 </button>
                 <button
                   role="tab"
@@ -484,10 +534,14 @@ export const Dashboard: React.FC = () => {
           {/* Empty Search / Filter State */}
           {!isLoading && filteredEvents.length === 0 && (
             <div className="my-10 flex flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.08] bg-[#0c121e]/50 p-10 text-center">
-              <span className="text-3xl mb-2">🏈</span>
-              <h3 className="text-sm font-bold text-white">No Matchups Found</h3>
-              <p className="mt-1 text-xs text-slate-400 max-w-xs">
-                {filter === 'live'
+              <span className="text-3xl mb-2">{filter === 'redzone' ? '🔥' : '🏈'}</span>
+              <h3 className="text-sm font-bold text-white">
+                {filter === 'redzone' ? 'No Games Currently in the Red Zone' : 'No Matchups Found'}
+              </h3>
+              <p className="mt-1 text-xs text-slate-400 max-w-sm">
+                {filter === 'redzone'
+                  ? 'No teams are currently driving inside the 20-yard line. Games will automatically appear here the moment an offense crosses the 20, or toggle Simulation Mode to watch a live drive!'
+                  : filter === 'live'
                   ? 'No games are currently in progress right now. Try switching to "All" or toggle Simulation Mode to preview live field animations.'
                   : 'No games match your query.'}
               </p>
@@ -498,7 +552,7 @@ export const Dashboard: React.FC = () => {
                 }}
                 className="mt-3 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-500 transition-colors"
               >
-                Clear Filters
+                Show All Games
               </button>
             </div>
           )}
@@ -511,7 +565,11 @@ export const Dashboard: React.FC = () => {
                   key={event.id}
                   event={event}
                   isSpotlighted={heroMatchup?.id === event.id}
-                  onSpotlight={() => setSelectedHeroId(event.id)}
+                  onSpotlight={() => {
+                    setSelectedHeroId(event.id)
+                    setAutoRedZoneSpotlight(false)
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
                 />
               ))}
             </div>

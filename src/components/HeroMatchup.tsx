@@ -7,11 +7,19 @@ import { Radio, Flame, Tv, MapPin, Compass } from 'lucide-react'
 
 interface HeroMatchupProps {
   event: NFLEvent
+  autoRedZone?: boolean
+  onToggleAutoRedZone?: () => void
+  isAutoSelectedRedZone?: boolean
 }
 
 const DEFAULT_NFL_LOGO = 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nfl.png'
 
-export const HeroMatchup: React.FC<HeroMatchupProps> = ({ event }) => {
+export const HeroMatchup: React.FC<HeroMatchupProps> = ({
+  event,
+  autoRedZone = true,
+  onToggleAutoRedZone,
+  isAutoSelectedRedZone = false,
+}) => {
   const competition = event.competitions?.[0]
   if (!competition) return null
 
@@ -54,12 +62,19 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({ event }) => {
       aria-labelledby="hero-matchup-heading"
     >
       {/* Editorial Spotlight Banner */}
-      <div className="flex flex-wrap items-center justify-between border-b border-white/[0.08] bg-[#090e18] px-5 py-3">
-        <div className="flex items-center gap-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] bg-[#090e18] px-5 py-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs font-bold text-emerald-300 border border-emerald-500/30">
             <Compass className="h-3.5 w-3.5" />
             SPOTLIGHT MATCHUP
           </span>
+
+          {isAutoSelectedRedZone && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600/30 border border-rose-500/50 px-2.5 py-1 text-xs font-bold text-rose-200 animate-pulse shadow-sm shadow-rose-950">
+              <Flame className="h-3.5 w-3.5 text-rose-400 fill-rose-400" />
+              AUTO-SPOTLIGHT: RED ZONE
+            </span>
+          )}
 
           {isLive ? (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/20 px-2.5 py-1 text-xs font-bold text-rose-300 border border-rose-500/30">
@@ -77,13 +92,34 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({ event }) => {
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-slate-400">
-          {isLive && situation?.isRedZone && (
+        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+          {/* Interactive Auto Red Zone Toggle */}
+          {onToggleAutoRedZone && (
+            <button
+              onClick={onToggleAutoRedZone}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold border transition-all ${
+                autoRedZone
+                  ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 shadow-sm'
+                  : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
+              }`}
+              title={
+                autoRedZone
+                  ? 'Auto Red Zone is ON: Automatically pins whichever matchup is driving inside the 20-yard line'
+                  : 'Auto Red Zone is OFF: Click to automatically follow active scoring threats'
+              }
+            >
+              <Flame className={`h-3.5 w-3.5 ${autoRedZone ? 'text-rose-400 fill-rose-400 animate-pulse' : 'text-slate-500'}`} />
+              <span>Auto Red Zone: <strong className="font-bold text-white">{autoRedZone ? 'ON' : 'OFF'}</strong></span>
+            </button>
+          )}
+
+          {isLive && situation?.isRedZone && !isAutoSelectedRedZone && (
             <span className="inline-flex items-center gap-1 rounded bg-rose-600/30 border border-rose-500/40 px-2 py-0.5 text-xs font-bold text-rose-300 animate-pulse">
               <Flame className="h-3.5 w-3.5 text-rose-400 fill-rose-400" />
               RED ZONE DRIVE
             </span>
           )}
+
           {broadcastNetwork && (
             <span className="hidden sm:flex items-center gap-1 text-slate-400">
               <Tv className="h-3.5 w-3.5 text-slate-500" />
