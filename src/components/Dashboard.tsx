@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import type { GameFilter, NFLScoreboardData, NFLEvent } from '../types/nfl'
 import { fetchNFLScoreboard, getMockLiveGames } from '../services/espnApi'
+import { isRedZoneSituation } from '../utils/nflHelpers'
 import { HeroMatchup } from './HeroMatchup'
 import { GameCard } from './GameCard'
 import {
@@ -167,9 +168,8 @@ export const Dashboard: React.FC = () => {
 
       if (filter === 'live' && state !== 'in') return false
       if (filter === 'redzone') {
-        const isLive = state === 'in'
-        const isRz = Boolean(comp?.situation?.isRedZone)
-        if (!isLive || !isRz) return false
+        const isRz = isRedZoneSituation(comp?.situation, ev.status || comp?.status, comp?.competitors || [])
+        if (!isRz) return false
       }
       if (filter === 'upcoming' && state !== 'pre') return false
       if (filter === 'final' && state !== 'post') return false
@@ -203,8 +203,7 @@ export const Dashboard: React.FC = () => {
     if (autoRedZoneSpotlight) {
       const rzGame = events.find((e) => {
         const comp = e.competitions?.[0]
-        const isLive = (e.status?.type?.state || comp?.status?.type?.state) === 'in'
-        return isLive && comp?.situation?.isRedZone
+        return isRedZoneSituation(comp?.situation, e.status || comp?.status, comp?.competitors || [])
       })
       if (rzGame) return rzGame
     }
@@ -229,8 +228,11 @@ export const Dashboard: React.FC = () => {
   const isAutoSelectedRedZone = Boolean(
     autoRedZoneSpotlight &&
     heroMatchup &&
-    heroMatchup.competitions?.[0]?.situation?.isRedZone &&
-    ((heroMatchup.status?.type?.state || heroMatchup.competitions?.[0]?.status?.type?.state) === 'in')
+    isRedZoneSituation(
+      heroMatchup.competitions?.[0]?.situation,
+      heroMatchup.status || heroMatchup.competitions?.[0]?.status,
+      heroMatchup.competitions?.[0]?.competitors || []
+    )
   )
 
   const liveCount = events.filter(
@@ -239,8 +241,7 @@ export const Dashboard: React.FC = () => {
 
   const redZoneCount = events.filter((e) => {
     const comp = e.competitions?.[0]
-    const isLive = (e.status?.type?.state || comp?.status?.type?.state) === 'in'
-    return isLive && comp?.situation?.isRedZone
+    return isRedZoneSituation(comp?.situation, e.status || comp?.status, comp?.competitors || [])
   }).length
 
   const upcomingCount = events.filter(

@@ -2,7 +2,7 @@ import React from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt } from '../utils/nflHelpers'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation } from '../utils/nflHelpers'
 import { Radio, Flame, Tv, MapPin, Compass, Sparkles } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 
@@ -40,6 +40,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
     isLive ? situation : null,
     competitors
   )
+
+  const isRedZone = isRedZoneSituation(situation, status, competitors)
 
   const broadcastNetwork =
     competition.broadcasts?.[0]?.names?.join(', ') ||
@@ -127,7 +129,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             </button>
           )}
 
-          {isLive && situation?.isRedZone && !isAutoSelectedRedZone && (
+          {isLive && isRedZone && !isAutoSelectedRedZone && (
             <span className="inline-flex items-center gap-1 rounded bg-rose-600/30 border border-rose-500/40 px-2 py-0.5 text-xs font-bold text-rose-300 animate-pulse">
               <Flame className="h-3.5 w-3.5 text-rose-400 fill-rose-400" />
               RED ZONE DRIVE
@@ -361,6 +363,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             gameState={state}
             gameStatusDetail={status?.type?.detail}
             isHero={true}
+            status={status}
           />
         </div>
       </div>

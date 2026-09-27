@@ -1,6 +1,6 @@
 import React, { useId, memo } from 'react'
-import type { NFLSituation, NFLCompetitor } from '../types/nfl'
-import { sanitizeHexColor, getOffensiveDrive } from '../utils/nflHelpers'
+import type { NFLSituation, NFLCompetitor, NFLStatus } from '../types/nfl'
+import { sanitizeHexColor, getOffensiveDrive, isRedZoneSituation } from '../utils/nflHelpers'
 
 interface FieldDiagramProps {
   situation?: NFLSituation | null
@@ -8,6 +8,7 @@ interface FieldDiagramProps {
   gameState?: 'pre' | 'in' | 'post'
   gameStatusDetail?: string
   isHero?: boolean
+  status?: NFLStatus
 }
 
 export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
@@ -16,6 +17,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   gameState = 'in',
   gameStatusDetail = 'In Progress',
   isHero = false,
+  status,
 }) => {
   const uniqueId = useId().replace(/:/g, '')
 
@@ -64,10 +66,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
     ((direction === 'right' && yardLineClamped + distance >= 100) ||
       (direction === 'left' && yardLineClamped - distance <= 0))
 
-  const inRedZone =
-    situation?.isRedZone ||
-    (direction === 'right' && yardLineClamped >= 80) ||
-    (direction === 'left' && yardLineClamped <= 20)
+  const inRedZone = isRedZoneSituation(situation, status, competitors)
 
   // Direct label text
   const losLabel = situation?.possessionText || `${yardLineClamped} YD`

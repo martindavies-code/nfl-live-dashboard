@@ -1,4 +1,4 @@
-import type { NFLSituation, NFLCompetitor } from '../types/nfl'
+import type { NFLSituation, NFLCompetitor, NFLStatus } from '../types/nfl'
 
 /**
  * Safely parse score or number strings, handling "-", empty strings, or nulls without returning NaN.
@@ -129,4 +129,90 @@ export function getOffensiveDrive(
     isHomePossession,
     isAwayPossession,
   }
+}
+
+/**
+ * Rigorously verifies whether a game situation is genuinely in the Red Zone.
+ * Rejects stale ESPN API flags during Halftime, Kickoffs, Timeouts, End of Quarters,
+ * or when the ball is on the offense's own side of the field.
+ */
+export function isRedZoneSituation(
+  situation: NFLSituation | null | undefined,
+  status: NFLStatus | null | undefined,
+  competitors: NFLCompetitor[] = []
+): boolean {
+  if (!situation) return false
+
+  // 1. Must be live in progress and not completed
+  if (status?.type?.completed) return false
+  const state = status?.type?.state
+  if (state && state !== 'in') return false
+
+  // 2. Reject Halftime, End of Period, Overtime intermission, Delays, or 0:00 on the clock
+  const statusName = (status?.type?.name || '').toUpperCase()
+  if (
+    statusName === 'STATUS_HALFTIME' ||
+    statusName === 'STATUS_END_PERIOD' ||
+    statusName === 'STATUS_FINAL' ||
+    statusName === 'STATUS_POSTPONED' ||
+    statusName === 'STATUS_DELAYED'
+  ) {
+    return false
+  }
+
+  const detail = (status?.type?.detail || status?.type?.shortDetail || status?.type?.description || '').toLowerCase()
+  if (
+    detail.includes('half') ||
+    detail.includes('end of') ||
+    detail.includes('final') ||
+    detail.includes('intermission') ||
+    detail.includes('delay') ||
+    detail.includes('suspended')
+  ) {
+    return false
+  }
+
+  // Clock 0:00 means quarter/half has expired and no scrimmage play is active
+  if (typeof status?.clock === 'number' && status.clock === 0) {
+    return false
+  }
+
+  // 3. Reject dead-ball plays like Kickoffs (down = -1) or PATs
+  if (situation.down === undefined || situation.down <= 0) {
+    return false
+  }
+
+  // 4. Must have a valid yardLine between 1 and 99
+  const yardLine = situation.yardLine
+  if (typeof yardLine !== 'number' || !Number.isFinite(yardLine) || yardLine <= 0 || yardLine >= 100) {
+    return false
+  }
+
+  // 5. Must be within 20 yards of the OPPONENT's goal line:
+  const { direction, offensiveTeam } = getOffensiveDrive(situation, competitors)
+
+  // In ESPN coordinates (0 = Home Goal, 100 = Away Goal):
+  // Driving RIGHT means attacking Away Goal (100) -> Red zone is yardLine 80 to 99
+  // Driving LEFT means attacking Home Goal (0) -> Red zone is yardLine 1 to 20
+  const isInsideOpponent20 =
+    (direction === 'right' && yardLine >= 80 && yardLine < 100) ||
+    (direction === 'left' && yardLine <= 20 && yardLine > 0)
+
+  if (isInsideOpponent20) {
+    return true
+  }
+
+  // Fallback check against possessionText: if ball is at "DEF 18" (opponent territory <= 20)
+  if (situation.possessionText && offensiveTeam) {
+    const defensiveComp = competitors.find((c) => c.id !== offensiveTeam.id)
+    const defAbbr = defensiveComp?.team?.abbreviation
+    if (defAbbr && situation.possessionText.startsWith(defAbbr)) {
+      const yardNum = parseInt(situation.possessionText.replace(defAbbr, '').trim(), 10)
+      if (Number.isFinite(yardNum) && yardNum > 0 && yardNum <= 20) {
+        return true
+      }
+    }
+  }
+
+  return false
 }

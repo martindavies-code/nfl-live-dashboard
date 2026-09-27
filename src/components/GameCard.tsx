@@ -2,7 +2,7 @@ import React, { useState, memo } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt } from '../utils/nflHelpers'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation } from '../utils/nflHelpers'
 import { 
   Tv, 
   Flame, 
@@ -62,6 +62,8 @@ export const GameCard: React.FC<GameCardProps> = memo(({
     isLive ? situation : null,
     competitors
   )
+
+  const isRedZone = isRedZoneSituation(situation, status, competitors)
 
   const broadcastNetwork =
     competition.broadcasts?.[0]?.names?.join(', ') ||
@@ -133,7 +135,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
         </div>
 
         <div className="flex items-center gap-2">
-          {isLive && situation?.isRedZone && (
+          {isLive && isRedZone && (
             <span className="inline-flex items-center gap-0.5 rounded bg-rose-600/20 border border-rose-500/30 px-1.5 py-0.5 text-[10px] font-bold text-rose-300">
               <Flame className="h-3 w-3 text-rose-400 fill-rose-400" />
               RZ
@@ -364,6 +366,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               competitors={competitors}
               gameState={state}
               gameStatusDetail={status?.type?.detail}
+              status={status}
             />
           </div>
         )}
