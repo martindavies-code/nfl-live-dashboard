@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import type { GameFilter, NFLScoreboardData, NFLEvent } from '../types/nfl'
 import { fetchNFLScoreboard, getMockLiveGames } from '../services/espnApi'
 import { HeroMatchup } from './HeroMatchup'
@@ -26,12 +26,14 @@ export const Dashboard: React.FC = () => {
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true)
 
   const abortControllerRef = useRef<AbortController | null>(null)
+  // Always-current reference to loadData so event listeners never capture stale closures
+  const loadDataRef = useRef<((isManual?: boolean) => void) | null>(null)
 
-  // Network online/offline listener
+  // Network online/offline listener — uses loadDataRef to always call latest version
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true)
-      loadData(true)
+      loadDataRef.current?.(true)
     }
     const handleOffline = () => {
       setIsOnline(false)
@@ -43,7 +45,7 @@ export const Dashboard: React.FC = () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [])
+  }, []) // stable — no deps needed thanks to loadDataRef
 
   // Fetch function with AbortController and resilience
   const loadData = useCallback(async (isManual = false) => {
@@ -91,7 +93,13 @@ export const Dashboard: React.FC = () => {
     }
   }, [useDemoMode])
 
-  // Polling setup with Page Visibility awareness (Battery & network preservation)
+  // Keep loadDataRef in sync with the latest loadData so stable event listeners always call the current version
+  useEffect(() => {
+    loadDataRef.current = loadData
+  })
+
+  // Polling setup with Page Visibility awareness (battery & network preservation)
+  // Countdown is synced to the same interval as the poll to prevent drift.
   useEffect(() => {
     loadData()
 
@@ -102,13 +110,17 @@ export const Dashboard: React.FC = () => {
       if (pollInterval) clearInterval(pollInterval)
       if (tickInterval) clearInterval(tickInterval)
 
+      // Reset countdown when timers (re)start so tick and poll are always aligned
+      setCountdown(10)
+
       pollInterval = setInterval(() => {
         loadData()
         setCountdown(10)
       }, 10000)
 
+      // Tick fires every second; countdown never drifts below 1 before poll resets it
       tickInterval = setInterval(() => {
-        setCountdown((prev) => (prev > 1 ? prev - 1 : 10))
+        setCountdown((prev) => (prev > 1 ? prev - 1 : 1))
       }, 1000)
     }
 
@@ -144,7 +156,7 @@ export const Dashboard: React.FC = () => {
   const events = data?.events || []
 
   // Sanitized filtered and searched events
-  const filteredEvents = useMemo(() => {
+  const filteredEvents = (() => {
     const cleanQuery = searchQuery.trim().toLowerCase()
 
     return events.filter((ev) => {
@@ -174,10 +186,10 @@ export const Dashboard: React.FC = () => {
 
       return true
     })
-  }, [events, filter, searchQuery])
+  })()
 
   // Identify the premier game for the Hero Spotlight
-  const heroMatchup: NFLEvent | null = useMemo(() => {
+  const heroMatchup: NFLEvent | null = (() => {
     if (events.length === 0) return null
 
     if (selectedHeroId) {
@@ -201,7 +213,7 @@ export const Dashboard: React.FC = () => {
     if (liveGame) return liveGame
 
     return events[0]
-  }, [events, selectedHeroId])
+  })()
 
   const liveCount = events.filter(
     (e) => (e.status?.type?.state || e.competitions?.[0]?.status?.type?.state) === 'in'
@@ -263,7 +275,7 @@ export const Dashboard: React.FC = () => {
               {/* Simulation Mode Toggle */}
               <button
                 onClick={() => {
-                  setUseDemoMode(!useDemoMode)
+                  setUseDemoMode((prev) => !prev)
                   setSelectedHeroId(null)
                 }}
                 className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-1 focus:ring-amber-400 ${

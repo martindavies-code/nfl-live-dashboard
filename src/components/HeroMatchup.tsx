@@ -145,9 +145,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({ event }) => {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 id="hero-matchup-heading" className="text-xl font-black text-white tracking-tight">
+                    <span id="hero-matchup-heading" className="text-xl font-black text-white tracking-tight">
                       {awayComp?.team?.displayName || awayComp?.team?.name}
-                    </h3>
+                    </span>
                     <span className="font-mono text-xs text-slate-400 font-bold">
                       {awayComp?.team?.abbreviation}
                     </span>

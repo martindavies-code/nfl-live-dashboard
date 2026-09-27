@@ -2,7 +2,7 @@ import React, { useState, memo } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive } from '../utils/nflHelpers'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt } from '../utils/nflHelpers'
 import { 
   Tv, 
   Flame, 
@@ -12,6 +12,7 @@ import {
   Activity,
   Maximize2
 } from 'lucide-react'
+import { getScorigamiInfo } from '../utils/scorigami'
 
 interface GameCardProps {
   event: NFLEvent
@@ -41,6 +42,15 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const isFinal = state === 'post'
 
   const situation = competition.situation
+
+  // Derive seconds remaining for scorigami probability (ESPN clock is in seconds)
+  const secondsLeft = typeof status?.clock === 'number' ? status.clock : 0
+  const scorigamiInfo = getScorigamiInfo(
+    safeParseInt(homeComp?.score, 0),
+    safeParseInt(awayComp?.score, 0),
+    secondsLeft,
+    state
+  )
 
   // Check possession with helper (only active during live games)
   const { isHomePossession, isAwayPossession } = getOffensiveDrive(
@@ -276,6 +286,31 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           awayCompetitor={awayComp}
           gameState={state}
         />
+        {/* Scorigami Badge */}
+        {(isLive || isFinal) && (
+          <div className={`mt-2 rounded-lg border px-3 py-2 text-xs ${
+            scorigamiInfo.isCurrentScorigami
+              ? 'border-violet-500/40 bg-violet-950/40 text-violet-300'
+              : 'border-white/[0.06] bg-[#070c16] text-slate-400'
+          }`}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold tracking-wide uppercase text-[10px]">
+                {scorigamiInfo.isCurrentScorigami ? '✨ Scorigami!' : 'Scorigami'}
+              </span>
+              <span className={`font-mono font-bold tabular-nums ${
+                scorigamiInfo.isCurrentScorigami ? 'text-violet-200' : 'text-slate-300'
+              }`}>
+                {scorigamiInfo.chanceLabel}
+              </span>
+            </div>
+            {scorigamiInfo.mostLikelyNovel && !scorigamiInfo.isCurrentScorigami && (
+              <div className="mt-1 text-[11px] text-slate-500">
+                Most likely novel score:{' '}
+                <strong className="text-slate-300">{scorigamiInfo.mostLikelyLabel}</strong>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Expandable Field Radar Toggle */}

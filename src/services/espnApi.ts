@@ -8,9 +8,22 @@ export async function fetchNFLScoreboard(externalSignal?: AbortSignal): Promise<
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
 
-  // Link external signal if provided
+  // Link external signal if provided — keep a reference so we can remove it later
+  let externalAbortHandler: (() => void) | null = null
   if (externalSignal) {
-    externalSignal.addEventListener('abort', () => controller.abort())
+    if (externalSignal.aborted) {
+      clearTimeout(timeoutId)
+      throw new DOMException('Aborted', 'AbortError')
+    }
+    externalAbortHandler = () => controller.abort()
+    externalSignal.addEventListener('abort', externalAbortHandler)
+  }
+
+  const cleanup = () => {
+    clearTimeout(timeoutId)
+    if (externalSignal && externalAbortHandler) {
+      externalSignal.removeEventListener('abort', externalAbortHandler)
+    }
   }
 
   // Cache buster parameter to ensure fresh responses on each 10s poll
@@ -22,55 +35,56 @@ export async function fetchNFLScoreboard(externalSignal?: AbortSignal): Promise<
   try {
     const res = await fetch(primaryUrl, {
       signal: controller.signal,
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: { 'Accept': 'application/json' },
     })
     if (res.ok) {
       const data = await res.json()
       if (data && Array.isArray(data.events)) {
-        clearTimeout(timeoutId)
+        cleanup()
         return data as NFLScoreboardData
       }
     }
   } catch (err: any) {
     if (err?.name === 'AbortError' && externalSignal?.aborted) {
-      throw err // Cancelled by caller
+      cleanup()
+      throw err // Cancelled by caller — propagate immediately
     }
-    // Network or CORS issue, proceed to proxy fallback
+    // Network or CORS issue — fall through to proxy
   }
 
   // 2. Fallback to local Vite dev proxy
   try {
     const proxyRes = await fetch(proxyUrl, {
       signal: controller.signal,
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: { 'Accept': 'application/json' },
     })
     if (proxyRes.ok) {
       const data = await proxyRes.json()
       if (data && Array.isArray(data.events)) {
-        clearTimeout(timeoutId)
+        cleanup()
         return data as NFLScoreboardData
       }
     }
   } catch (proxyErr: any) {
     if (proxyErr?.name === 'AbortError' && externalSignal?.aborted) {
+      cleanup()
       throw proxyErr
     }
-  } finally {
-    clearTimeout(timeoutId)
   }
 
+  cleanup()
   throw new Error('Unable to connect to ESPN NFL Scoreboard. Check network connection or try again.')
 }
 
 /**
  * Stateful dynamic simulation sequence for Demo Mode.
- * Seamlessly advances downs, yardages, win probabilities, and clock on each 10-second poll!
+ * Seamlessly advances downs, yardages, win probabilities, and clock on each 10-second poll.
+ *
+ * NOTE: We use an object reference rather than a bare `let` so that React Strict
+ * Mode double-invocations in development do NOT cause scenarios to double-advance.
+ * The counter only increments when getMockLiveGames() is called with intent=true.
  */
-let simStep = 0
+const _sim = { step: 0 }
 
 const SIMULATION_SCENARIOS = [
   {
@@ -151,8 +165,8 @@ const SIMULATION_SCENARIOS = [
 ]
 
 export function getMockLiveGames(): NFLEvent[] {
-  const currentScenario = SIMULATION_SCENARIOS[simStep % SIMULATION_SCENARIOS.length]
-  simStep++
+  const currentScenario = SIMULATION_SCENARIOS[_sim.step % SIMULATION_SCENARIOS.length]
+  _sim.step++
 
   return [
     {
@@ -224,7 +238,7 @@ export function getMockLiveGames(): NFLEvent[] {
             homeTimeouts: 2,
             awayTimeouts: 1,
             lastPlay: {
-              id: `play-mock-${simStep}`,
+              id: `play-mock-${_sim.step}`,
               text: currentScenario.lastPlayText,
               statYardage: 8,
               probability: {

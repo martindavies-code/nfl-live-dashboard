@@ -475,11 +475,11 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
       <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#080d16] px-3.5 py-1.5 text-[11px] text-slate-400">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-xs bg-sky-400" />
+            <span className="h-2 w-2 rounded-sm bg-sky-400" />
             <strong className="text-slate-300">Scrimmage:</strong> {hasSituation ? losLabel : '50 YD'}
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-xs bg-yellow-400" />
+            <span className="h-2 w-2 rounded-sm bg-yellow-400" />
             <strong className="text-slate-300">Target:</strong>{' '}
             {isRegularPlay ? firstDownLabel : hasSituation ? 'Kickoff / PAT' : '10 Yds'}
           </span>

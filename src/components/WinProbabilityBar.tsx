@@ -65,9 +65,9 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
     awayPct = 50
   }
 
-  // Clamping to visually sensible bounds
+  // Clamping to visually sensible bounds — always ensure home + away = 100
   homePct = Math.max(2, Math.min(98, Math.round(homePct * 10) / 10))
-  awayPct = Math.max(2, Math.min(98, Math.round((100 - homePct) * 10) / 10))
+  awayPct = Math.round((100 - homePct) * 10) / 10
 
   const isHomeFavored = homePct > awayPct
   const isAwayFavored = awayPct > homePct
