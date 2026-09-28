@@ -8,6 +8,7 @@ import {
   getWeekLabel,
   getNextWeek,
   getPrevWeek,
+  sanitizePatriotsInEvent,
 } from '../utils/nflHelpers'
 import { fetchNFLScoreboard, type ScoreboardQueryParams } from '../services/espnApi'
 import { HeroMatchup } from './HeroMatchup'
@@ -254,7 +255,7 @@ export const Dashboard: React.FC = () => {
     }
   }, [loadData])
 
-  const events = data?.events || []
+  const events = (data?.events || []).map(sanitizePatriotsInEvent)
 
   // Sanitized filtered and searched events
   const filteredEvents = (() => {
@@ -283,10 +284,14 @@ export const Dashboard: React.FC = () => {
         const matchesShort = (ev.shortName || '').toLowerCase().includes(cleanQuery)
         const matchesHome =
           (home?.team?.displayName || '').toLowerCase().includes(cleanQuery) ||
-          (home?.team?.abbreviation || '').toLowerCase().includes(cleanQuery)
+          (home?.team?.name || '').toLowerCase().includes(cleanQuery) ||
+          (home?.team?.abbreviation || '').toLowerCase().includes(cleanQuery) ||
+          (home?.team?.abbreviation === 'NE' && (cleanQuery.includes('pat') || cleanQuery.includes('fuck')))
         const matchesAway =
           (away?.team?.displayName || '').toLowerCase().includes(cleanQuery) ||
-          (away?.team?.abbreviation || '').toLowerCase().includes(cleanQuery)
+          (away?.team?.name || '').toLowerCase().includes(cleanQuery) ||
+          (away?.team?.abbreviation || '').toLowerCase().includes(cleanQuery) ||
+          (away?.team?.abbreviation === 'NE' && (cleanQuery.includes('pat') || cleanQuery.includes('fuck')))
 
         if (!matchesName && !matchesShort && !matchesHome && !matchesAway) {
           return false

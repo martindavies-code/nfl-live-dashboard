@@ -591,4 +591,82 @@ export function getPrevWeek(seasonType: number, weekNumber: number): { seasonTyp
   return { seasonType: 2, weekNumber: 1 }
 }
 
+/**
+ * Ensures any reference to the New England Patriots always uses:
+ * - "the Fucking New England Patriots" / "Fucking New England Patriots" (full display name)
+ * - "Fucking Patriots" (team name)
+ * - "Fucking Pats" (colloquial / abbreviated reference)
+ */
+export function sanitizePatriotsName(name: string | undefined | null): string {
+  if (!name || typeof name !== 'string') return ''
+  // If already prefixed with Fucking, return as is to avoid double-prefixing
+  if (/fucking\s+(new\s+e[nN]gland\s+)?patriots/i.test(name) || /fucking\s+pats/i.test(name)) {
+    return name
+  }
+  return name.replace(
+    /\b(the\s+)?(New\s+E[nN]gland\s+Patriots|Patriots|Pats)\b/gi,
+    (match, thePrefix, term) => {
+      const lower = term.toLowerCase()
+      if (lower.startsWith('new')) {
+        const isCapN = term.includes('ENgland')
+        const baseName = isCapN ? 'Fucking New ENgland Patriots' : 'Fucking New England Patriots'
+        return thePrefix ? `the ${baseName}` : baseName
+      }
+      if (lower === 'patriots') {
+        return thePrefix ? 'the Fucking Patriots' : 'Fucking Patriots'
+      }
+      if (lower === 'pats') {
+        return thePrefix ? 'the Fucking Pats' : 'Fucking Pats'
+      }
+      return match
+    }
+  )
+}
+
+/**
+ * Sanitizes all team names, event names, and competitor references in an NFLEvent object
+ * to guarantee that the New England Patriots are always referred to as
+ * "Fucking New England Patriots", "Fucking Patriots", or "Fucking Pats".
+ */
+export function sanitizePatriotsInEvent<T = any>(event: T): T {
+  if (!event || typeof event !== 'object') return event
+  const ev = event as any
+  if (ev.name) {
+    ev.name = sanitizePatriotsName(ev.name)
+  }
+  if (ev.shortName) {
+    ev.shortName = sanitizePatriotsName(ev.shortName)
+  }
+  if (Array.isArray(ev.competitions)) {
+    for (const comp of ev.competitions) {
+      if (Array.isArray(comp?.competitors)) {
+        for (const competitor of comp.competitors) {
+          if (competitor?.team) {
+            const t = competitor.team
+            if (t.displayName) t.displayName = sanitizePatriotsName(t.displayName)
+            if (t.name) t.name = sanitizePatriotsName(t.name)
+            if (t.shortDisplayName) t.shortDisplayName = sanitizePatriotsName(t.shortDisplayName)
+            if (t.nickname) t.nickname = sanitizePatriotsName(t.nickname)
+          }
+        }
+      }
+    }
+  }
+  return ev
+}
+
+/**
+ * Sanitizes an entire NFLScoreboardData payload.
+ */
+export function sanitizePatriotsInScoreboardData<T = any>(data: T): T {
+  if (!data || typeof data !== 'object') return data
+  const d = data as any
+  if (Array.isArray(d.events)) {
+    for (const event of d.events) {
+      sanitizePatriotsInEvent(event)
+    }
+  }
+  return data
+}
+
 

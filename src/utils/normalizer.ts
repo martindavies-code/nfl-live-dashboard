@@ -1,5 +1,5 @@
 import type { NFLSituation } from '../types/nfl'
-import { safeParseInt, sanitizeHexColor, getContrastYIQ, formatLocalizedKickoff } from './nflHelpers.ts'
+import { safeParseInt, sanitizeHexColor, getContrastYIQ, formatLocalizedKickoff, sanitizePatriotsName } from './nflHelpers.ts'
 
 export const FALLBACK_LOGO = 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nfl.png'
 
@@ -80,8 +80,8 @@ export function normalizeNFLEvent(raw: any, index = 0): NormalizedEvent {
     : {}
 
   const id = String(safeObj.id || comp.id || `match-${index}-${Date.now()}`)
-  const name = String(safeObj.name || 'NFL Matchup')
-  const shortName = String(safeObj.shortName || 'NFL')
+  const name = sanitizePatriotsName(String(safeObj.name || 'NFL Matchup'))
+  const shortName = sanitizePatriotsName(String(safeObj.shortName || 'NFL'))
   const dateStr = String(safeObj.date || comp.date || new Date().toISOString())
 
   const formattedKickoff = formatLocalizedKickoff(dateStr)
@@ -120,7 +120,8 @@ export function normalizeNFLEvent(raw: any, index = 0): NormalizedEvent {
     const t = (rawC.team && typeof rawC.team === 'object') ? rawC.team : {}
     const teamId = String(t.id || rawC.id || defaultAbbr)
     const abbr = String(t.abbreviation || defaultAbbr).toUpperCase()
-    const teamName = String(t.displayName || t.name || defaultName)
+    const rawTeamName = String(t.displayName || t.name || defaultName)
+    const teamName = sanitizePatriotsName(rawTeamName)
     const color = sanitizeHexColor(t.color, defaultAbbr === 'HOME' ? '#00338d' : '#b91c1c')
     const textColor = getContrastYIQ(color)
     const logo = sanitizeUrl(t.logo)
@@ -152,7 +153,7 @@ export function normalizeNFLEvent(raw: any, index = 0): NormalizedEvent {
       hasBall,
       team: {
         id: teamId,
-        name: String(t.name || defaultName),
+        name: sanitizePatriotsName(String(t.name || defaultName)),
         displayName: teamName,
         abbreviation: abbr,
         color,

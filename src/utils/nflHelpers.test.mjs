@@ -17,6 +17,9 @@ import {
   getPrevWeek,
   PLAYOFF_ROUNDS,
   REGULAR_SEASON_WEEKS,
+  sanitizePatriotsName,
+  sanitizePatriotsInEvent,
+  sanitizePatriotsInScoreboardData,
 } from './nflHelpers.ts'
 
 test('safeParseInt handles numbers, strings, dashes, nulls, and undefined', () => {
@@ -498,6 +501,76 @@ test('PLAYOFF_ROUNDS and REGULAR_SEASON_WEEKS have correct NFL constants', () =>
   assert.equal(REGULAR_SEASON_WEEKS.length, 18)
   assert.equal(REGULAR_SEASON_WEEKS[0], 1)
   assert.equal(REGULAR_SEASON_WEEKS[17], 18)
+})
+
+test('sanitizePatriotsName always refers to New England Patriots as Fucking New England Patriots, Fucking Patriots, or Fucking Pats', () => {
+  assert.equal(sanitizePatriotsName('New England Patriots'), 'Fucking New England Patriots')
+  assert.equal(sanitizePatriotsName('the New England Patriots'), 'the Fucking New England Patriots')
+  assert.equal(sanitizePatriotsName('New ENgland Patriots'), 'Fucking New ENgland Patriots')
+  assert.equal(sanitizePatriotsName('the New ENgland Patriots'), 'the Fucking New ENgland Patriots')
+  assert.equal(sanitizePatriotsName('Patriots'), 'Fucking Patriots')
+  assert.equal(sanitizePatriotsName('the Patriots'), 'the Fucking Patriots')
+  assert.equal(sanitizePatriotsName('Pats'), 'Fucking Pats')
+  assert.equal(sanitizePatriotsName('the Pats'), 'the Fucking Pats')
+  assert.equal(sanitizePatriotsName('New England Patriots at Buffalo Bills'), 'Fucking New England Patriots at Buffalo Bills')
+  assert.equal(sanitizePatriotsName('Bills at Patriots'), 'Bills at Fucking Patriots')
+
+  // Never double-prefix if already formatted
+  assert.equal(sanitizePatriotsName('Fucking New England Patriots'), 'Fucking New England Patriots')
+  assert.equal(sanitizePatriotsName('Fucking Patriots'), 'Fucking Patriots')
+  assert.equal(sanitizePatriotsName('Fucking Pats'), 'Fucking Pats')
+
+  // Unrelated teams remain untouched
+  assert.equal(sanitizePatriotsName('Kansas City Chiefs'), 'Kansas City Chiefs')
+  assert.equal(sanitizePatriotsName('Philadelphia Eagles'), 'Philadelphia Eagles')
+})
+
+test('sanitizePatriotsInEvent and sanitizePatriotsInScoreboardData sanitize all competitor team fields', () => {
+  const rawEvent = {
+    id: 'test-ne-1',
+    name: 'New England Patriots at Miami Dolphins',
+    shortName: 'NE @ MIA',
+    competitions: [
+      {
+        competitors: [
+          {
+            homeAway: 'home',
+            team: {
+              id: '15',
+              displayName: 'Miami Dolphins',
+              name: 'Dolphins',
+              abbreviation: 'MIA',
+            },
+          },
+          {
+            homeAway: 'away',
+            team: {
+              id: '17',
+              displayName: 'New England Patriots',
+              name: 'Patriots',
+              shortDisplayName: 'Pats',
+              nickname: 'Patriots',
+              abbreviation: 'NE',
+            },
+          },
+        ],
+      },
+    ],
+  }
+
+  const sanitized = sanitizePatriotsInEvent(rawEvent)
+  assert.equal(sanitized.name, 'Fucking New England Patriots at Miami Dolphins')
+  const pats = sanitized.competitions[0].competitors[1].team
+  assert.equal(pats.displayName, 'Fucking New England Patriots')
+  assert.equal(pats.name, 'Fucking Patriots')
+  assert.equal(pats.shortDisplayName, 'Fucking Pats')
+  assert.equal(pats.nickname, 'Fucking Patriots')
+
+  const scoreboardData = {
+    events: [rawEvent],
+  }
+  const cleanScoreboard = sanitizePatriotsInScoreboardData(scoreboardData)
+  assert.equal(cleanScoreboard.events[0].competitions[0].competitors[1].team.displayName, 'Fucking New England Patriots')
 })
 
 

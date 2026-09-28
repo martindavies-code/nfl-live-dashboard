@@ -12,7 +12,7 @@
 // -----------------------------------------------------------------------------
 
 import { HISTORICAL_OCCURRED, TOTAL_UNIQUE_SCORIGAMIS, type HistoricalScoreRecord } from './scorigamiHistoricalData.ts'
-import { isHalftimeSituation } from './nflHelpers.ts'
+import { isHalftimeSituation, sanitizePatriotsName } from './nflHelpers.ts'
 
 export interface ScorigamiInfo {
   /** True if the current score pair has never occurred in NFL history */
@@ -85,7 +85,7 @@ export function formatLastGameSummary(
   if (!winner || !loser || !isoDate) return null
   const [hi, lo] = scoreKey.split('-')
   const formattedDate = formatHistoricalDate(isoDate)
-  return `${winner} ${hi}, ${loser} ${lo} on ${formattedDate}`
+  return `${sanitizePatriotsName(winner)} ${hi}, ${sanitizePatriotsName(loser)} ${lo} on ${formattedDate}`
 }
 
 /**
@@ -213,8 +213,8 @@ export function getScorigamiInfo(
   const lastSeenYear = histRecord ? histRecord[1] : null
   const lastDateIso = histRecord ? histRecord[2] : null
   const lastDate = lastDateIso ? formatHistoricalDate(lastDateIso) : null
-  const lastWinner = histRecord ? histRecord[3] : null
-  const lastLoser = histRecord ? histRecord[4] : null
+  const lastWinner = histRecord ? sanitizePatriotsName(histRecord[3]) : null
+  const lastLoser = histRecord ? sanitizePatriotsName(histRecord[4]) : null
   const lastGameSummary = histRecord
     ? formatLastGameSummary(key, lastWinner, lastLoser, lastDateIso)
     : null

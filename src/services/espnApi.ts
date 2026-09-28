@@ -1,4 +1,5 @@
 import type { NFLScoreboardData, NFLEvent } from '../types/nfl'
+import { sanitizePatriotsInScoreboardData, sanitizePatriotsInEvent } from '../utils/nflHelpers.ts'
 
 export interface ScoreboardQueryParams {
   seasonType?: number // 1 = Preseason, 2 = Regular Season, 3 = Postseason (Playoffs)
@@ -182,8 +183,9 @@ export async function fetchNFLScoreboard(
             // Ignore localStorage quota or incognito limitations
           }
 
+          const sanitizedData = sanitizePatriotsInScoreboardData(parsedData)
           return {
-            data: parsedData,
+            data: sanitizedData,
             sourceId: source.id,
             sourceName: source.name,
             responseTimeMs,
@@ -212,7 +214,7 @@ export async function fetchNFLScoreboard(
         const cached = JSON.parse(cachedRaw)
         if (cached?.data?.events && Array.isArray(cached.data.events)) {
           return {
-            data: cached.data as NFLScoreboardData,
+            data: sanitizePatriotsInScoreboardData(cached.data as NFLScoreboardData),
             sourceId: 'offline-cache',
             sourceName: `${cached.sourceName} (Verified Real Cache)`,
             responseTimeMs: 0,
@@ -325,7 +327,7 @@ const SIMULATION_SCENARIOS = [
   },
 ]
 
-export function getMockLiveGames(seasonType: number = 2, week: number = 4): NFLEvent[] {
+function _getRawMockLiveGames(seasonType: number = 2, week: number = 4): NFLEvent[] {
   // 1. Super Bowl (Season Type 3, Week 5)
   if (seasonType === 3 && week === 5) {
     const currentScenario = SIMULATION_SCENARIOS[_sim.step % SIMULATION_SCENARIOS.length]
@@ -1259,4 +1261,8 @@ export function getMockLiveGames(seasonType: number = 2, week: number = 4): NFLE
       },
     },
   ]
+}
+
+export function getMockLiveGames(seasonType: number = 2, week: number = 4): NFLEvent[] {
+  return _getRawMockLiveGames(seasonType, week).map(sanitizePatriotsInEvent)
 }
