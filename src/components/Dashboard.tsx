@@ -12,6 +12,7 @@ import {
 import { fetchNFLScoreboard, type ScoreboardQueryParams } from '../services/espnApi'
 import { HeroMatchup } from './HeroMatchup'
 import { GameCard } from './GameCard'
+import { SlateBriefing } from './SlateBriefing'
 import {
   RefreshCw,
   Search,
@@ -774,6 +775,27 @@ export const Dashboard: React.FC = () => {
               </button>
             </div>
           </div>
+        )}
+
+        {/* EXECUTIVE SLATE BRIEFING: Situational Orientation & Guided User Journey (Kucharski Reason #1) */}
+        {!isLoading && events.length > 0 && (
+          <SlateBriefing
+            events={events}
+            seasonType={selectedSeasonType}
+            weekNumber={selectedWeek}
+            seasonYear={seasonYear}
+            activeFilter={filter}
+            onSelectFilter={(newFilter) => {
+              setFilter(newFilter)
+              playTactileClick(isMuted)
+            }}
+            onSpotlightEvent={(id) => {
+              setSelectedHeroId(id)
+              setAutoRedZoneSpotlight(false)
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+              playTactileClick(isMuted)
+            }}
+          />
         )}
 
         {/* SECTION 1: HERO SPOTLIGHT */}

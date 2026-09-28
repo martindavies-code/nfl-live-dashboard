@@ -23,6 +23,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   isAutoSelectedRedZone = false,
 }) => {
   const [isCopied, setIsCopied] = useState(false)
+  const [showScorigamiDetails, setShowScorigamiDetails] = useState(false)
   const competition = event.competitions?.[0]
   if (!competition) return null
 
@@ -102,10 +103,10 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
 
   return (
     <section
-      className={`relative overflow-hidden rounded-2xl border shadow-2xl transition-all duration-300 ${
+      className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
         isRedZone
-          ? 'border-rose-500/70 bg-gradient-to-b from-[#180d16] via-[#111927] to-[#0c1322] shadow-[0_0_35px_rgba(244,63,94,0.25)]'
-          : 'border-sky-500/40 bg-gradient-to-b from-[#0f172a] via-[#111927] to-[#0c1322] shadow-[0_0_30px_rgba(56,189,248,0.18)]'
+          ? 'card-tier-hero-redzone'
+          : 'card-tier-hero'
       }`}
       aria-labelledby="hero-matchup-heading"
     >
@@ -132,72 +133,53 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
         isRedZone ? 'border-rose-500/20 bg-[#12080d]' : 'border-white/[0.08] bg-[#090e18]'
       }`}>
         <div className="flex flex-wrap items-center gap-2.5">
-          <span className="flex items-center gap-1.5 rounded-full bg-sky-500/20 px-2.5 py-1 text-xs font-bold text-sky-300 border border-sky-500/40">
+          <span className="flex items-center gap-1.5 rounded-md bg-sky-500/20 px-2.5 py-1 text-xs font-bold text-sky-300 border border-sky-500/40">
             <Compass className="h-3.5 w-3.5" />
             SPOTLIGHT RADAR
           </span>
 
           {event.season?.type === 3 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-black tracking-wide text-amber-300 border border-amber-500/50 shadow-sm shadow-amber-950">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/20 px-2.5 py-1 text-xs font-bold tracking-wide text-amber-300 border border-amber-500/50">
               <Trophy className="h-3.5 w-3.5 text-amber-400" />
               {getWeekLabel(3, event.week?.number).toUpperCase()}
             </span>
           )}
 
           {isRedZone && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600/30 border border-rose-500/60 px-2.5 py-1 text-xs font-black tracking-wide text-rose-200 animate-pulse shadow-sm shadow-rose-950">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-600/30 border border-rose-500/60 px-2.5 py-1 text-xs font-bold tracking-wide text-rose-200 animate-pulse">
               <Flame className="h-3.5 w-3.5 text-rose-400 fill-rose-400" />
-              RED ZONE THREAT
+              {isAutoSelectedRedZone ? 'AUTO-TRACKED RED ZONE' : 'RED ZONE THREAT'}
             </span>
           )}
 
           {isHalftime ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-bold text-amber-300 border border-amber-500/30">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/20 px-2.5 py-1 text-xs font-bold text-amber-300 border border-amber-500/30">
               <Pause className="h-3.5 w-3.5 text-amber-400" />
               AT HALFTIME
             </span>
           ) : isLive ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/20 px-2.5 py-1 text-xs font-bold text-rose-300 border border-rose-500/30">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-500/20 px-2.5 py-1 text-xs font-bold text-rose-300 border border-rose-500/30">
               <Radio className="h-3.5 w-3.5 animate-pulse" />
               LIVE IN PROGRESS
             </span>
           ) : isFinal ? (
-            <span className="rounded bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-300">
+            <span className="rounded-md bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-300">
               FINAL RECAP
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 rounded bg-sky-950 px-2.5 py-1 text-xs font-semibold text-sky-300 border border-sky-800/40">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-950 px-2.5 py-1 text-xs font-semibold text-sky-300 border border-sky-800/40">
               <Clock className="h-3.5 w-3.5 text-sky-400" />
               KICKOFF: {formattedKickoff.toUpperCase()}
             </span>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
-          {/* 1-Click Share Snapshot Button */}
-          <button
-            onClick={handleCopySnapshot}
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold border transition-all ${
-              isCopied
-                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-                : 'bg-sky-500/15 border-sky-500/40 text-sky-200 hover:bg-sky-500/25 hover:text-white'
-            }`}
-            title="Copy live score snapshot to clipboard for sharing"
-            aria-label={isCopied ? "Live score snapshot copied to clipboard" : "Share live score snapshot"}
-          >
-            {isCopied ? (
-              <Check className="h-3.5 w-3.5 text-emerald-400" />
-            ) : (
-              <Share2 className="h-3.5 w-3.5 text-sky-400" />
-            )}
-            <span>{isCopied ? 'Copied!' : 'Share Score'}</span>
-          </button>
-
+        <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-400">
           {/* Interactive Auto Red Zone Toggle */}
           {onToggleAutoRedZone && (
             <button
               onClick={onToggleAutoRedZone}
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold border transition-all ${
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold border transition-all ${
                 autoRedZone
                   ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 shadow-sm'
                   : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
@@ -213,26 +195,24 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             </button>
           )}
 
-          {isLive && isRedZone && !isAutoSelectedRedZone && (
-            <span className="inline-flex items-center gap-1 rounded bg-rose-600/30 border border-rose-500/40 px-2 py-0.5 text-xs font-bold text-rose-300 animate-pulse">
-              <Flame className="h-3.5 w-3.5 text-rose-400 fill-rose-400" />
-              RED ZONE DRIVE
-            </span>
-          )}
-
-          {/* UK TV & Radio Badges in Spotlight Header */}
-          <span className="inline-flex items-center gap-1 rounded bg-sky-500/15 border border-sky-500/30 px-2 py-0.5 text-xs font-semibold text-sky-200" title={`UK TV: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})`}>
-            <Tv className="h-3 w-3 text-sky-400" />
-            {broadcastDetails.ukTvShort}
-          </span>
-          <span className="hidden sm:inline-flex items-center gap-1 rounded bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-xs font-semibold text-amber-200" title={`UK Radio: ${broadcastDetails.ukRadio} (${broadcastDetails.ukRadioFrequency})`}>
-            <Radio className="h-3 w-3 text-amber-400" />
-            {broadcastDetails.ukRadioShort}
-          </span>
-          <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-slate-800/90 border border-slate-700/60 px-2.5 py-0.5 text-xs font-semibold text-slate-300" title={`Live Announcers: ${broadcastDetails.announcers.fullCrew}`}>
-            <Mic className="h-3 w-3 text-rose-400" />
-            {broadcastDetails.announcers.leadDuo}
-          </span>
+          {/* 1-Click Share Snapshot Button */}
+          <button
+            onClick={handleCopySnapshot}
+            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold border transition-all ${
+              isCopied
+                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                : 'bg-sky-500/15 border-sky-500/40 text-sky-200 hover:bg-sky-500/25 hover:text-white'
+            }`}
+            title="Copy live score snapshot to clipboard for sharing"
+            aria-label={isCopied ? "Live score snapshot copied to clipboard" : "Share live score snapshot"}
+          >
+            {isCopied ? (
+              <Check className="h-3.5 w-3.5 text-emerald-400" />
+            ) : (
+              <Share2 className="h-3.5 w-3.5 text-sky-400" />
+            )}
+            <span>{isCopied ? 'Copied' : 'Share'}</span>
+          </button>
         </div>
       </div>
 
@@ -434,51 +414,64 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             odds={competition.odds}
           />
 
-          {/* Spotlight Scorigami Novelty & Projection Section */}
+          {/* Spotlight Scorigami Historical Milestone Section */}
           <div
-            className={`rounded-xl border p-3.5 text-xs transition-colors ${
+            className={`rounded-xl border p-3 text-xs transition-colors ${
               scorigamiInfo.isCurrentScorigami
-                ? 'border-violet-500/50 bg-gradient-to-r from-violet-950/70 to-purple-950/60 text-violet-200 shadow-md shadow-violet-950/50'
+                ? 'border-indigo-500/50 bg-gradient-to-r from-indigo-950/60 to-slate-900/80 text-indigo-200 shadow-md shadow-indigo-950/40'
                 : 'border-white/[0.08] bg-[#090e18] text-slate-300'
             }`}
           >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-2 mb-2">
-              <span className="flex items-center gap-1.5 font-bold tracking-wider uppercase text-[11px] text-slate-400">
-                <Sparkles className={`h-3.5 w-3.5 ${scorigamiInfo.isCurrentScorigami ? 'text-violet-400 animate-pulse' : 'text-slate-500'}`} />
-                {scorigamiInfo.isCurrentScorigami ? '✨ Live Scorigami in Progress' : 'Scorigami Probability'}
-              </span>
-              <span
-                className={`font-mono font-bold text-xs tabular-nums px-2 py-0.5 rounded ${
-                  scorigamiInfo.isCurrentScorigami
-                    ? 'bg-violet-500/20 text-violet-200 border border-violet-500/40'
-                    : 'bg-white/[0.06] text-slate-200 border border-white/[0.08]'
-                }`}
-              >
-                {scorigamiInfo.chanceLabel}
-              </span>
-            </div>
-
-            {scorigamiInfo.mostLikelyNovel && (
-              <div className="flex items-center justify-between py-1">
-                <span className="text-slate-400 text-xs">Most Likely Scorigami:</span>
-                <span className="font-mono text-sm font-bold text-violet-300 bg-violet-950/80 px-2 py-0.5 rounded border border-violet-700/50">
-                  {scorigamiInfo.mostLikelyLabel}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className={`h-3.5 w-3.5 ${scorigamiInfo.isCurrentScorigami ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
+                <span className="font-bold text-slate-300">
+                  {scorigamiInfo.isCurrentScorigami ? '✨ Live Scorigami in Progress' : 'Historical Scorigami Chance'}
                 </span>
               </div>
-            )}
-
-            <div className="mt-1.5 text-xs leading-relaxed text-slate-400">
-              <span className="font-semibold text-slate-200">When: </span>
-              {scorigamiInfo.whenScenario}
+              <div className="flex items-center gap-2">
+                <span
+                  className={`font-mono font-bold text-xs tabular-nums px-2 py-0.5 rounded-md ${
+                    scorigamiInfo.isCurrentScorigami
+                      ? 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/40'
+                      : 'bg-white/[0.06] text-slate-200 border border-white/[0.08]'
+                  }`}
+                >
+                  {scorigamiInfo.chanceLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowScorigamiDetails((prev) => !prev)}
+                  className="text-xs font-semibold text-sky-400 hover:text-sky-300 underline underline-offset-2 focus:outline-none"
+                  aria-expanded={showScorigamiDetails}
+                  aria-label={showScorigamiDetails ? "Collapse Scorigami details" : "Expand Scorigami details"}
+                >
+                  {showScorigamiDetails ? 'Less' : 'Details'}
+                </button>
+              </div>
             </div>
 
-            {scorigamiInfo.lastGameSummary && (
-              <div className="mt-2 flex items-start gap-1.5 text-xs text-slate-400 border-t border-white/[0.06] pt-2">
-                <span className="font-semibold text-slate-200 flex-shrink-0">Last Occurred:</span>
-                <span className="text-slate-300">
-                  <strong className="text-amber-300/90 font-medium">{scorigamiInfo.lastGameSummary}</strong>
-                  <span className="text-slate-400 ml-1.5 font-mono text-[11px]">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
-                </span>
+            {showScorigamiDetails && (
+              <div className="mt-2.5 pt-2 border-t border-white/[0.06] space-y-1.5 text-xs text-slate-400">
+                {scorigamiInfo.mostLikelyNovel && (
+                  <div className="flex items-center justify-between">
+                    <span>Most Likely Scorigami:</span>
+                    <strong className="font-mono font-bold text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-700/40">
+                      {scorigamiInfo.mostLikelyLabel}
+                    </strong>
+                  </div>
+                )}
+                <div>
+                  <span className="font-semibold text-slate-300">When: </span>
+                  {scorigamiInfo.whenScenario}
+                </div>
+                {scorigamiInfo.lastGameSummary && (
+                  <div className="border-t border-white/[0.06] pt-1.5 text-slate-400">
+                    <span className="font-semibold text-slate-300">Last Occurred: </span>
+                    <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
+                    <span className="text-slate-500 ml-1 font-mono text-[11px]">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

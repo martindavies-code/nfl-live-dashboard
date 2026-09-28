@@ -2,8 +2,8 @@
 
 @theme {
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-display: 'Oswald', 'Chakra Petch', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Oswald', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 /* Custom scrollbars */
@@ -12,7 +12,7 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #070b14;
 }
 ::-webkit-scrollbar-thumb {
   background: #1e293b;
@@ -25,11 +25,61 @@
 /* Tabular numerals for non-jittery live clocks and scores */
 .tabular-numbers {
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 /* Smooth transitions */
 * {
   box-sizing: border-box;
+}
+
+/* 4-Tier Visual Hierarchy System (Kucharski Reason #2 Fix) */
+/* Tier 1: Hero Command Spotlight */
+.card-tier-hero {
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: linear-gradient(180deg, #0f172a 0%, #0c1322 100%);
+  box-shadow: 0 10px 30px -5px rgba(2, 6, 23, 0.8), 0 0 25px rgba(56, 189, 248, 0.15);
+}
+
+.card-tier-hero-redzone {
+  border: 1px solid rgba(244, 63, 94, 0.7);
+  background: linear-gradient(180deg, #180d16 0%, #0c1322 100%);
+  box-shadow: 0 10px 30px -5px rgba(2, 6, 23, 0.8), 0 0 35px rgba(244, 63, 94, 0.25);
+}
+
+/* Tier 2: Live In-Progress / Urgent Red Zone Cards */
+.card-tier-live {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #0e1524;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+}
+.card-tier-live:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: #111a2d;
+}
+
+.card-tier-redzone {
+  border: 1px solid rgba(244, 63, 94, 0.8);
+  background: linear-gradient(180deg, rgba(244, 63, 94, 0.12) 0%, #0c1322 100%);
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
+}
+
+/* Tier 3: Halftime Intermission */
+.card-tier-halftime {
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, #0c1322 100%);
+}
+
+/* Tier 4: Dormant (Upcoming Scheduled & Final Recap Cards) */
+.card-tier-dormant {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(10, 15, 27, 0.75);
+  opacity: 0.88;
+}
+.card-tier-dormant:hover {
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(14, 21, 36, 0.9);
 }
 
 /* Accessibility: Respect Reduced Motion Preferences */
@@ -61,3 +111,4 @@
   outline: 2px solid #38bdf8 !important;
   outline-offset: 2px !important;
 }
+

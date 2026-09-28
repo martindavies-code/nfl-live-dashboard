@@ -74,16 +74,16 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
       aria-label={`Win probability: ${homeAbbr} ${homePct.toFixed(1)}%, ${awayAbbr} ${awayPct.toFixed(1)}% (${modelSource})`}
     >
       {/* High-Impact Broadcast Dual Header */}
-      <div className="mb-2.5 flex items-center justify-between gap-2">
+      <div className="mb-2 flex items-center justify-between gap-1">
         {/* Home Team Probability Capsule */}
-        <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 transition-all ${
+        <div className={`flex items-center gap-1.5 rounded-lg px-2 py-1 transition-all ${
           isHomeFavored
             ? 'bg-white/[0.06] border border-white/[0.12] shadow-sm'
             : 'bg-transparent'
         }`}>
           <div className="relative flex items-center gap-1.5">
             <span
-              className="h-3 w-3 rounded-full ring-2 ring-white/30 shrink-0 shadow-sm"
+              className="h-2.5 w-2.5 rounded-full ring-2 ring-white/30 shrink-0 shadow-sm"
               style={{ backgroundColor: homeColor }}
             />
             {safeHomeComp.team?.logo && (
@@ -97,19 +97,12 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
                 }}
               />
             )}
-            <div className="flex flex-col">
-              <span className="font-extrabold text-xs text-white tracking-wide leading-tight">
-                {homeAbbr}
-              </span>
-              {isHomeFavored && (
-                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider -mt-0.5">
-                  Favored
-                </span>
-              )}
-            </div>
+            <span className="font-extrabold text-xs text-white tracking-wide leading-tight">
+              {homeAbbr}
+            </span>
           </div>
           <span
-            className="font-mono text-base sm:text-lg font-black tracking-tight tabular-nums ml-1"
+            className="font-mono text-sm sm:text-base font-black tracking-tight tabular-nums ml-0.5"
             style={{ color: isHomeFavored ? '#38bdf8' : '#e2e8f0' }}
           >
             {homePct.toFixed(1)}%
@@ -118,35 +111,28 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
 
         {/* Center Win Probability Pill */}
         <div className="flex flex-col items-center shrink-0 px-1">
-          <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.05] border border-white/[0.08] px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-slate-400">
-            <Activity className="h-2.5 w-2.5 text-sky-400" />
+          <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.05] border border-white/[0.08] px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider text-slate-300">
+            <Activity className="h-3 w-3 text-sky-400" />
             WIN PROB
           </span>
         </div>
 
         {/* Away Team Probability Capsule */}
-        <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 transition-all ${
+        <div className={`flex items-center gap-1.5 rounded-lg px-2 py-1 transition-all ${
           isAwayFavored
             ? 'bg-white/[0.06] border border-white/[0.12] shadow-sm'
             : 'bg-transparent'
         }`}>
           <span
-            className="font-mono text-base sm:text-lg font-black tracking-tight tabular-nums mr-1"
+            className="font-mono text-sm sm:text-base font-black tracking-tight tabular-nums mr-0.5"
             style={{ color: isAwayFavored ? '#f43f5e' : '#e2e8f0' }}
           >
             {awayPct.toFixed(1)}%
           </span>
           <div className="relative flex items-center gap-1.5">
-            <div className="flex flex-col items-end">
-              <span className="font-extrabold text-xs text-white tracking-wide leading-tight">
-                {awayAbbr}
-              </span>
-              {isAwayFavored && (
-                <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider -mt-0.5">
-                  Favored
-                </span>
-              )}
-            </div>
+            <span className="font-extrabold text-xs text-white tracking-wide leading-tight">
+              {awayAbbr}
+            </span>
             {safeAwayComp.team?.logo && (
               <img
                 src={safeAwayComp.team.logo}
@@ -159,7 +145,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
               />
             )}
             <span
-              className="h-3 w-3 rounded-full ring-2 ring-white/30 shrink-0 shadow-sm"
+              className="h-2.5 w-2.5 rounded-full ring-2 ring-white/30 shrink-0 shadow-sm"
               style={{ backgroundColor: awayColor }}
             />
           </div>
@@ -241,30 +227,29 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
       </div>
 
       {/* Bar Scale Labels (25%, 50%, 75%) */}
-      <div className="mt-1 flex items-center justify-between px-1 text-[9px] font-mono text-slate-400">
+      <div className="mt-1.5 flex items-center justify-between px-1 text-xs font-mono text-slate-400">
         <span>{homeAbbr} 100%</span>
-        <span className="text-slate-400">25%</span>
-        <span className="font-bold text-slate-300">50% TIE</span>
-        <span className="text-slate-400">75%</span>
+        <span>25%</span>
+        <span className="font-bold text-slate-200">50% EVEN</span>
+        <span>75%</span>
         <span>{awayAbbr} 100%</span>
       </div>
 
       {/* Favored / Projected Insight Strip */}
-      <div className="mt-2.5 flex items-center justify-between text-xs text-slate-300 border-t border-white/[0.06] pt-2">
-        <div className="truncate min-w-0 mr-2 flex items-center gap-1.5">
+      <div className="mt-2 flex items-center justify-between text-xs text-slate-300 border-t border-white/[0.06] pt-1.5">
+        <div className="truncate min-w-0 mr-1.5 flex items-center gap-1">
           {isHomeFavored || isAwayFavored ? (
-            <span className="flex items-center gap-1 truncate">
+            <span className="flex items-center gap-1 truncate text-xs">
               <TrendingUp className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-              <strong className="text-white font-bold">{favoredName}</strong>
-              <span className="text-slate-400">holds a</span>
-              <span className="font-mono font-black text-emerald-400">+{spreadPct}%</span>
-              <span className="text-slate-400">probability edge</span>
+              <strong className="text-white font-bold truncate">{favoredName}</strong>
+              <span className="font-mono font-black text-emerald-400 shrink-0">+{spreadPct}%</span>
+              <span className="text-slate-400 shrink-0">edge</span>
             </span>
           ) : (
             <span className="text-slate-400 font-medium">Even matchup (50.0% / 50.0%)</span>
           )}
         </div>
-        <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase shrink-0 bg-white/[0.04] px-2 py-0.5 rounded border border-white/[0.06]">
+        <span className="text-xs font-mono font-semibold text-slate-400 uppercase shrink-0 bg-white/[0.04] px-1.5 py-0.5 rounded-md border border-white/[0.06]">
           {modelSource}
         </span>
       </div>

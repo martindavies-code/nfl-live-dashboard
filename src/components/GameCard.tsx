@@ -6,8 +6,6 @@ import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituat
 import { 
   Tv, 
   Flame, 
-  ChevronDown, 
-  ChevronUp, 
   Clock, 
   Activity,
   Maximize2,
@@ -38,16 +36,16 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   showField: controlledShowField,
   onToggleAllRadars
 }) => {
-  const [internalShowField, setInternalShowField] = useState(false)
-  const isFieldExpanded = controlledShowField !== undefined ? controlledShowField : internalShowField
+  const [activeTab, setActiveTab] = useState<'radar' | 'broadcast' | 'scorigami' | null>(null)
+  const isFieldExpanded = controlledShowField || activeTab === 'radar'
 
-  const handleToggleRadar = (e: React.MouseEvent) => {
+  const handleToggleTab = (tab: 'radar' | 'broadcast' | 'scorigami', e: React.MouseEvent) => {
     e.stopPropagation()
-    if (onToggleAllRadars) {
+    if (tab === 'radar' && onToggleAllRadars && controlledShowField !== undefined) {
       onToggleAllRadars()
-    } else {
-      setInternalShowField(!internalShowField)
+      return
     }
+    setActiveTab((prev) => (prev === tab ? null : tab))
   }
 
   const competition = event.competitions?.[0]
@@ -86,7 +84,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const isRedZone = isRedZoneSituation(situation, status, competitors)
   const isHalftime = isHalftimeSituation(status, situation)
 
-  // Format kick-off date for pre-game localized to London, UK timezone
+  // Format kick-off date for pre-game localized to user's timezone
   const formattedKickoff = formatLocalizedKickoff(event.date)
 
   const downAndDistance = formatDownAndDistance(situation)
@@ -114,25 +112,23 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           onSpotlight()
         }
       }}
-      className={`group relative flex flex-col rounded-xl border transition-all duration-300 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b14] ${
+      className={`group relative flex flex-col rounded-xl transition-all duration-200 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b14] ${
         onSpotlight && !isSpotlighted ? 'cursor-pointer hover:-translate-y-0.5' : ''
       } ${
-        isRedZone && isSpotlighted
-          ? 'border-rose-500/90 ring-2 ring-sky-400 ring-offset-2 ring-offset-[#070b14] bg-gradient-to-b from-rose-950/30 via-[#101726] to-[#0a0f1b] shadow-[0_0_28px_rgba(244,63,94,0.38),0_0_16px_rgba(56,189,248,0.35)]'
-          : isRedZone
-          ? 'border-rose-500/90 ring-2 ring-rose-500/70 bg-gradient-to-b from-rose-950/30 via-[#0e1524] to-[#0a0f1b] shadow-[0_0_24px_rgba(244,63,94,0.38)]'
+        isRedZone
+          ? 'card-tier-redzone'
           : isSpotlighted
-          ? 'border-sky-400/90 ring-2 ring-sky-400/80 bg-gradient-to-b from-sky-950/30 via-[#101726] to-[#0a0f1b] shadow-[0_0_24px_rgba(56,189,248,0.35)]'
+          ? 'border border-sky-400/90 ring-2 ring-sky-400/80 bg-[#101726] shadow-[0_0_24px_rgba(56,189,248,0.3)]'
+          : isHalftime
+          ? 'card-tier-halftime'
           : isLive
-          ? 'border-white/[0.12] bg-[#0e1524] hover:border-white/[0.25] hover:bg-[#11192b]'
-          : 'border-white/[0.05] bg-[#0a0f1b]/80 opacity-90 hover:opacity-100 hover:border-white/[0.12]'
+          ? 'card-tier-live'
+          : 'card-tier-dormant'
       }`}
     >
       {/* TOP ACCENT BAR FOR INSTANT PERIPHERAL SCANNING */}
-      {isRedZone && isSpotlighted ? (
-        <div className="h-1.5 w-full bg-gradient-to-r from-rose-500 via-fuchsia-500 to-sky-400 animate-pulse" />
-      ) : isRedZone ? (
-        <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-rose-500 to-red-600 animate-pulse" />
+      {isRedZone ? (
+        <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 animate-pulse" />
       ) : isSpotlighted ? (
         <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 shadow-sm" />
       ) : null}
@@ -386,93 +382,64 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           situation={situation}
           odds={competition.odds}
         />
-        {/* Scorigami Novelty & Projection Section */}
-        <div
-          className={`mt-2.5 rounded-lg border px-3 py-2 text-xs transition-colors ${
-            scorigamiInfo.isCurrentScorigami
-              ? 'border-violet-500/50 bg-gradient-to-r from-violet-950/70 to-purple-950/60 text-violet-200 shadow-sm shadow-violet-950/50'
-              : 'border-white/[0.08] bg-[#070c16] text-slate-300'
-          }`}
-        >
-          <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] pb-1.5 mb-1.5">
-            <span className="flex items-center gap-1.5 font-bold tracking-wider uppercase text-[10px] text-slate-400">
-              <Sparkles className={`h-3 w-3 ${scorigamiInfo.isCurrentScorigami ? 'text-violet-400 animate-pulse' : 'text-slate-500'}`} />
-              {scorigamiInfo.isCurrentScorigami ? '✨ Active Scorigami' : 'Scorigami Chance'}
-            </span>
-            <span
-              className={`font-mono font-bold text-xs tabular-nums px-1.5 py-0.5 rounded ${
-                scorigamiInfo.isCurrentScorigami
-                  ? 'bg-violet-500/20 text-violet-200 border border-violet-500/40'
-                  : 'bg-white/[0.04] text-slate-300'
-              }`}
-            >
-              {scorigamiInfo.chanceLabel}
-            </span>
-          </div>
-
-          {scorigamiInfo.mostLikelyNovel && (
-            <div className="flex items-center justify-between text-[11px] font-medium text-slate-300">
-              <span className="text-slate-400">Most Likely Scorigami:</span>
-              <strong className="font-mono text-xs font-bold text-violet-300 bg-violet-950/60 px-1.5 py-0.5 rounded border border-violet-800/40">
-                {scorigamiInfo.mostLikelyLabel}
-              </strong>
-            </div>
-          )}
-
-          <div className="mt-1 text-[11px] leading-relaxed text-slate-400">
-            <span className="font-semibold text-slate-300">When: </span>
-            {scorigamiInfo.whenScenario}
-          </div>
-
-          {scorigamiInfo.lastGameSummary && (
-            <div className="mt-2 flex items-start gap-1.5 text-xs text-slate-400 border-t border-white/[0.06] pt-1.5">
-              <span className="font-semibold text-slate-300 flex-shrink-0">Last Occurred:</span>
-              <span className="text-slate-300 leading-snug">
-                <strong className="text-amber-300/90 font-medium">{scorigamiInfo.lastGameSummary}</strong>
-                <span className="text-slate-500 ml-1.5 font-mono text-[10px]">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* UK Broadcast, Radio & Live Announcers Strip */}
-        <div className="mt-2.5 rounded-lg border border-white/[0.06] bg-[#070c16] p-2 text-xs space-y-1.5">
-          <div className="flex items-center justify-between text-[11px] gap-2">
-            <span className="flex items-center gap-1.5 text-sky-300 font-semibold truncate" title={`UK Television: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})`}>
-              <Tv className="h-3 w-3 text-sky-400 flex-shrink-0" />
-              <span className="truncate">{broadcastDetails.ukTvShort}</span>
-            </span>
-            <span className="flex items-center gap-1 text-amber-300 font-medium text-[10px] truncate" title={`UK Radio Broadcast: ${broadcastDetails.ukRadio} (${broadcastDetails.ukRadioFrequency})`}>
-              <Radio className="h-3 w-3 text-amber-400 flex-shrink-0" />
-              <span className="truncate">{broadcastDetails.ukRadioShort}</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-300 border-t border-white/[0.04] pt-1" title={`Announcers calling the game: ${broadcastDetails.announcers.fullCrew}`}>
-            <Mic className="h-3 w-3 text-rose-400 flex-shrink-0" />
-            <span className="text-slate-200 font-medium truncate">{broadcastDetails.announcers.leadDuo}</span>
-            <span className="text-slate-500 text-[10px] shrink-0 ml-auto font-mono">({broadcastDetails.usTv})</span>
-          </div>
-        </div>
       </div>
 
-      {/* Expandable Field Radar Toggle */}
-      <div className="border-t border-white/[0.06] bg-[#070b14] px-4 py-1.5 mt-auto">
-        <button
-          onClick={handleToggleRadar}
-          className="flex w-full items-center justify-between text-xs text-slate-400 hover:text-white transition-colors min-h-[44px] py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded-lg px-1"
-          aria-expanded={isFieldExpanded}
-          aria-controls={fieldPanelId}
-          aria-label={isFieldExpanded ? `Hide field diagram for ${awayAbbr} at ${homeAbbr}` : `View live field diagram for ${awayAbbr} at ${homeAbbr}`}
-        >
-          <span className="font-semibold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+      {/* Progressive Disclosure Action Toolbar (Kucharski Reason #4 & #6 Fix) */}
+      <div className="border-t border-white/[0.06] bg-[#070b14] px-3 py-2 mt-auto">
+        <div className="flex items-center justify-between gap-1 text-xs">
+          {/* Radar Tab */}
+          <button
+            type="button"
+            onClick={(e) => handleToggleTab('radar', e)}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[36px] ${
+              isFieldExpanded
+                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+            }`}
+            aria-expanded={isFieldExpanded}
+            aria-controls={fieldPanelId}
+            aria-label={isFieldExpanded ? `Collapse field radar for ${awayAbbr} at ${homeAbbr}` : `View field radar for ${awayAbbr} at ${homeAbbr}`}
+          >
             <Compass className={`h-3.5 w-3.5 ${isFieldExpanded ? 'text-sky-400' : 'text-slate-400'}`} />
-            {isFieldExpanded ? 'Hide Field Radar' : 'View Field Radar'}
-          </span>
-          {isFieldExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
+            <span>Radar</span>
+          </button>
 
+          {/* Broadcast Tab */}
+          <button
+            type="button"
+            onClick={(e) => handleToggleTab('broadcast', e)}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[36px] ${
+              activeTab === 'broadcast'
+                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+            }`}
+            aria-expanded={activeTab === 'broadcast'}
+            aria-label="View UK television, UK radio, and live commentary booth"
+          >
+            <Tv className={`h-3.5 w-3.5 ${activeTab === 'broadcast' ? 'text-sky-400' : 'text-slate-400'}`} />
+            <span>Broadcast</span>
+          </button>
+
+          {/* Scorigami Tab */}
+          <button
+            type="button"
+            onClick={(e) => handleToggleTab('scorigami', e)}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[36px] ${
+              activeTab === 'scorigami'
+                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+            }`}
+            aria-expanded={activeTab === 'scorigami'}
+            aria-label="View historical Scorigami probability and unique score metrics"
+          >
+            <Sparkles className={`h-3.5 w-3.5 ${activeTab === 'scorigami' ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
+            <span>Scorigami</span>
+          </button>
+        </div>
+
+        {/* Dynamic Expanded Section: Radar */}
         {isFieldExpanded && (
-          <div id={fieldPanelId} className="pt-2 pb-1" role="region" aria-label="Field position view">
+          <div id={fieldPanelId} className="pt-2 pb-1 border-t border-white/[0.06] mt-2" role="region" aria-label="Field position view">
             <FieldDiagram
               situation={situation}
               competitors={competitors}
@@ -480,6 +447,64 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               gameStatusDetail={isHalftime ? 'At Halftime' : status?.type?.detail}
               status={status}
             />
+          </div>
+        )}
+
+        {/* Dynamic Expanded Section: Broadcast & Booth */}
+        {activeTab === 'broadcast' && (
+          <div className="pt-2.5 pb-1 border-t border-white/[0.06] mt-2 space-y-2 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5 text-sky-300 font-semibold" title={`UK Television: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})`}>
+                <Tv className="h-3.5 w-3.5 text-sky-400 shrink-0" />
+                <span>{broadcastDetails.ukTv}</span>
+                <span className="text-slate-400 font-mono text-[11px]">({broadcastDetails.ukTvChannelNumber})</span>
+              </span>
+              <span className="flex items-center gap-1 text-amber-300 font-medium text-[11px]" title={`UK Radio Broadcast: ${broadcastDetails.ukRadio} (${broadcastDetails.ukRadioFrequency})`}>
+                <Radio className="h-3 w-3 text-amber-400 shrink-0" />
+                <span>{broadcastDetails.ukRadioShort}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-slate-300 border-t border-white/[0.04] pt-1.5">
+              <Mic className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+              <span className="text-white font-medium">{broadcastDetails.announcers.leadDuo}</span>
+              <span className="text-slate-400 text-[11px] shrink-0 ml-auto font-mono">({broadcastDetails.usTv})</span>
+            </div>
+            {broadcastDetails.announcers.sideline && (
+              <div className="text-[11px] text-slate-400 pl-5">
+                Sideline: <span className="text-slate-300">{broadcastDetails.announcers.sideline}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Dynamic Expanded Section: Scorigami */}
+        {activeTab === 'scorigami' && (
+          <div className="pt-2.5 pb-1 border-t border-white/[0.06] mt-2 space-y-1.5 text-xs text-slate-300">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-bold text-slate-200 flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-indigo-400" />
+                {scorigamiInfo.isCurrentScorigami ? 'Live Scorigami Active' : 'Scorigami Chance'}
+              </span>
+              <span className="font-mono font-bold text-xs bg-indigo-950/80 text-indigo-300 px-2 py-0.5 rounded border border-indigo-700/40">
+                {scorigamiInfo.chanceLabel}
+              </span>
+            </div>
+            {scorigamiInfo.mostLikelyNovel && (
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">Most Likely:</span>
+                <span className="font-mono font-bold text-indigo-200">{scorigamiInfo.mostLikelyLabel}</span>
+              </div>
+            )}
+            <div className="text-[11px] text-slate-400">
+              <span className="text-slate-300 font-semibold">Scenario: </span>
+              {scorigamiInfo.whenScenario}
+            </div>
+            {scorigamiInfo.lastGameSummary && (
+              <div className="text-[11px] text-slate-400 border-t border-white/[0.04] pt-1">
+                Last: <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
+                <span className="text-slate-500 ml-1">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
+              </div>
+            )}
           </div>
         )}
       </div>

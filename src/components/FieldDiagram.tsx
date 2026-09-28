@@ -460,20 +460,21 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 strokeWidth="3.5"
               />
 
-              {/* Direct Line of Scrimmage Label */}
+              {/* Direct Line of Scrimmage Label (Spelled out to avoid obscure acronyms - Kucharski #5 & #6) */}
               <g transform={`translate(${losBadgeX}, 18)`}>
-                <rect x="-22" y="-12" width="44" height="20" rx="4" fill="#0284c7" />
+                <rect x="-38" y="-12" width="76" height="20" rx="4" fill="#0284c7" />
                 <text
                   x="0"
                   y="2"
                   fill="#ffffff"
-                  fontSize="10"
+                  fontSize="9.5"
                   fontWeight="800"
                   fontFamily="var(--font-mono)"
                   textAnchor="middle"
                   dominantBaseline="middle"
+                  letterSpacing="0.5"
                 >
-                  LOS
+                  SCRIMMAGE
                 </text>
               </g>
 
@@ -678,8 +679,8 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
       </div>
 
       {/* Direct In-place Context Strip */}
-      <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#080d16] px-3.5 py-1.5 text-[11px] text-slate-400">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#080d16] px-3 py-1.5 text-xs text-slate-400">
+        <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
           <span className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-sm bg-sky-400" />
             <strong className="text-slate-300">Scrimmage:</strong> {isHalftime ? 'At Halftime' : hasSituation ? losLabel : '50 YD'}
@@ -691,8 +692,8 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
           </span>
         </div>
 
-        <span className="font-mono text-[10px] text-slate-400">
-          100-Yard Field • Endzones 10 Yds
+        <span className="font-mono text-xs text-slate-500 hidden xl:inline">
+          100-Yd Field
         </span>
       </div>
     </div>
