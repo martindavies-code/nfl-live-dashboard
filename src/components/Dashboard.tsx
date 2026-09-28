@@ -153,9 +153,17 @@ export const Dashboard: React.FC = () => {
     } catch (err: unknown) {
       const isAbort = err instanceof Error && err.name === 'AbortError'
       if (!isAbort) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to fetch live games from ESPN API'
-        console.error('Error fetching scoreboard:', err)
-        setError(errorMsg)
+        console.warn('ESPN API direct connection unavailable (e.g. CORS on static hosting). Activating simulation fallback:', err)
+        const mockEvents = getMockLiveGames(targetSeasonType, targetWeek)
+        setData({
+          events: mockEvents,
+          week: { number: targetWeek },
+          season: { year: 2026, type: targetSeasonType },
+        })
+        setLastUpdated(new Date())
+        setCountdown(10)
+        setUseDemoMode(true)
+        setError(null)
       }
     } finally {
       setIsLoading(false)
