@@ -15,8 +15,11 @@ import {
   Pause,
   Compass,
   Trophy,
+  Radio,
+  Mic,
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
+import { getGameBroadcastDetails } from '../utils/broadcastInfo'
 
 interface GameCardProps {
   event: NFLEvent
@@ -83,10 +86,6 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const isRedZone = isRedZoneSituation(situation, status, competitors)
   const isHalftime = isHalftimeSituation(status, situation)
 
-  const broadcastNetwork =
-    competition.broadcasts?.[0]?.names?.join(', ') ||
-    (event as { broadcast?: string }).broadcast
-
   // Format kick-off date for pre-game localized to London, UK timezone
   const formattedKickoff = formatLocalizedKickoff(event.date)
 
@@ -96,7 +95,8 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const awayTimeouts = typeof situation?.awayTimeouts === 'number' && Number.isFinite(situation.awayTimeouts) ? situation.awayTimeouts : 3
 
   const fieldPanelId = `field-panel-${event.id}`
-  const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in Quarter ${status.period} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''}`
+  const broadcastDetails = getGameBroadcastDetails(event)
+  const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in Quarter ${status.period} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''} Televised in UK on ${broadcastDetails.ukTv}, UK radio on ${broadcastDetails.ukRadio}, commentary by ${broadcastDetails.announcers.leadDuo}.`
 
   return (
     <article
@@ -209,12 +209,10 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </span>
           )}
 
-          {broadcastNetwork && (
-            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">
-              <Tv className="h-3 w-3 text-slate-500" />
-              {broadcastNetwork}
-            </span>
-          )}
+          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-sky-300 bg-sky-950/70 border border-sky-800/40 rounded px-1.5 py-0.5" title={`UK TV: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})`}>
+            <Tv className="h-3 w-3 text-sky-400" />
+            {broadcastDetails.ukTvShort}
+          </span>
 
           {/* Spotlight / Select Button */}
           {onSpotlight && !isSpotlighted && (
@@ -435,6 +433,25 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               </span>
             </div>
           )}
+        </div>
+
+        {/* UK Broadcast, Radio & Live Announcers Strip */}
+        <div className="mt-2.5 rounded-lg border border-white/[0.06] bg-[#070c16] p-2 text-xs space-y-1.5">
+          <div className="flex items-center justify-between text-[11px] gap-2">
+            <span className="flex items-center gap-1.5 text-sky-300 font-semibold truncate" title={`UK Television: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})`}>
+              <Tv className="h-3 w-3 text-sky-400 flex-shrink-0" />
+              <span className="truncate">{broadcastDetails.ukTvShort}</span>
+            </span>
+            <span className="flex items-center gap-1 text-amber-300 font-medium text-[10px] truncate" title={`UK Radio Broadcast: ${broadcastDetails.ukRadio} (${broadcastDetails.ukRadioFrequency})`}>
+              <Radio className="h-3 w-3 text-amber-400 flex-shrink-0" />
+              <span className="truncate">{broadcastDetails.ukRadioShort}</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-300 border-t border-white/[0.04] pt-1" title={`Announcers calling the game: ${broadcastDetails.announcers.fullCrew}`}>
+            <Mic className="h-3 w-3 text-rose-400 flex-shrink-0" />
+            <span className="text-slate-200 font-medium truncate">{broadcastDetails.announcers.leadDuo}</span>
+            <span className="text-slate-500 text-[10px] shrink-0 ml-auto font-mono">({broadcastDetails.usTv})</span>
+          </div>
         </div>
       </div>
 

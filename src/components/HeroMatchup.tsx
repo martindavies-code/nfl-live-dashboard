@@ -3,8 +3,9 @@ import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
 import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff } from '../utils/nflHelpers'
-import { Radio, Flame, Tv, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check, Clock } from 'lucide-react'
+import { Radio, Flame, Tv, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check, Clock, Mic } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
+import { getGameBroadcastDetails } from '../utils/broadcastInfo'
 
 interface HeroMatchupProps {
   event: NFLEvent
@@ -45,11 +46,6 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   const isRedZone = isRedZoneSituation(situation, status, competitors)
   const isHalftime = isHalftimeSituation(status, situation)
 
-  const broadcastNetwork =
-    competition.broadcasts?.[0]?.names?.join(', ') ||
-    (event as { broadcast?: string }).broadcast ||
-    'National Broadcast'
-
   const venueText = competition.venue
     ? `${competition.venue.fullName}${
         competition.venue.address?.city ? `, ${competition.venue.address.city}` : ''
@@ -61,6 +57,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
 
   const downAndDistance = formatDownAndDistance(situation)
   const formattedKickoff = formatLocalizedKickoff(event.date)
+  const broadcastDetails = getGameBroadcastDetails(event)
 
   // Derive true regulation seconds remaining for accurate scorigami probability
   const secondsLeft = getGameSecondsRemaining(status, state)
@@ -90,7 +87,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
     const playText = isLive && situation?.downDistanceText ? ` • ${situation.downDistanceText} at ${situation.possessionText || ''}` : ''
     const rzText = isRedZone ? ' 🔥 RED ZONE' : ''
 
-    const shareText = `🏈 NFL Score: ${awayName} (${awayScore}) @ ${homeName} (${homeScore}) [${statusText}${playText}${rzText}]\nLive Command: https://martindavies-code.github.io/nfl-live-dashboard/`
+    const shareText = `🏈 NFL Score: ${awayName} (${awayScore}) @ ${homeName} (${homeScore}) [${statusText}${playText}${rzText}]\n📺 UK TV: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})\n📻 UK Radio: ${broadcastDetails.ukRadio}\n🎙️ Announcers: ${broadcastDetails.announcers.fullCrew}\nLive Command: https://martindavies-code.github.io/nfl-live-dashboard/`
 
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -223,12 +220,19 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             </span>
           )}
 
-          {broadcastNetwork && (
-            <span className="hidden sm:flex items-center gap-1 text-slate-400">
-              <Tv className="h-3.5 w-3.5 text-slate-500" />
-              {broadcastNetwork}
-            </span>
-          )}
+          {/* UK TV & Radio Badges in Spotlight Header */}
+          <span className="inline-flex items-center gap-1 rounded bg-sky-500/15 border border-sky-500/30 px-2 py-0.5 text-xs font-semibold text-sky-200" title={`UK TV: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})`}>
+            <Tv className="h-3 w-3 text-sky-400" />
+            {broadcastDetails.ukTvShort}
+          </span>
+          <span className="hidden sm:inline-flex items-center gap-1 rounded bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-xs font-semibold text-amber-200" title={`UK Radio: ${broadcastDetails.ukRadio} (${broadcastDetails.ukRadioFrequency})`}>
+            <Radio className="h-3 w-3 text-amber-400" />
+            {broadcastDetails.ukRadioShort}
+          </span>
+          <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-slate-800/90 border border-slate-700/60 px-2.5 py-0.5 text-xs font-semibold text-slate-300" title={`Live Announcers: ${broadcastDetails.announcers.fullCrew}`}>
+            <Mic className="h-3 w-3 text-rose-400" />
+            {broadcastDetails.announcers.leadDuo}
+          </span>
         </div>
       </div>
 
@@ -498,6 +502,69 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             isHero={true}
             status={status}
           />
+        </div>
+      </div>
+
+      {/* UK Broadcast, Radio & Live Announcers Center */}
+      <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-5 py-3.5 sm:px-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs">
+          {/* UK TV & UK Radio Cards */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* UK TV Channel */}
+            <div className="flex items-center gap-2.5 rounded-lg bg-sky-500/10 border border-sky-500/25 px-3 py-2 text-sky-200 shadow-sm">
+              <div className="p-1.5 rounded-md bg-sky-500/20 text-sky-300 flex-shrink-0">
+                <Tv className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-sky-400 block">UK Television</span>
+                <span className="font-bold text-white text-xs sm:text-sm">{broadcastDetails.ukTv}</span>
+                <span className="text-[11px] text-sky-300/80 ml-1.5 font-mono">({broadcastDetails.ukTvChannelNumber})</span>
+              </div>
+            </div>
+
+            {/* UK Radio Broadcast */}
+            <div className="flex items-center gap-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 px-3 py-2 text-amber-200 shadow-sm">
+              <div className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 flex-shrink-0">
+                <Radio className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 block">UK Radio Broadcast</span>
+                <span className="font-bold text-white text-xs sm:text-sm">{broadcastDetails.ukRadio}</span>
+                <span className="text-[11px] text-amber-300/80 ml-1.5 font-mono">({broadcastDetails.ukRadioFrequency})</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Announcers Calling the Game */}
+          <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2">
+            <div className="p-1.5 rounded-md bg-rose-500/20 text-rose-300 flex-shrink-0">
+              <Mic className="h-4 w-4 text-rose-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-rose-400">Live Commentary Booth</span>
+                <span className="text-[10px] text-slate-400 font-mono">({broadcastDetails.usTv} Production)</span>
+              </div>
+              <div className="text-slate-200 font-medium text-xs sm:text-sm">
+                <strong className="text-white font-bold">{broadcastDetails.announcers.leadDuo}</strong>
+                {broadcastDetails.announcers.sideline && (
+                  <span className="text-slate-400 text-xs font-normal"> • Sideline: <span className="text-slate-300">{broadcastDetails.announcers.sideline}</span></span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* UK Studio Pundits & Streaming Options */}
+        <div className="mt-2.5 pt-2 border-t border-white/[0.05] flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-slate-300">UK Studio:</span>
+            <span>{broadcastDetails.ukPundits}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <span className="font-semibold text-slate-300">Streaming:</span>
+            <span className="text-slate-400">{broadcastDetails.streaming}</span>
+          </div>
         </div>
       </div>
     </section>
