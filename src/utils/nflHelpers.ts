@@ -427,28 +427,42 @@ export function isHalftimeSituation(
 }
 
 /**
- * Localizes NFL kickoff dates and times to London, UK timezone (BST/GMT).
+ * Localizes NFL kickoff dates and times to the browsing user's local timezone.
+ * Supports optional timezone override (e.g. for testing or explicit user preference).
  * Guarantees resilience against null, undefined, and invalid ISO timestamps.
  */
-export function formatLocalizedKickoff(dateVal?: string | Date | null): string {
+export function formatLocalizedKickoff(
+  dateVal?: string | Date | null,
+  timeZone?: string
+): string {
   if (!dateVal) return 'Upcoming'
   try {
     const d = typeof dateVal === 'string' ? new Date(dateVal) : dateVal
     if (isNaN(d.getTime())) return 'Upcoming'
 
-    const ukWeekday = d.toLocaleDateString('en-GB', {
-      timeZone: 'Europe/London',
+    const weekdayOptions: Intl.DateTimeFormatOptions = {
       weekday: 'short',
-    })
+    }
+    if (timeZone) {
+      weekdayOptions.timeZone = timeZone
+    }
 
-    const ukTimeStr = d.toLocaleTimeString('en-GB', {
-      timeZone: 'Europe/London',
+    const timeOptions: Intl.DateTimeFormatOptions = {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
-    }).toUpperCase()
+      timeZoneName: 'short',
+    }
+    if (timeZone) {
+      timeOptions.timeZone = timeZone
+    }
 
-    return `${ukWeekday} ${ukTimeStr} UK`
+    const weekdayStr = d.toLocaleDateString(undefined, weekdayOptions)
+    let timeStr = d.toLocaleTimeString(undefined, timeOptions)
+    // Standardize uppercase for AM/PM if present (e.g. "6:00 PM BST" or "1:00 PM EDT")
+    timeStr = timeStr.replace(/\b([ap]m)\b/gi, (m) => m.toUpperCase())
+
+    return `${weekdayStr} ${timeStr}`
   } catch {
     return 'Upcoming'
   }

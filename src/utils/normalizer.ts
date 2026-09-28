@@ -1,5 +1,5 @@
 import type { NFLSituation } from '../types/nfl'
-import { safeParseInt, sanitizeHexColor, getContrastYIQ } from './nflHelpers.ts'
+import { safeParseInt, sanitizeHexColor, getContrastYIQ, formatLocalizedKickoff } from './nflHelpers.ts'
 
 export const FALLBACK_LOGO = 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nfl.png'
 
@@ -84,21 +84,7 @@ export function normalizeNFLEvent(raw: any, index = 0): NormalizedEvent {
   const shortName = String(safeObj.shortName || 'NFL')
   const dateStr = String(safeObj.date || comp.date || new Date().toISOString())
 
-  let formattedKickoff = 'TBD'
-  try {
-    const d = new Date(dateStr)
-    if (!isNaN(d.getTime())) {
-      formattedKickoff = d.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-    }
-  } catch {
-    formattedKickoff = 'Upcoming'
-  }
+  const formattedKickoff = formatLocalizedKickoff(dateStr)
 
   // Status normalization
   const statusObj = (safeObj.status && typeof safeObj.status === 'object') ? safeObj.status : comp.status || {}
@@ -109,7 +95,7 @@ export function normalizeNFLEvent(raw: any, index = 0): NormalizedEvent {
 
   const period = Math.max(1, safeParseInt(statusObj.period, 1))
   const displayClock = String(statusObj.displayClock || '0:00')
-  const detail = String(typeObj.detail || (state === 'post' ? 'Final' : state === 'in' ? `Q${period}` : formattedKickoff))
+  const detail = String(state === 'pre' ? formattedKickoff : (typeObj.detail || (state === 'post' ? 'Final' : `Q${period}`)))
 
   // Competitors normalization
   const rawCompetitors: any[] = Array.isArray(comp.competitors) ? comp.competitors : []

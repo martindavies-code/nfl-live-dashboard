@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel } from '../utils/nflHelpers'
-import { Radio, Flame, Tv, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check } from 'lucide-react'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff } from '../utils/nflHelpers'
+import { Radio, Flame, Tv, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check, Clock } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 
 interface HeroMatchupProps {
@@ -60,6 +60,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   const awayTimeouts = typeof situation?.awayTimeouts === 'number' && Number.isFinite(situation.awayTimeouts) ? situation.awayTimeouts : 3
 
   const downAndDistance = formatDownAndDistance(situation)
+  const formattedKickoff = formatLocalizedKickoff(event.date)
 
   // Derive true regulation seconds remaining for accurate scorigami probability
   const secondsLeft = getGameSecondsRemaining(status, state)
@@ -79,7 +80,13 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
     const homeName = homeComp?.team?.displayName || homeAbbr
     const awayScore = awayComp?.score ?? '-'
     const homeScore = homeComp?.score ?? '-'
-    const statusText = isHalftime ? 'At Halftime' : isLive ? `Q${status?.period} ${status?.displayClock}` : isFinal ? 'Final' : 'Upcoming'
+    const statusText = isHalftime
+      ? 'At Halftime'
+      : isLive
+      ? `Q${status?.period} ${status?.displayClock}`
+      : isFinal
+      ? (status?.type?.detail || 'Final')
+      : `Upcoming (${formattedKickoff})`
     const playText = isLive && situation?.downDistanceText ? ` • ${situation.downDistanceText} at ${situation.possessionText || ''}` : ''
     const rzText = isRedZone ? ' 🔥 RED ZONE' : ''
 
@@ -107,7 +114,13 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
     >
       {/* Accessible Heading for Screen Readers */}
       <h2 id="hero-matchup-heading" className="sr-only">
-        {`Spotlight Matchup: ${awayComp?.team?.displayName || awayAbbr} at ${homeComp?.team?.displayName || homeAbbr}`}
+        {`Spotlight Matchup: ${awayComp?.team?.displayName || awayAbbr} at ${homeComp?.team?.displayName || homeAbbr}. ${
+          isLive
+            ? `Live in Quarter ${status.period} with ${status.displayClock} remaining`
+            : isFinal
+            ? (status?.type?.detail || 'Final')
+            : `Kickoff scheduled for ${formattedKickoff}`
+        }`}
       </h2>
 
       {/* Top Accent Bar */}
@@ -156,8 +169,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
               FINAL RECAP
             </span>
           ) : (
-            <span className="rounded bg-sky-950 px-2.5 py-1 text-xs font-semibold text-sky-300 border border-sky-800/40">
-              UPCOMING KICKOFF
+            <span className="inline-flex items-center gap-1.5 rounded bg-sky-950 px-2.5 py-1 text-xs font-semibold text-sky-300 border border-sky-800/40">
+              <Clock className="h-3.5 w-3.5 text-sky-400" />
+              KICKOFF: {formattedKickoff.toUpperCase()}
             </span>
           )}
         </div>
@@ -230,17 +244,24 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                   <Pause className="h-3.5 w-3.5 text-amber-400" />
                   AT HALFTIME
                 </span>
-              ) : (
+              ) : isLive ? (
                 <>
                   <span className="font-mono text-xs font-bold text-white bg-slate-800/80 px-2 py-0.5 rounded">
-                    {isLive ? `Quarter ${status.period}` : status.type?.detail || 'Match Details'}
+                    Quarter {status.period}
                   </span>
-                  {isLive && (
-                    <span className="font-mono text-sm font-extrabold text-emerald-400 tabular-nums">
-                      {status.displayClock}
-                    </span>
-                  )}
+                  <span className="font-mono text-sm font-extrabold text-emerald-400 tabular-nums">
+                    {status.displayClock}
+                  </span>
                 </>
+              ) : isFinal ? (
+                <span className="font-mono text-xs font-bold text-slate-300 bg-slate-800/80 px-2 py-0.5 rounded">
+                  {status.type?.detail || 'Final'}
+                </span>
+              ) : (
+                <span className="font-mono text-xs font-bold text-sky-300 bg-sky-950/80 px-2.5 py-1 rounded border border-sky-800/40 flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-sky-400" />
+                  Kickoff: {formattedKickoff}
+                </span>
               )}
             </div>
 
@@ -465,7 +486,15 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             situation={situation}
             competitors={competitors}
             gameState={state}
-            gameStatusDetail={isHalftime ? 'At Halftime' : status?.type?.detail}
+            gameStatusDetail={
+              isHalftime
+                ? 'At Halftime'
+                : isLive
+                ? `Quarter ${status?.period} ${status?.displayClock}`
+                : isFinal
+                ? (status?.type?.detail || 'Final')
+                : `Kickoff: ${formattedKickoff}`
+            }
             isHero={true}
             status={status}
           />

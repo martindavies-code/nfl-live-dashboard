@@ -15,25 +15,36 @@ test('Boundary Audit: formatLocalizedKickoff handles all date inputs and timezon
   assert.equal(formatLocalizedKickoff('not-a-date'), 'Upcoming')
   assert.equal(formatLocalizedKickoff(NaN), 'Upcoming')
 
-  // Valid ISO strings in BST (Summer / Daylight Savings)
-  // 2026-10-04 17:00:00 UTC is 18:00 BST (6:00 PM UK)
-  const bstResult = formatLocalizedKickoff('2026-10-04T17:00:00Z')
+  // Valid ISO strings in Europe/London (Summer BST & Winter GMT)
+  const bstResult = formatLocalizedKickoff('2026-10-04T17:00:00Z', 'Europe/London')
   assert.ok(bstResult.includes('Sun'), `Expected Sun in ${bstResult}`)
   assert.ok(bstResult.includes('6:00 PM'), `Expected 6:00 PM in ${bstResult}`)
-  assert.ok(bstResult.includes('UK'), `Expected UK in ${bstResult}`)
+  assert.ok(bstResult.includes('BST') || bstResult.includes('GMT+1'), `Expected BST in ${bstResult}`)
 
-  // Valid ISO string in GMT (Winter)
-  // 2026-12-13 18:00:00 UTC is 18:00 GMT (6:00 PM UK)
-  const gmtResult = formatLocalizedKickoff('2026-12-13T18:00:00Z')
+  const gmtResult = formatLocalizedKickoff('2026-12-13T18:00:00Z', 'Europe/London')
   assert.ok(gmtResult.includes('Sun'), `Expected Sun in ${gmtResult}`)
   assert.ok(gmtResult.includes('6:00 PM'), `Expected 6:00 PM in ${gmtResult}`)
-  assert.ok(gmtResult.includes('UK'), `Expected UK in ${gmtResult}`)
+  assert.ok(gmtResult.includes('GMT'), `Expected GMT in ${gmtResult}`)
+
+  // Valid ISO strings in America/New_York (Eastern Time)
+  const nyResult = formatLocalizedKickoff('2026-10-04T17:00:00Z', 'America/New_York')
+  assert.ok(nyResult.includes('Sun'), `Expected Sun in ${nyResult}`)
+  assert.ok(nyResult.includes('1:00 PM'), `Expected 1:00 PM in ${nyResult}`)
+
+  // Valid ISO strings in America/Los_Angeles (Pacific Time)
+  const laResult = formatLocalizedKickoff('2026-10-04T17:00:00Z', 'America/Los_Angeles')
+  assert.ok(laResult.includes('Sun'), `Expected Sun in ${laResult}`)
+  assert.ok(laResult.includes('10:00 AM'), `Expected 10:00 AM in ${laResult}`)
+
+  // Default host/browser environment localization (without explicit timezone param)
+  const defaultResult = formatLocalizedKickoff('2026-10-04T17:00:00Z')
+  assert.ok(defaultResult.includes('Sun'), `Expected weekday in ${defaultResult}`)
 
   // Date object input
-  const dateObj = new Date('2026-09-10T00:20:00Z') // Thu 1:20 AM UK
-  const dateObjResult = formatLocalizedKickoff(dateObj)
-  assert.ok(dateObjResult.includes('Thu'))
-  assert.ok(dateObjResult.includes('1:20 AM'))
+  const dateObj = new Date('2026-09-10T00:20:00Z')
+  const dateObjResult = formatLocalizedKickoff(dateObj, 'Europe/London')
+  assert.ok(dateObjResult.includes('Thu'), `Expected Thu in ${dateObjResult}`)
+  assert.ok(dateObjResult.includes('1:20 AM'), `Expected 1:20 AM in ${dateObjResult}`)
 })
 
 test('Boundary Audit: FieldDiagram Play Direction Arrow & Badges Mathematical Invariants', () => {
