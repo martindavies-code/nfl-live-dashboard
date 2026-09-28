@@ -166,10 +166,18 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
         </div>
       </div>
 
-      {/* Visual Dual-Colored Split Bar with High Contrast & Gradient Fill */}
-      <div className="relative h-3.5 w-full overflow-hidden rounded-full bg-[#05080f] p-0.5 border border-white/[0.12] shadow-inner">
+      {/* Visual Dual-Colored Split Bar with High Contrast, Textural Hatching & WAI-ARIA Meter Semantics */}
+      <div
+        className="relative h-4 w-full overflow-hidden rounded-full bg-[#05080f] p-0.5 border border-white/[0.12] shadow-inner"
+        role="meter"
+        aria-valuenow={Math.round(homePct)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Win probability meter: ${homeAbbr} vs ${awayAbbr}`}
+        aria-valuetext={`${homeAbbr} ${homePct.toFixed(1)}%, ${awayAbbr} ${awayPct.toFixed(1)}%. ${isHomeFavored ? `${homeAbbr} favored` : isAwayFavored ? `${awayAbbr} favored` : 'Even matchup'}`}
+      >
         <div className="flex h-full w-full rounded-full overflow-hidden">
-          {/* Home Segment */}
+          {/* Home Segment with Color-Blind Stipple Texture */}
           <div
             className="h-full transition-all duration-700 ease-out relative"
             style={{
@@ -177,10 +185,18 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
               background: `linear-gradient(90deg, ${homeColor}, ${homeColor}ee)`,
             }}
           >
+            <div
+              className="absolute inset-0 opacity-20"
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
+                backgroundSize: '6px 6px',
+              }}
+            />
             <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
           </div>
 
-          {/* Away Segment */}
+          {/* Away Segment with Color-Blind Diagonal Textural Hatch */}
           <div
             className="h-full transition-all duration-700 ease-out relative"
             style={{
@@ -188,6 +204,13 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
               background: `linear-gradient(90deg, ${awayColor}ee, ${awayColor})`,
             }}
           >
+            <div
+              className="absolute inset-0 opacity-25"
+              style={{
+                backgroundImage:
+                  'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.7) 4px, rgba(255,255,255,0.7) 7px)',
+              }}
+            />
             <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
           </div>
         </div>

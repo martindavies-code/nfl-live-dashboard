@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
 import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel } from '../utils/nflHelpers'
-import { Radio, Flame, Tv, MapPin, Compass, Sparkles, Pause, Trophy } from 'lucide-react'
+import { Radio, Flame, Tv, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 
 interface HeroMatchupProps {
@@ -21,6 +21,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   onToggleAutoRedZone,
   isAutoSelectedRedZone = false,
 }) => {
+  const [isCopied, setIsCopied] = useState(false)
   const competition = event.competitions?.[0]
   if (!competition) return null
 
@@ -72,6 +73,28 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
     homeAbbr,
     awayAbbr
   )
+
+  const handleCopySnapshot = async () => {
+    const awayName = awayComp?.team?.displayName || awayAbbr
+    const homeName = homeComp?.team?.displayName || homeAbbr
+    const awayScore = awayComp?.score ?? '-'
+    const homeScore = homeComp?.score ?? '-'
+    const statusText = isHalftime ? 'At Halftime' : isLive ? `Q${status?.period} ${status?.displayClock}` : isFinal ? 'Final' : 'Upcoming'
+    const playText = isLive && situation?.downDistanceText ? ` • ${situation.downDistanceText} at ${situation.possessionText || ''}` : ''
+    const rzText = isRedZone ? ' 🔥 RED ZONE' : ''
+
+    const shareText = `🏈 NFL Score: ${awayName} (${awayScore}) @ ${homeName} (${homeScore}) [${statusText}${playText}${rzText}]\nLive Command: https://martindavies-code.github.io/nfl-live-dashboard/`
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(shareText)
+        setIsCopied(true)
+        setTimeout(() => setIsCopied(false), 2500)
+      }
+    } catch {
+      // Clipboard fallback
+    }
+  }
 
   return (
     <section
@@ -140,6 +163,25 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+          {/* 1-Click Share Snapshot Button */}
+          <button
+            onClick={handleCopySnapshot}
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold border transition-all ${
+              isCopied
+                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                : 'bg-sky-500/15 border-sky-500/40 text-sky-200 hover:bg-sky-500/25 hover:text-white'
+            }`}
+            title="Copy live score snapshot to clipboard for sharing"
+            aria-label={isCopied ? "Live score snapshot copied to clipboard" : "Share live score snapshot"}
+          >
+            {isCopied ? (
+              <Check className="h-3.5 w-3.5 text-emerald-400" />
+            ) : (
+              <Share2 className="h-3.5 w-3.5 text-sky-400" />
+            )}
+            <span>{isCopied ? 'Copied!' : 'Share Score'}</span>
+          </button>
+
           {/* Interactive Auto Red Zone Toggle */}
           {onToggleAutoRedZone && (
             <button

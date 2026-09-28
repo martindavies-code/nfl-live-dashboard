@@ -1,6 +1,7 @@
 import React from 'react'
 import { Server, CheckCircle2, ShieldCheck, X, RefreshCw, Zap, Database } from 'lucide-react'
 import { REAL_NFL_DATA_SOURCES } from '../services/espnApi'
+import { useFocusTrap } from '../utils/useFocusTrap'
 
 interface DataSourcesModalProps {
   isOpen: boolean
@@ -25,6 +26,8 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
   onRefresh,
   isRefreshing,
 }) => {
+  const modalRef = useFocusTrap<HTMLDivElement>({ isOpen, onClose })
+
   if (!isOpen) return null
 
   return (
@@ -37,7 +40,10 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="relative w-full max-w-2xl rounded-2xl border border-slate-700/80 bg-[#0d1322] p-6 shadow-2xl text-slate-100 max-h-[90vh] overflow-y-auto">
+      <div
+        ref={modalRef}
+        className="relative w-full max-w-2xl rounded-2xl border border-slate-700/80 bg-[#0d1322] p-6 shadow-2xl text-slate-100 max-h-[90vh] overflow-y-auto"
+      >
         {/* Header */}
         <div className="flex items-start justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3">

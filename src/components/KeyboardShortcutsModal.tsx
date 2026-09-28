@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 import { X, Keyboard } from 'lucide-react'
+import { useFocusTrap } from '../utils/useFocusTrap'
 
 interface KeyboardShortcutsModalProps {
   isOpen: boolean
@@ -33,25 +34,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const closeBtnRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    if (!isOpen) return
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        onClose()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    closeBtnRef.current?.focus()
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isOpen, onClose])
+  const modalRef = useFocusTrap<HTMLDivElement>({ isOpen, onClose })
 
   if (!isOpen) return null
 
@@ -66,7 +49,10 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
       aria-labelledby="shortcuts-title"
       aria-describedby="shortcuts-desc"
     >
-      <div className="relative w-full max-w-lg rounded-2xl border border-white/20 bg-[#0c1220] p-6 shadow-2xl ring-1 ring-sky-500/30 text-white">
+      <div
+        ref={modalRef}
+        className="relative w-full max-w-lg rounded-2xl border border-white/20 bg-[#0c1220] p-6 shadow-2xl ring-1 ring-sky-500/30 text-white"
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-2.5">
@@ -83,7 +69,6 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
             </div>
           </div>
           <button
-            ref={closeBtnRef}
             onClick={onClose}
             aria-label="Close keyboard shortcuts dialog"
             className="rounded-lg p-2 text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center"

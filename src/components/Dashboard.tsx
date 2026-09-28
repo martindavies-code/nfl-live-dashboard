@@ -704,11 +704,10 @@ export const Dashboard: React.FC = () => {
                 </span>
               </button>
 
-              {/* Polling countdown badge */}
+              {/* Polling countdown badge (purely visual ticker, screen reader announcements are event-driven) */}
               <div
                 className="hidden md:flex min-h-[44px] items-center gap-2 rounded-lg bg-[#111927] border border-white/[0.08] px-3 py-1.5 text-xs select-none"
-                role="status"
-                aria-live="polite"
+                aria-hidden="true"
               >
                 <div className="relative flex h-2 w-2 items-center justify-center">
                   {liveCount > 0 && (
@@ -809,81 +808,78 @@ export const Dashboard: React.FC = () => {
                 role="tablist"
                 aria-label="Filter games by state"
               >
-                <button
-                  role="tab"
-                  aria-selected={filter === 'all'}
-                  onClick={() => setFilter('all')}
-                  className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all focus:outline-none ${
-                    filter === 'all'
-                      ? 'bg-slate-700 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  All ({events.length})
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={filter === 'live'}
-                  onClick={() => setFilter('live')}
-                  className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold transition-all focus:outline-none ${
-                    filter === 'live'
-                      ? 'bg-rose-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {liveCount > 0 && <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />}
-                  Live ({liveCount})
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={filter === 'redzone'}
-                  onClick={() => setFilter('redzone')}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all focus:outline-none ${
-                    filter === 'redzone'
-                      ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-sm ring-1 ring-white/20'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <Flame className={`h-3 w-3 ${filter === 'redzone' ? 'text-amber-300 fill-amber-300' : redZoneCount > 0 ? 'text-rose-400 fill-rose-400 animate-pulse' : 'text-slate-400'}`} />
-                  <span>Red Zone ({redZoneCount})</span>
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={filter === 'halftime'}
-                  onClick={() => setFilter('halftime')}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all focus:outline-none ${
-                    filter === 'halftime'
-                      ? 'bg-amber-600 text-white shadow-sm ring-1 ring-white/20'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <Pause className={`h-3 w-3 ${filter === 'halftime' ? 'text-amber-200 fill-amber-200' : halftimeCount > 0 ? 'text-amber-400' : 'text-slate-400'}`} />
-                  <span>At Halftime ({halftimeCount})</span>
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={filter === 'upcoming'}
-                  onClick={() => setFilter('upcoming')}
-                  className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all focus:outline-none ${
-                    filter === 'upcoming'
-                      ? 'bg-slate-700 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Upcoming ({upcomingCount})
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={filter === 'final'}
-                  onClick={() => setFilter('final')}
-                  className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all focus:outline-none ${
-                    filter === 'final'
-                      ? 'bg-slate-700 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Final ({finalCount})
-                </button>
+                {[
+                  { id: 'all' as GameFilter, label: 'All', count: events.length },
+                  { id: 'live' as GameFilter, label: 'Live', count: liveCount },
+                  { id: 'redzone' as GameFilter, label: 'Red Zone', count: redZoneCount },
+                  { id: 'halftime' as GameFilter, label: 'At Halftime', count: halftimeCount },
+                  { id: 'upcoming' as GameFilter, label: 'Upcoming', count: upcomingCount },
+                  { id: 'final' as GameFilter, label: 'Final', count: finalCount },
+                ].map((tab, idx, arr) => {
+                  const isSelected = filter === tab.id
+                  return (
+                    <button
+                      key={tab.id}
+                      role="tab"
+                      id={`tab-${tab.id}`}
+                      aria-controls="matchups-grid"
+                      aria-selected={isSelected}
+                      tabIndex={isSelected ? 0 : -1}
+                      onClick={() => {
+                        setFilter(tab.id)
+                        playTactileClick(isMuted)
+                        setSrAnnouncement(`Filter selected: ${tab.label} (${tab.count} games)`)
+                      }}
+                      onKeyDown={(e) => {
+                        let targetIdx = -1
+                        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                          e.preventDefault()
+                          targetIdx = (idx + 1) % arr.length
+                        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                          e.preventDefault()
+                          targetIdx = (idx - 1 + arr.length) % arr.length
+                        } else if (e.key === 'Home') {
+                          e.preventDefault()
+                          targetIdx = 0
+                        } else if (e.key === 'End') {
+                          e.preventDefault()
+                          targetIdx = arr.length - 1
+                        }
+
+                        if (targetIdx !== -1) {
+                          const target = arr[targetIdx]
+                          setFilter(target.id)
+                          playTactileClick(isMuted)
+                          setSrAnnouncement(`Filter selected: ${target.label} (${target.count} games)`)
+                          const btns = document.querySelectorAll<HTMLButtonElement>('[role="tablist"] [role="tab"]')
+                          btns[targetIdx]?.focus()
+                        }
+                      }}
+                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[34px] ${
+                        isSelected
+                          ? tab.id === 'live'
+                            ? 'bg-rose-600 text-white shadow-sm ring-1 ring-white/20'
+                            : tab.id === 'redzone'
+                            ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-sm ring-1 ring-white/20'
+                            : tab.id === 'halftime'
+                            ? 'bg-amber-600 text-white shadow-sm ring-1 ring-white/20'
+                            : 'bg-slate-700 text-white shadow-sm ring-1 ring-white/20'
+                          : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      {tab.id === 'live' && liveCount > 0 && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
+                      )}
+                      {tab.id === 'redzone' && (
+                        <Flame className={`h-3 w-3 ${isSelected ? 'text-amber-300 fill-amber-300' : redZoneCount > 0 ? 'text-rose-400 fill-rose-400 animate-pulse' : 'text-slate-400'}`} />
+                      )}
+                      {tab.id === 'halftime' && (
+                        <Pause className={`h-3 w-3 ${isSelected ? 'text-amber-200 fill-amber-200' : halftimeCount > 0 ? 'text-amber-400' : 'text-slate-400'}`} />
+                      )}
+                      <span>{tab.label} ({tab.count})</span>
+                    </button>
+                  )
+                })}
               </div>
 
               {/* Expand All / Collapse All Field Radars Toggle */}
@@ -993,7 +989,12 @@ export const Dashboard: React.FC = () => {
 
           {/* GAME CARDS GRID */}
           {!isLoading && filteredEvents.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
+            <div
+              id="matchups-grid"
+              role="tabpanel"
+              aria-labelledby={`tab-${filter}`}
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start"
+            >
               {filteredEvents.map((event) => (
                 <GameCard
                   key={event.id}

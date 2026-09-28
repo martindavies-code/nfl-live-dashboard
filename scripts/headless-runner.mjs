@@ -166,10 +166,10 @@ async function runAudit(options = {}) {
     await page.keyboard.press('h')
     await new Promise((r) => setTimeout(r, 300))
 
-    // 4. Test Simulation Mode (Press 'S') to trigger live field radar drive animations
-    console.log(`[5/7] Testing Simulation Mode: 'S'...`)
+    // 4. Test Data Redundancy Modal (Press 'S')
+    console.log(`[5/7] Testing Data Redundancy Modal: 'S'...`)
     await page.keyboard.press('s')
-    await new Promise((r) => setTimeout(r, 800))
+    await new Promise((r) => setTimeout(r, 600))
 
     const simPath = path.join(outDir, '04-simulation-radar.png')
     await page.screenshot({ path: simPath, fullPage: false })
@@ -177,6 +177,10 @@ async function runAudit(options = {}) {
     if (fs.existsSync(artifactDir)) {
       fs.copyFileSync(simPath, path.join(artifactDir, '04-simulation-radar.png'))
     }
+
+    // Dismiss redundancy modal with Escape
+    await page.keyboard.press('Escape')
+    await new Promise((r) => setTimeout(r, 300))
 
     // 5. Test Synchronized Field Radars (Press 'F')
     console.log(`[6/7] Testing Synchronized Field Radars: 'F'...`)

@@ -111,6 +111,11 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   const turfPatternId = `turf-pat-${uniqueId}`
   const ballGradId = `ball-grad-${uniqueId}`
   const arrowGradId = `arrow-grad-${uniqueId}`
+  const titleId = `field-title-${uniqueId}`
+  const descId = `field-desc-${uniqueId}`
+  const homePatternId = `hatch-home-${uniqueId}`
+  const awayPatternId = `hatch-away-${uniqueId}`
+  const redZonePatternId = `hatch-redzone-${uniqueId}`
 
   const offensiveAbbr = offensiveTeam?.team?.abbreviation || 'Offense'
   const accessibilityDesc = hasSituation
@@ -185,13 +190,26 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
         )}
       </div>
 
-      {/* SVG American Football Pitch */}
+      {/* SVG American Football Pitch with Full WCAG 2.2 AAA Semantic Tree */}
       <div className="relative w-full aspect-[1200/340]">
         <svg
           viewBox="0 0 1200 340"
           className="w-full h-full select-none"
           preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-labelledby={`${titleId} ${descId}`}
         >
+          <title id={titleId}>
+            {hasSituation
+              ? `Football field: ${offensiveAbbr} at ${losLabel}, ${situation?.downDistanceText || 'Active play'}`
+              : `Football field: ${gameState === 'pre' ? 'Pregame' : gameState === 'post' ? 'Game Final' : 'Tactical overview'}`}
+          </title>
+          <desc id={descId}>
+            {hasSituation
+              ? `${offensiveAbbr} is driving towards ${direction === 'right' ? awayAbbr : homeAbbr} end zone. Ball on ${losLabel}. Target line: ${firstDownLabel}.${inRedZone ? ' Currently in the Red Zone.' : ''}`
+              : `Tactical 100-yard field showing ${homeAbbr} defending left endzone and ${awayAbbr} defending right endzone.`}
+          </desc>
+
           <defs>
             <linearGradient id={turfGradId} x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#153621" />
@@ -202,6 +220,20 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
             <pattern id={turfPatternId} width="100" height="340" patternUnits="userSpaceOnUse">
               <rect x="0" y="0" width="50" height="340" fill="rgba(255,255,255,0.02)" />
               <rect x="50" y="0" width="50" height="340" fill="rgba(0,0,0,0.04)" />
+            </pattern>
+
+            {/* Color-Blind Safe Texture Patterns (WCAG 1.4.1 Invariance) */}
+            <pattern id={homePatternId} width="14" height="14" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="14" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" />
+            </pattern>
+
+            <pattern id={awayPatternId} width="14" height="14" patternTransform="rotate(-45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="14" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" />
+            </pattern>
+
+            <pattern id={redZonePatternId} width="14" height="14" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="14" stroke="rgba(244,63,94,0.45)" strokeWidth="2.5" />
+              <line x1="0" y1="0" x2="14" y2="0" stroke="rgba(244,63,94,0.45)" strokeWidth="2.5" />
             </pattern>
 
             {/* Pro Football Saddle Leather Gradient */}
@@ -223,14 +255,10 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
           <rect x="0" y="0" width="1200" height="340" fill={`url(#${turfGradId})`} />
           <rect x="100" y="0" width="1000" height="340" fill={`url(#${turfPatternId})`} />
 
-          {/* HOME ENDZONE (Left, 0-100) */}
+          {/* HOME ENDZONE (Left, 0-100) with Color-Blind Diagonal Stripes */}
           <g>
             <rect x="0" y="0" width="100" height="340" fill={homeColor} fillOpacity="0.85" />
-            <path
-              d="M0,0 L100,100 M0,85 L100,185 M0,170 L100,270 M0,255 L100,340"
-              stroke="rgba(255,255,255,0.12)"
-              strokeWidth="2.5"
-            />
+            <rect x="0" y="0" width="100" height="340" fill={`url(#${homePatternId})`} />
             <text
               x="50"
               y="170"
@@ -248,9 +276,10 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
             </text>
           </g>
 
-          {/* AWAY ENDZONE (Right, 1100-1200) */}
+          {/* AWAY ENDZONE (Right, 1100-1200) with Color-Blind Reverse Stripes */}
           <g>
             <rect x="1100" y="0" width="100" height="340" fill={awayColor} fillOpacity="0.85" />
+            <rect x="1100" y="0" width="100" height="340" fill={`url(#${awayPatternId})`} />
             <path
               d="M1100,0 L1200,100 M1100,85 L1200,185 M1100,170 L1200,270 M1100,255 L1200,340"
               stroke="rgba(255,255,255,0.12)"
@@ -355,15 +384,24 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               )
             })}
 
-          {/* Red Zone Tint (Opponent's 20-yard line to goal) */}
+          {/* Red Zone Tint (Opponent's 20-yard line to goal) with Color-Blind Cross-Hatch */}
           {inRedZone && (
-            <rect
-              x={direction === 'right' ? 900 : 100}
-              y="0"
-              width="200"
-              height="340"
-              fill="rgba(225, 29, 72, 0.14)"
-            />
+            <g>
+              <rect
+                x={direction === 'right' ? 900 : 100}
+                y="0"
+                width="200"
+                height="340"
+                fill="rgba(225, 29, 72, 0.16)"
+              />
+              <rect
+                x={direction === 'right' ? 900 : 100}
+                y="0"
+                width="200"
+                height="340"
+                fill={`url(#${redZonePatternId})`}
+              />
+            </g>
           )}
 
           {/* SITUATION OVERLAYS */}

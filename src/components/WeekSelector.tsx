@@ -8,6 +8,7 @@ import {
   getNextWeek,
   getPrevWeek,
 } from '../utils/nflHelpers'
+import { useFocusTrap } from '../utils/useFocusTrap'
 
 export interface WeekSelectorProps {
   currentSeasonType: number
@@ -35,20 +36,20 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
   const menuRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
+  const popoverRef = useFocusTrap<HTMLDivElement>({
+    isOpen,
+    onClose: () => {
+      setIsOpen(false)
+      setTabOverride(null)
+    },
+  })
+
   const isPlayoffs = currentSeasonType === 3
   const isViewingLiveWeek = currentSeasonType === liveSeasonType && currentWeek === liveWeek
 
-  // Keyboard navigation & click outside listener
+  // Click outside listener
   useEffect(() => {
     if (!isOpen) return
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsOpen(false)
-        setTabOverride(null)
-        triggerRef.current?.focus()
-      }
-    }
 
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -57,10 +58,8 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
     document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      window.removeEventListener('keydown', handleKeyDown)
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isOpen])
@@ -165,6 +164,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
       {/* Week & Playoff Selector Popover Dropdown */}
       {isOpen && (
         <div
+          ref={popoverRef}
           role="dialog"
           aria-modal="true"
           aria-label="Select NFL Week or Playoff Round"
