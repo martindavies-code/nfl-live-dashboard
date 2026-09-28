@@ -95,7 +95,30 @@ test('Broadcast: Super Bowl resolves dual Sky & ITV, dual BBC & talkSPORT, lead 
   assert.ok(info.ukTv.includes('Sky Sports'))
   assert.ok(info.ukRadio.includes('BBC Radio 5 Live'))
   assert.ok(info.ukRadio.includes('talkSPORT'))
-  assert.ok(info.announcers.leadDuo.includes('Tony Romo') || info.announcers.leadDuo.includes('Tom Brady') || info.announcers.leadDuo.includes('Cris Collinsworth'))
+  assert.ok(info.announcers.leadDuo.includes('Joe Buck') || info.announcers.leadDuo.includes('J.J. Watt') || info.announcers.leadDuo.includes('Tom Brady') || info.announcers.leadDuo.includes('Cris Collinsworth'))
+})
+
+test('Broadcast: CBS marquee late-window resolves Jim Nantz & J.J. Watt (Tony Romo on leave)', () => {
+  const cbsEvent = {
+    name: 'Chiefs at Bills',
+    date: '2026-10-18T20:25:00Z', // Sun 9:25 PM UK (late marquee window)
+    competitions: [
+      {
+        broadcasts: [{ names: ['CBS'] }],
+        competitors: [
+          { homeAway: 'away', team: { abbreviation: 'KC' } },
+          { homeAway: 'home', team: { abbreviation: 'BUF' } },
+        ],
+      },
+    ],
+  }
+
+  const info = getGameBroadcastDetails(cbsEvent)
+  assert.equal(info.usTv, 'CBS')
+  assert.equal(info.announcers.playByPlay, 'Jim Nantz')
+  assert.equal(info.announcers.analyst, 'J.J. Watt')
+  assert.equal(info.announcers.leadDuo, 'Jim Nantz & J.J. Watt')
+  assert.ok(!info.announcers.fullCrew.includes('Tony Romo'), 'Tony Romo must not be assigned to live CBS games')
 })
 
 test('Broadcast: FOX marquee late-window resolves Kevin Burkhardt & Tom Brady', () => {

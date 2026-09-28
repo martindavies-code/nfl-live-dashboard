@@ -107,13 +107,43 @@ export function getGameBroadcastDetails(event?: NFLEvent | null): GameBroadcastD
   let usTv = 'CBS'
 
   if (isSuperBowl) {
-    usTv = upperNet || 'CBS / FOX / NBC'
-    announcers = {
-      playByPlay: 'Jim Nantz',
-      analyst: 'Tony Romo',
-      sideline: 'Tracy Wolfson & Evan Washburn',
-      leadDuo: 'Jim Nantz & Tony Romo',
-      fullCrew: 'Jim Nantz, Tony Romo, Tracy Wolfson, Evan Washburn',
+    if (upperNet.includes('FOX')) {
+      usTv = 'FOX'
+      announcers = {
+        playByPlay: 'Kevin Burkhardt',
+        analyst: 'Tom Brady',
+        sideline: 'Erin Andrews & Tom Rinaldi',
+        leadDuo: 'Kevin Burkhardt & Tom Brady',
+        fullCrew: 'Kevin Burkhardt, Tom Brady, Erin Andrews, Tom Rinaldi',
+      }
+    } else if (upperNet.includes('NBC')) {
+      usTv = 'NBC'
+      announcers = {
+        playByPlay: 'Mike Tirico',
+        analyst: 'Cris Collinsworth',
+        sideline: 'Melissa Stark',
+        leadDuo: 'Mike Tirico & Cris Collinsworth',
+        fullCrew: 'Mike Tirico, Cris Collinsworth, Melissa Stark',
+      }
+    } else if (upperNet.includes('CBS')) {
+      usTv = 'CBS'
+      announcers = {
+        playByPlay: 'Jim Nantz',
+        analyst: 'J.J. Watt',
+        sideline: 'Tracy Wolfson & Evan Washburn',
+        leadDuo: 'Jim Nantz & J.J. Watt',
+        fullCrew: 'Jim Nantz, J.J. Watt, Tracy Wolfson, Evan Washburn',
+      }
+    } else {
+      // Super Bowl LXI (Feb 2027) on ESPN / ABC
+      usTv = upperNet || 'ESPN / ABC'
+      announcers = {
+        playByPlay: 'Joe Buck',
+        analyst: 'Troy Aikman',
+        sideline: 'Lisa Salters & Laura Rutledge',
+        leadDuo: 'Joe Buck & Troy Aikman',
+        fullCrew: 'Joe Buck, Troy Aikman, Lisa Salters, Laura Rutledge',
+      }
     }
   } else if (isLondonVenue) {
     usTv = 'NFL Network'
@@ -199,10 +229,10 @@ export function getGameBroadcastDetails(event?: NFLEvent | null): GameBroadcastD
     if (ukHour >= 21 || isTier1Matchup) {
       announcers = {
         playByPlay: 'Jim Nantz',
-        analyst: 'Tony Romo',
+        analyst: 'J.J. Watt',
         sideline: 'Tracy Wolfson',
-        leadDuo: 'Jim Nantz & Tony Romo',
-        fullCrew: 'Jim Nantz, Tony Romo, Tracy Wolfson',
+        leadDuo: 'Jim Nantz & J.J. Watt',
+        fullCrew: 'Jim Nantz, J.J. Watt, Tracy Wolfson',
       }
     } else {
       announcers = {
