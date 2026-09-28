@@ -9,13 +9,12 @@ import {
   getNextWeek,
   getPrevWeek,
 } from '../utils/nflHelpers'
-import { fetchNFLScoreboard, getMockLiveGames, type ScoreboardQueryParams } from '../services/espnApi'
+import { fetchNFLScoreboard, type ScoreboardQueryParams } from '../services/espnApi'
 import { HeroMatchup } from './HeroMatchup'
 import { GameCard } from './GameCard'
 import {
   RefreshCw,
   Search,
-  Sparkles,
   AlertTriangle,
   WifiOff,
   X,
@@ -26,9 +25,12 @@ import {
   Eye,
   Keyboard,
   Compass,
+  Server,
+  Database,
 } from 'lucide-react'
 import { playRedZoneSound, playScoreChime, playTactileClick } from '../utils/audioFeedback'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
+import { DataSourcesModal } from './DataSourcesModal'
 
 export const Dashboard: React.FC = () => {
   const [data, setData] = useState<NFLScoreboardData | null>(null)
@@ -39,7 +41,6 @@ export const Dashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [countdown, setCountdown] = useState<number>(10)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
-  const [useDemoMode, setUseDemoMode] = useState<boolean>(false)
   const [selectedHeroId, setSelectedHeroId] = useState<string | null>(null)
   const [autoRedZoneSpotlight, setAutoRedZoneSpotlight] = useState<boolean>(true)
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true)
@@ -97,10 +98,25 @@ export const Dashboard: React.FC = () => {
   }, []) // stable — no deps needed thanks to loadDataRef
 
   // Fetch function with AbortController and resilience
+  // Active redundant live source status
+  const [activeSource, setActiveSource] = useState<{
+    id: string
+    name: string
+    responseTimeMs: number
+    isCached: boolean
+    cachedTimestamp?: string
+  }>({
+    id: 'espn-cdn-fastly',
+    name: 'ESPN Core CDN (Fastly Edge)',
+    responseTimeMs: 0,
+    isCached: false,
+  })
+  const [isSourcesModalOpen, setIsSourcesModalOpen] = useState<boolean>(false)
+
+  // Fetch function with AbortController and multi-source real NFL redundancy
   const loadData = useCallback(async (isManual = false, overrideSeasonType?: number, overrideWeek?: number) => {
-    if (!navigator.onLine && !useDemoMode) {
+    if (!navigator.onLine) {
       setIsOnline(false)
-      return
     }
 
     if (isManual) setIsRefreshing(true)
@@ -117,26 +133,20 @@ export const Dashboard: React.FC = () => {
     const isTargetingLive = !overrideSeasonType ? !hasUserSelectedWeek : (targetSeasonType === liveSeasonType && targetWeek === liveWeek)
 
     try {
-      if (useDemoMode) {
-        const mockEvents = getMockLiveGames(targetSeasonType, targetWeek)
-        setData({
-          events: mockEvents,
-          week: { number: targetWeek },
-          season: { year: 2026, type: targetSeasonType },
-        })
-        setLastUpdated(new Date())
-        setCountdown(10)
-        setIsLoading(false)
-        setIsRefreshing(false)
-        return
-      }
-
       const params: ScoreboardQueryParams | undefined = !isTargetingLive
         ? { seasonType: targetSeasonType, week: targetWeek }
         : undefined
 
-      const scoreboard = await fetchNFLScoreboard(params, controller.signal)
+      const result = await fetchNFLScoreboard(params, controller.signal)
+      const scoreboard = result.data
       setData(scoreboard)
+      setActiveSource({
+        id: result.sourceId,
+        name: result.sourceName,
+        responseTimeMs: result.responseTimeMs,
+        isCached: result.isCached,
+        cachedTimestamp: result.cachedTimestamp,
+      })
 
       // If user hasn't explicitly chosen a different week, sync to current live week
       if (scoreboard.week?.number && isTargetingLive) {
@@ -153,23 +163,18 @@ export const Dashboard: React.FC = () => {
     } catch (err: unknown) {
       const isAbort = err instanceof Error && err.name === 'AbortError'
       if (!isAbort) {
-        console.warn('ESPN API direct connection unavailable (e.g. CORS on static hosting). Activating simulation fallback:', err)
-        const mockEvents = getMockLiveGames(targetSeasonType, targetWeek)
-        setData({
-          events: mockEvents,
-          week: { number: targetWeek },
-          season: { year: 2026, type: targetSeasonType },
-        })
-        setLastUpdated(new Date())
-        setCountdown(10)
-        setUseDemoMode(true)
-        setError(null)
+        const errorMsg =
+          err instanceof Error
+            ? err.message
+            : 'Unable to connect to live NFL scoreboard across redundant endpoints. Check your internet connection.'
+        console.error('Data redundancy failover exhausted:', err)
+        setError(errorMsg)
       }
     } finally {
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }, [useDemoMode, selectedSeasonType, selectedWeek, hasUserSelectedWeek, liveSeasonType, liveWeek])
+  }, [selectedSeasonType, selectedWeek, hasUserSelectedWeek, liveSeasonType, liveWeek])
 
   const handleSelectWeek = useCallback(
     (seasonType: number, weekNumber: number) => {
@@ -454,11 +459,9 @@ export const Dashboard: React.FC = () => {
         setCountdown(10)
         playTactileClick(isMuted)
         loadData(true)
-        setSrAnnouncement('Refreshing live scores')
-      } else if (e.key.toLowerCase() === 's') {
+      } else if (e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'd') {
         e.preventDefault()
-        setUseDemoMode((prev) => !prev)
-        setSelectedHeroId(null)
+        setIsSourcesModalOpen((prev) => !prev)
       } else if (e.key.toLowerCase() === 'a') {
         e.preventDefault()
         setAutoRedZoneSpotlight((prev) => !prev)
@@ -567,8 +570,32 @@ export const Dashboard: React.FC = () => {
         Skip to main content
       </a>
 
+      {/* VERIFIED OFFLINE DATA BANNER */}
+      {activeSource.isCached && (
+        <aside
+          role="alert"
+          className="bg-amber-950/90 border-b border-amber-500/40 text-amber-200 px-4 py-2 text-xs flex items-center justify-between shadow-md"
+        >
+          <div className="flex items-center gap-2">
+            <Database className="h-4 w-4 text-amber-400 shrink-0" />
+            <span>
+              <strong>Offline Resiliency Active:</strong> Displaying last verified real NFL scoreboard data from {activeSource.name}
+              {activeSource.cachedTimestamp && ` (recorded at ${new Date(activeSource.cachedTimestamp).toLocaleTimeString()})`}.
+              Never using made-up data.
+            </span>
+          </div>
+          <button
+            onClick={() => loadData(true)}
+            disabled={isRefreshing}
+            className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[11px] transition-colors shrink-0 disabled:opacity-50"
+          >
+            {isRefreshing ? 'Reconnecting...' : 'Retry Live Feeds'}
+          </button>
+        </aside>
+      )}
+
       {/* OFFLINE STATUS BANNER */}
-      {!isOnline && (
+      {!isOnline && !activeSource.isCached && (
         <div
           className="bg-amber-600/90 text-white text-xs py-2 px-4 text-center flex items-center justify-center gap-2 font-medium"
           role="status"
@@ -659,23 +686,21 @@ export const Dashboard: React.FC = () => {
                 <span className="sr-only sm:not-sr-only sm:ml-1 hidden xl:inline">Help (?)</span>
               </button>
 
-              {/* Simulation Mode Toggle */}
+              {/* Active Live Data Feed & Redundancy Inspector */}
               <button
-                onClick={() => {
-                  setUseDemoMode((prev) => !prev)
-                  setSelectedHeroId(null)
-                }}
-                className={`flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-amber-400 ${
-                  useDemoMode
+                onClick={() => setIsSourcesModalOpen(true)}
+                className={`flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                  activeSource.isCached
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    : 'bg-[#111927] text-slate-400 border border-white/[0.08] hover:text-white'
+                    : 'bg-emerald-950/40 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-900/40'
                 }`}
-                title="Toggle simulated sequence to test live field animations and drive updates"
-                aria-pressed={useDemoMode}
+                title={`Active Feed: ${activeSource.name}${activeSource.responseTimeMs ? ` (${activeSource.responseTimeMs}ms)` : ''}. Click to inspect all 5 redundant real sources.`}
+                aria-label={`Active Data Source: ${activeSource.name}. Click to view redundant sources.`}
               >
-                <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                <span className="hidden sm:inline">
-                  {useDemoMode ? 'Demo Active' : 'Simulation'}
+                <Server className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="hidden sm:inline font-mono text-[11px]">
+                  {activeSource.isCached ? 'Offline Cache' : activeSource.name.replace('ESPN ', '')}
+                  {activeSource.responseTimeMs > 0 && !activeSource.isCached ? ` • ${activeSource.responseTimeMs}ms` : ''}
                 </span>
               </button>
 
@@ -737,16 +762,16 @@ export const Dashboard: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setUseDemoMode(true)}
-                className="rounded bg-emerald-700/80 hover:bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white transition-colors shadow-sm"
+                onClick={() => setIsSourcesModalOpen(true)}
+                className="rounded bg-slate-800 hover:bg-slate-700 px-2.5 py-1 text-xs font-semibold text-slate-200 transition-colors"
               >
-                Launch Simulation
+                Inspect Sources
               </button>
               <button
                 onClick={() => loadData(true)}
                 className="rounded bg-rose-800/80 px-2.5 py-1 text-xs font-semibold text-white hover:bg-rose-700 transition-colors"
               >
-                Retry Sync
+                Retry All 5 Real Feeds
               </button>
             </div>
           </div>
@@ -1000,6 +1025,22 @@ export const Dashboard: React.FC = () => {
       <KeyboardShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+      />
+
+      {/* Redundant Live Data Sources Modal */}
+      <DataSourcesModal
+        isOpen={isSourcesModalOpen}
+        onClose={() => setIsSourcesModalOpen(false)}
+        activeSourceId={activeSource.id}
+        activeSourceName={activeSource.name}
+        responseTimeMs={activeSource.responseTimeMs}
+        isCached={activeSource.isCached}
+        cachedTimestamp={activeSource.cachedTimestamp}
+        onRefresh={() => {
+          setCountdown(10)
+          loadData(true)
+        }}
+        isRefreshing={isRefreshing}
       />
     </div>
   )

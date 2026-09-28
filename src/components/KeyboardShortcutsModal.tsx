@@ -20,7 +20,7 @@ const SHORTCUTS: ShortcutItem[] = [
   { keyLabel: 'J / K', action: 'Cycle spotlight matchup up and down', category: 'Navigation' },
   { keyLabel: '/', action: 'Focus search bar', category: 'Navigation' },
   { keyLabel: 'R', action: 'Manual instant data refresh', category: 'Controls' },
-  { keyLabel: 'S', action: 'Toggle simulation / demo mode', category: 'Controls' },
+  { keyLabel: 'S or D', action: 'Inspect 5 redundant live data sources & telemetry', category: 'Controls' },
   { keyLabel: 'A', action: 'Toggle Auto Red Zone follow', category: 'Controls' },
   { keyLabel: 'F', action: 'Toggle all 100-yard field radars (Expand / Collapse All)', category: 'Controls' },
   { keyLabel: 'M', action: 'Toggle broadcast audio effects', category: 'Controls' },

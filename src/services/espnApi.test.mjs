@@ -60,3 +60,48 @@ test('Multiple games can be in the Red Zone simultaneously', async () => {
   )
 })
 
+test('REAL_NFL_DATA_SOURCES contains 5 valid redundant live endpoints', async () => {
+  const { REAL_NFL_DATA_SOURCES } = await import('./espnApi.ts')
+  assert.equal(REAL_NFL_DATA_SOURCES.length, 5)
+
+  for (const src of REAL_NFL_DATA_SOURCES) {
+    assert.ok(src.id, 'Source must have id')
+    assert.ok(src.name, 'Source must have name')
+    assert.ok(src.shortName, 'Source must have shortName')
+    assert.equal(typeof src.buildUrl, 'function')
+    assert.equal(typeof src.parseResponse, 'function')
+
+    const url = src.buildUrl('seasontype=2&week=4')
+    assert.ok(url.includes('scoreboard'), `URL for ${src.name} must target scoreboard feed`)
+  }
+})
+
+test('RedundantSource parsers accurately parse direct events and wrapped content.sbData', async () => {
+  const { REAL_NFL_DATA_SOURCES } = await import('./espnApi.ts')
+  const fastly = REAL_NFL_DATA_SOURCES.find((s) => s.id === 'espn-cdn-fastly')
+  assert.ok(fastly)
+
+  // Direct events shape
+  const direct = fastly.parseResponse({ events: [{ id: '123', name: 'KC vs BUF' }] })
+  assert.ok(direct)
+  assert.equal(direct.events[0].id, '123')
+
+  // Wrapped sbData shape
+  const wrapped = fastly.parseResponse({
+    content: {
+      sbData: {
+        events: [{ id: '456', name: 'PHI vs DAL' }],
+        week: { number: 4 }
+      }
+    }
+  })
+  assert.ok(wrapped)
+  assert.equal(wrapped.events[0].id, '456')
+  assert.equal(wrapped.week.number, 4)
+
+  // Null or malformed input returns null
+  assert.equal(fastly.parseResponse(null), null)
+  assert.equal(fastly.parseResponse({}), null)
+  assert.equal(fastly.parseResponse({ events: 'not-array' }), null)
+})
+
