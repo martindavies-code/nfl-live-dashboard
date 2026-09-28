@@ -8,6 +8,15 @@ import {
   getOffensiveDrive,
   isRedZoneSituation,
   isHalftimeSituation,
+  areColorsTooSimilar,
+  resolveContrastingTeamColors,
+  getWeekLabel,
+  getWeekBadgeText,
+  getSeasonPhaseDescription,
+  getNextWeek,
+  getPrevWeek,
+  PLAYOFF_ROUNDS,
+  REGULAR_SEASON_WEEKS,
 } from './nflHelpers.ts'
 
 test('safeParseInt handles numbers, strings, dashes, nulls, and undefined', () => {
@@ -361,5 +370,135 @@ test('isHalftimeSituation accurately identifies Halftime states', () => {
     false
   )
 })
+
+test('areColorsTooSimilar accurately detects clashing vs distinct team colors', () => {
+  // Identical colors
+  assert.equal(areColorsTooSimilar('#00338d', '#00338d'), true)
+
+  // Bills blue vs Patriots/Cowboys deep navy (similar blue hue and low Delta E)
+  assert.equal(areColorsTooSimilar('#00338d', '#0b2265'), true)
+
+  // Two dark colors (Steelers black vs Panthers black/dark)
+  assert.equal(areColorsTooSimilar('#101820', '#000000'), true)
+
+  // Distinct contrast (Bills blue vs Chiefs red)
+  assert.equal(areColorsTooSimilar('#00338d', '#e31837'), false)
+
+  // Distinct contrast (Packers green vs Vikings purple)
+  assert.equal(areColorsTooSimilar('#203731', '#4f2683'), false)
+})
+
+test('resolveContrastingTeamColors ensures distinct broadcast contrast', () => {
+  // 1. Naturally distinct teams: Bills (Blue) vs Chiefs (Red)
+  const distinct = resolveContrastingTeamColors(
+    { team: { color: '00338d', alternateColor: 'c60c30' } },
+    { team: { color: 'e31837', alternateColor: 'ffb81c' } }
+  )
+  assert.equal(distinct.homeColor, '#00338d')
+  assert.equal(distinct.awayColor, '#e31837')
+
+  // 2. Clashing blue teams: Bills (Navy) vs Cowboys (Navy), Cowboys have silver alternate
+  const blueClash = resolveContrastingTeamColors(
+    { team: { color: '00338d', alternateColor: 'c60c30' } },
+    { team: { color: '002244', alternateColor: '869397' } }
+  )
+  assert.equal(blueClash.homeColor, '#00338d')
+  assert.notEqual(blueClash.awayColor, '#002244') // Must have changed to alternate or fallback
+  assert.equal(areColorsTooSimilar(blueClash.homeColor, blueClash.awayColor), false)
+
+  // 3. Clashing colors with no alternates: Falls back to curated contrasting pair
+  const darkClashNoAlt = resolveContrastingTeamColors(
+    { team: { color: '001122' } },
+    { team: { color: '001133' } }
+  )
+  assert.equal(areColorsTooSimilar(darkClashNoAlt.homeColor, darkClashNoAlt.awayColor), false)
+})
+
+test('getWeekLabel formats regular season, preseason, and all 5 playoff rounds correctly', () => {
+  // Regular season
+  assert.equal(getWeekLabel(2, 1), 'Week 1')
+  assert.equal(getWeekLabel(2, 4), 'Week 4')
+  assert.equal(getWeekLabel(2, 18), 'Week 18')
+  assert.equal(getWeekLabel(undefined, 4), 'Week 4')
+
+  // Preseason
+  assert.equal(getWeekLabel(1, 1), 'Preseason Week 1')
+  assert.equal(getWeekLabel(1, 3), 'Preseason Week 3')
+
+  // Postseason / Playoffs
+  assert.equal(getWeekLabel(3, 1), 'Wild Card Weekend')
+  assert.equal(getWeekLabel(3, 2), 'Divisional Round')
+  assert.equal(getWeekLabel(3, 3), 'Conference Championships')
+  assert.equal(getWeekLabel(3, 4), 'Pro Bowl Games')
+  assert.equal(getWeekLabel(3, 5), 'Super Bowl LXI')
+  assert.equal(getWeekLabel(3, 99), 'Playoff Round 99')
+})
+
+test('getWeekBadgeText provides sleek compact labels for headers and buttons', () => {
+  assert.equal(getWeekBadgeText(2, 4), 'W4')
+  assert.equal(getWeekBadgeText(2, 18), 'W18')
+  assert.equal(getWeekBadgeText(1, 2), 'Pre W2')
+  assert.equal(getWeekBadgeText(3, 1), 'Wild Card')
+  assert.equal(getWeekBadgeText(3, 2), 'Divisional')
+  assert.equal(getWeekBadgeText(3, 3), 'Conf Champ')
+  assert.equal(getWeekBadgeText(3, 4), 'Pro Bowl')
+  assert.equal(getWeekBadgeText(3, 5), 'Super Bowl')
+})
+
+test('getSeasonPhaseDescription accurately contextualizes regular season and playoff rounds', () => {
+  assert.equal(
+    getSeasonPhaseDescription(2, 2026, 4),
+    '2026 Regular Season • Week 4'
+  )
+  assert.equal(
+    getSeasonPhaseDescription(3, 2026, 5),
+    '2026 NFL Playoffs • Super Bowl LXI'
+  )
+  assert.equal(
+    getSeasonPhaseDescription(3, 2026, 1),
+    '2026 NFL Playoffs • Wild Card Weekend'
+  )
+  assert.equal(
+    getSeasonPhaseDescription(1, 2026, 2),
+    '2026 NFL Preseason • Week 2'
+  )
+})
+
+test('getNextWeek and getPrevWeek handle seamless navigation and cross-season boundaries', () => {
+  // Step within regular season
+  assert.deepEqual(getNextWeek(2, 3), { seasonType: 2, weekNumber: 4 })
+  assert.deepEqual(getPrevWeek(2, 4), { seasonType: 2, weekNumber: 3 })
+
+  // Boundary: Week 18 -> Wild Card Weekend (Playoffs Round 1)
+  assert.deepEqual(getNextWeek(2, 18), { seasonType: 3, weekNumber: 1 })
+
+  // Boundary: Wild Card Weekend (Playoffs Round 1) -> Week 18 (Regular Season)
+  assert.deepEqual(getPrevWeek(3, 1), { seasonType: 2, weekNumber: 18 })
+
+  // Within Playoffs: Wild Card -> Divisional -> Conf Champ -> Pro Bowl -> Super Bowl
+  assert.deepEqual(getNextWeek(3, 1), { seasonType: 3, weekNumber: 2 })
+  assert.deepEqual(getNextWeek(3, 2), { seasonType: 3, weekNumber: 3 })
+  assert.deepEqual(getNextWeek(3, 3), { seasonType: 3, weekNumber: 4 })
+  assert.deepEqual(getNextWeek(3, 4), { seasonType: 3, weekNumber: 5 })
+  // Clamp at Super Bowl
+  assert.deepEqual(getNextWeek(3, 5), { seasonType: 3, weekNumber: 5 })
+
+  // Step backwards from Super Bowl
+  assert.deepEqual(getPrevWeek(3, 5), { seasonType: 3, weekNumber: 4 })
+  assert.deepEqual(getPrevWeek(3, 2), { seasonType: 3, weekNumber: 1 })
+
+  // Clamp at Week 1
+  assert.deepEqual(getPrevWeek(2, 1), { seasonType: 2, weekNumber: 1 })
+})
+
+test('PLAYOFF_ROUNDS and REGULAR_SEASON_WEEKS have correct NFL constants', () => {
+  assert.equal(PLAYOFF_ROUNDS.length, 5)
+  assert.equal(PLAYOFF_ROUNDS[0].name, 'Wild Card Weekend')
+  assert.equal(PLAYOFF_ROUNDS[4].name, 'Super Bowl LXI')
+  assert.equal(REGULAR_SEASON_WEEKS.length, 18)
+  assert.equal(REGULAR_SEASON_WEEKS[0], 1)
+  assert.equal(REGULAR_SEASON_WEEKS[17], 18)
+})
+
 
 

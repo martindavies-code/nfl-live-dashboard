@@ -31,3 +31,33 @@
 * {
   box-sizing: border-box;
 }
+
+/* Accessibility: Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High-Contrast Pro Mode for Low Vision & High Glare */
+.high-contrast-pro {
+  filter: contrast(1.15);
+}
+.high-contrast-pro article,
+.high-contrast-pro section,
+.high-contrast-pro [role="region"] {
+  border-width: 2px !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+.high-contrast-pro text {
+  font-weight: 800 !important;
+}
+
+/* Focus Visibility Ergonomics */
+:focus-visible {
+  outline: 2px solid #38bdf8 !important;
+  outline-offset: 2px !important;
+}

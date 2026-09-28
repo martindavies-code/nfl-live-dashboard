@@ -2,7 +2,7 @@ import React, { useState, memo } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation } from '../utils/nflHelpers'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, formatLocalizedKickoff, getWeekLabel } from '../utils/nflHelpers'
 import { 
   Tv, 
   Flame, 
@@ -13,6 +13,8 @@ import {
   Maximize2,
   Sparkles,
   Pause,
+  Compass,
+  Trophy,
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 
@@ -20,6 +22,8 @@ interface GameCardProps {
   event: NFLEvent
   isSpotlighted?: boolean
   onSpotlight?: () => void
+  showField?: boolean
+  onToggleAllRadars?: () => void
 }
 
 const DEFAULT_NFL_LOGO = 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nfl.png'
@@ -27,9 +31,21 @@ const DEFAULT_NFL_LOGO = 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/n
 export const GameCard: React.FC<GameCardProps> = memo(({ 
   event, 
   isSpotlighted = false,
-  onSpotlight 
+  onSpotlight,
+  showField: controlledShowField,
+  onToggleAllRadars
 }) => {
-  const [showField, setShowField] = useState(false)
+  const [internalShowField, setInternalShowField] = useState(false)
+  const isFieldExpanded = controlledShowField !== undefined ? controlledShowField : internalShowField
+
+  const handleToggleRadar = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (onToggleAllRadars) {
+      onToggleAllRadars()
+    } else {
+      setInternalShowField(!internalShowField)
+    }
+  }
 
   const competition = event.competitions?.[0]
   if (!competition) return null
@@ -69,43 +85,76 @@ export const GameCard: React.FC<GameCardProps> = memo(({
 
   const broadcastNetwork =
     competition.broadcasts?.[0]?.names?.join(', ') ||
-    (event as any).broadcast
+    (event as { broadcast?: string }).broadcast
 
-  // Format kick-off date for pre-game with resilience against null/invalid dates
-  let formattedKickoff = 'Upcoming'
-  try {
-    if (event.date) {
-      const d = new Date(event.date)
-      if (!isNaN(d.getTime())) {
-        formattedKickoff = d.toLocaleDateString('en-US', {
-          weekday: 'short',
-          hour: 'numeric',
-          minute: '2-digit',
-        })
-      }
-    }
-  } catch {
-    formattedKickoff = 'Upcoming'
-  }
+  // Format kick-off date for pre-game localized to London, UK timezone
+  const formattedKickoff = formatLocalizedKickoff(event.date)
 
   const downAndDistance = formatDownAndDistance(situation)
 
   const homeTimeouts = typeof situation?.homeTimeouts === 'number' && Number.isFinite(situation.homeTimeouts) ? situation.homeTimeouts : 3
   const awayTimeouts = typeof situation?.awayTimeouts === 'number' && Number.isFinite(situation.awayTimeouts) ? situation.awayTimeouts : 3
 
+  const fieldPanelId = `field-panel-${event.id}`
+  const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in Quarter ${status.period} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''}`
+
   return (
     <article
-      className={`group relative flex flex-col rounded-xl border transition-all duration-200 overflow-hidden ${
-        isSpotlighted
-          ? 'ring-2 ring-emerald-500/70 border-emerald-500/50 bg-[#101726]'
+      onClick={() => {
+        if (onSpotlight && !isSpotlighted) {
+          onSpotlight()
+        }
+      }}
+      role={onSpotlight ? 'button' : undefined}
+      tabIndex={onSpotlight ? 0 : undefined}
+      aria-label={cardAriaLabel}
+      onKeyDown={(e) => {
+        if (onSpotlight && !isSpotlighted && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault()
+          onSpotlight()
+        }
+      }}
+      className={`group relative flex flex-col rounded-xl border transition-all duration-300 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b14] ${
+        onSpotlight && !isSpotlighted ? 'cursor-pointer hover:-translate-y-0.5' : ''
+      } ${
+        isRedZone && isSpotlighted
+          ? 'border-rose-500/90 ring-2 ring-sky-400 ring-offset-2 ring-offset-[#070b14] bg-gradient-to-b from-rose-950/30 via-[#101726] to-[#0a0f1b] shadow-[0_0_28px_rgba(244,63,94,0.38),0_0_16px_rgba(56,189,248,0.35)]'
+          : isRedZone
+          ? 'border-rose-500/90 ring-2 ring-rose-500/70 bg-gradient-to-b from-rose-950/30 via-[#0e1524] to-[#0a0f1b] shadow-[0_0_24px_rgba(244,63,94,0.38)]'
+          : isSpotlighted
+          ? 'border-sky-400/90 ring-2 ring-sky-400/80 bg-gradient-to-b from-sky-950/30 via-[#101726] to-[#0a0f1b] shadow-[0_0_24px_rgba(56,189,248,0.35)]'
           : isLive
-          ? 'border-white/[0.12] bg-[#0e1524] hover:border-white/[0.22] hover:bg-[#11192b]'
+          ? 'border-white/[0.12] bg-[#0e1524] hover:border-white/[0.25] hover:bg-[#11192b]'
           : 'border-white/[0.05] bg-[#0a0f1b]/80 opacity-90 hover:opacity-100 hover:border-white/[0.12]'
       }`}
     >
+      {/* TOP ACCENT BAR FOR INSTANT PERIPHERAL SCANNING */}
+      {isRedZone && isSpotlighted ? (
+        <div className="h-1.5 w-full bg-gradient-to-r from-rose-500 via-fuchsia-500 to-sky-400 animate-pulse" />
+      ) : isRedZone ? (
+        <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-rose-500 to-red-600 animate-pulse" />
+      ) : isSpotlighted ? (
+        <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 shadow-sm" />
+      ) : null}
+
       {/* CARD HEADER */}
-      <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#070b14] px-4 py-2 text-xs">
+      <div className={`flex items-center justify-between border-b px-4 py-2 text-xs transition-colors ${
+        isRedZone && isSpotlighted
+          ? 'border-rose-500/30 bg-[#0d0914]'
+          : isRedZone
+          ? 'border-rose-500/30 bg-[#12080c]'
+          : isSpotlighted
+          ? 'border-sky-500/30 bg-[#07111e]'
+          : 'border-white/[0.06] bg-[#070b14]'
+      }`}>
         <div className="flex items-center gap-2">
+          {event.season?.type === 3 && (
+            <span className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/40">
+              <Trophy className="h-3 w-3 text-amber-400" />
+              {getWeekLabel(3, event.week?.number)}
+            </span>
+          )}
+
           {isLive ? (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/20 px-2 py-0.5 text-[11px] font-bold text-rose-300 border border-rose-500/30">
               <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
@@ -144,10 +193,19 @@ export const GameCard: React.FC<GameCardProps> = memo(({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* RED ZONE BADGE */}
           {isLive && isRedZone && (
-            <span className="inline-flex items-center gap-0.5 rounded bg-rose-600/20 border border-rose-500/30 px-1.5 py-0.5 text-[10px] font-bold text-rose-300">
+            <span className="inline-flex items-center gap-1 rounded bg-rose-600/30 border border-rose-500/60 px-2 py-0.5 text-[10px] font-black tracking-wider text-rose-200 animate-pulse shadow-sm shadow-rose-950">
               <Flame className="h-3 w-3 text-rose-400 fill-rose-400" />
-              RZ
+              RED ZONE
+            </span>
+          )}
+
+          {/* SELECTED BADGE */}
+          {isSpotlighted && (
+            <span className="inline-flex items-center gap-1 rounded bg-sky-500/25 border border-sky-400/60 px-2 py-0.5 text-[10px] font-bold text-sky-200 shadow-sm shadow-sky-950">
+              <Sparkles className="h-3 w-3 text-sky-300 fill-sky-300" />
+              SELECTED
             </span>
           )}
 
@@ -158,16 +216,19 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </span>
           )}
 
-          {/* Spotlight Button */}
+          {/* Spotlight / Select Button */}
           {onSpotlight && !isSpotlighted && (
             <button
-              onClick={onSpotlight}
-              className="flex items-center gap-1 rounded bg-slate-800/80 hover:bg-slate-700 px-2 py-0.5 text-[10px] font-semibold text-slate-300 hover:text-white transition-colors focus:outline-none focus:ring-1 focus:ring-sky-400"
+              onClick={(e) => {
+                e.stopPropagation()
+                onSpotlight()
+              }}
+              className="flex items-center gap-1 rounded bg-slate-800/90 hover:bg-sky-600 hover:text-white px-2 py-0.5 text-[10px] font-semibold text-slate-300 transition-colors focus:outline-none focus:ring-1 focus:ring-sky-400"
               title="Pin this matchup to the Spotlight Radar at the top"
-              aria-label={`Spotlight ${awayComp?.team?.name} at ${homeComp?.team?.name}`}
+              aria-label={`Select ${awayComp?.team?.name} at ${homeComp?.team?.name}`}
             >
               <Maximize2 className="h-3 w-3" />
-              <span className="hidden md:inline">Spotlight</span>
+              <span className="hidden md:inline">Select</span>
             </button>
           )}
         </div>
@@ -191,10 +252,16 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               />
               {isLive && isAwayPossession && (
                 <span
-                  className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[8px]"
+                  className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 shadow-md ring-1 ring-amber-300/80"
                   title="Possession"
+                  aria-label="Possession"
                 >
-                  🏈
+                  <svg viewBox="0 0 24 24" className="h-2.5 w-2.5 fill-amber-950 stroke-amber-950" strokeWidth="0.8">
+                    <path d="M 2.5,12 C 4.5,5 12,3.5 21.5,2.5 C 20.5,12 19,19.5 12,21.5 C 4.5,20.5 3.5,19 2.5,12 Z" />
+                    <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" />
+                    <line x1="9" y1="13" x2="13" y2="9" stroke="#ffffff" strokeWidth="1.3" strokeLinecap="round" />
+                    <line x1="11" y1="15" x2="15" y2="11" stroke="#ffffff" strokeWidth="1.3" strokeLinecap="round" />
+                  </svg>
                 </span>
               )}
             </div>
@@ -246,10 +313,16 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               />
               {isLive && isHomePossession && (
                 <span
-                  className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[8px]"
+                  className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 shadow-md ring-1 ring-amber-300/80"
                   title="Possession"
+                  aria-label="Possession"
                 >
-                  🏈
+                  <svg viewBox="0 0 24 24" className="h-2.5 w-2.5 fill-amber-950 stroke-amber-950" strokeWidth="0.8">
+                    <path d="M 2.5,12 C 4.5,5 12,3.5 21.5,2.5 C 20.5,12 19,19.5 12,21.5 C 4.5,20.5 3.5,19 2.5,12 Z" />
+                    <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" />
+                    <line x1="9" y1="13" x2="13" y2="9" stroke="#ffffff" strokeWidth="1.3" strokeLinecap="round" />
+                    <line x1="11" y1="15" x2="15" y2="11" stroke="#ffffff" strokeWidth="1.3" strokeLinecap="round" />
+                  </svg>
                 </span>
               )}
             </div>
@@ -352,24 +425,37 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             <span className="font-semibold text-slate-300">When: </span>
             {scorigamiInfo.whenScenario}
           </div>
+
+          {scorigamiInfo.lastGameSummary && (
+            <div className="mt-2 flex items-start gap-1.5 text-xs text-slate-400 border-t border-white/[0.06] pt-1.5">
+              <span className="font-semibold text-slate-300 flex-shrink-0">Last Occurred:</span>
+              <span className="text-slate-300 leading-snug">
+                <strong className="text-amber-300/90 font-medium">{scorigamiInfo.lastGameSummary}</strong>
+                <span className="text-slate-500 ml-1.5 font-mono text-[10px]">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Expandable Field Radar Toggle */}
-      <div className="border-t border-white/[0.06] bg-[#070b14] px-4 py-2">
+      <div className="border-t border-white/[0.06] bg-[#070b14] px-4 py-1.5 mt-auto">
         <button
-          onClick={() => setShowField(!showField)}
-          className="flex w-full items-center justify-between text-xs text-slate-400 hover:text-white transition-colors focus:outline-none"
-          aria-expanded={showField}
+          onClick={handleToggleRadar}
+          className="flex w-full items-center justify-between text-xs text-slate-400 hover:text-white transition-colors min-h-[44px] py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded-lg px-1"
+          aria-expanded={isFieldExpanded}
+          aria-controls={fieldPanelId}
+          aria-label={isFieldExpanded ? `Hide field diagram for ${awayAbbr} at ${homeAbbr}` : `View live field diagram for ${awayAbbr} at ${homeAbbr}`}
         >
-          <span className="font-semibold text-[11px] uppercase tracking-wider">
-            {showField ? 'Hide Field Radar' : 'View Field Radar'}
+          <span className="font-semibold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+            <Compass className={`h-3.5 w-3.5 ${isFieldExpanded ? 'text-sky-400' : 'text-slate-400'}`} />
+            {isFieldExpanded ? 'Hide Field Radar' : 'View Field Radar'}
           </span>
-          {showField ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          {isFieldExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
 
-        {showField && (
-          <div className="pt-3 pb-1">
+        {isFieldExpanded && (
+          <div id={fieldPanelId} className="pt-2 pb-1" role="region" aria-label="Field position view">
             <FieldDiagram
               situation={situation}
               competitors={competitors}

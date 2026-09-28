@@ -1,13 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { calculateWinProbability, normalCdf } from './winProbability.ts'
-import { getScorigamiInfo, getGameSecondsRemaining, makeScoreKey, hasOccurred, getHistoricalRecord } from './scorigami.ts'
+import { getGameSecondsRemaining, makeScoreKey, hasOccurred } from './scorigami.ts'
 import {
-  safeParseInt,
-  sanitizeHexColor,
-  getContrastYIQ,
-  formatDownAndDistance,
-  getOffensiveDrive,
   isRedZoneSituation,
   isHalftimeSituation,
 } from './nflHelpers.ts'

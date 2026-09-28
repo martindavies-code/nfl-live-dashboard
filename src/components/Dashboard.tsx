@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import type { GameFilter, NFLScoreboardData, NFLEvent } from '../types/nfl'
-import { fetchNFLScoreboard, getMockLiveGames } from '../services/espnApi'
-import { isRedZoneSituation, isHalftimeSituation } from '../utils/nflHelpers'
+import { WeekSelector } from './WeekSelector'
+import {
+  isRedZoneSituation,
+  isHalftimeSituation,
+  getSeasonPhaseDescription,
+  getWeekLabel,
+  getNextWeek,
+  getPrevWeek,
+} from '../utils/nflHelpers'
+import { fetchNFLScoreboard, getMockLiveGames, type ScoreboardQueryParams } from '../services/espnApi'
 import { HeroMatchup } from './HeroMatchup'
 import { GameCard } from './GameCard'
 import {
@@ -13,7 +21,14 @@ import {
   X,
   Flame,
   Pause,
+  Volume2,
+  VolumeX,
+  Eye,
+  Keyboard,
+  Compass,
 } from 'lucide-react'
+import { playRedZoneSound, playScoreChime, playTactileClick } from '../utils/audioFeedback'
+import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
 
 export const Dashboard: React.FC = () => {
   const [data, setData] = useState<NFLScoreboardData | null>(null)
@@ -28,6 +43,36 @@ export const Dashboard: React.FC = () => {
   const [selectedHeroId, setSelectedHeroId] = useState<string | null>(null)
   const [autoRedZoneSpotlight, setAutoRedZoneSpotlight] = useState<boolean>(true)
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true)
+  const [showAllFieldRadars, setShowAllFieldRadars] = useState<boolean>(false)
+
+  // NFL Season & Week Navigation States (Regular Season W1-18 & Postseason/Playoffs)
+  const [selectedSeasonType, setSelectedSeasonType] = useState<number>(2)
+  const [selectedWeek, setSelectedWeek] = useState<number>(4)
+  const [liveSeasonType, setLiveSeasonType] = useState<number>(2)
+  const [liveWeek, setLiveWeek] = useState<number>(4)
+  const [hasUserSelectedWeek, setHasUserSelectedWeek] = useState<boolean>(false)
+
+  // 2026 Premier Accessibility & Audio States
+  const [isMuted, setIsMuted] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('nfl_muted') === 'true'
+    } catch {
+      return false
+    }
+  })
+  const [isHighContrast, setIsHighContrast] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('nfl_high_contrast') === 'true'
+    } catch {
+      return false
+    }
+  })
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false)
+  const [srAnnouncement, setSrAnnouncement] = useState<string>('')
+
+  const prevRedZoneSetRef = useRef<Set<string>>(new Set())
+  const prevScoresMapRef = useRef<Map<string, string>>(new Map())
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const abortControllerRef = useRef<AbortController | null>(null)
   // Always-current reference to loadData so event listeners never capture stale closures
@@ -52,7 +97,7 @@ export const Dashboard: React.FC = () => {
   }, []) // stable — no deps needed thanks to loadDataRef
 
   // Fetch function with AbortController and resilience
-  const loadData = useCallback(async (isManual = false) => {
+  const loadData = useCallback(async (isManual = false, overrideSeasonType?: number, overrideWeek?: number) => {
     if (!navigator.onLine && !useDemoMode) {
       setIsOnline(false)
       return
@@ -67,13 +112,17 @@ export const Dashboard: React.FC = () => {
     const controller = new AbortController()
     abortControllerRef.current = controller
 
+    const targetSeasonType = overrideSeasonType ?? selectedSeasonType
+    const targetWeek = overrideWeek ?? selectedWeek
+    const isTargetingLive = !overrideSeasonType ? !hasUserSelectedWeek : (targetSeasonType === liveSeasonType && targetWeek === liveWeek)
+
     try {
       if (useDemoMode) {
-        const mockEvents = getMockLiveGames()
+        const mockEvents = getMockLiveGames(targetSeasonType, targetWeek)
         setData({
           events: mockEvents,
-          week: { number: 4 },
-          season: { year: 2026, type: 2 },
+          week: { number: targetWeek },
+          season: { year: 2026, type: targetSeasonType },
         })
         setLastUpdated(new Date())
         setCountdown(10)
@@ -82,20 +131,52 @@ export const Dashboard: React.FC = () => {
         return
       }
 
-      const scoreboard = await fetchNFLScoreboard(controller.signal)
+      const params: ScoreboardQueryParams | undefined = !isTargetingLive
+        ? { seasonType: targetSeasonType, week: targetWeek }
+        : undefined
+
+      const scoreboard = await fetchNFLScoreboard(params, controller.signal)
       setData(scoreboard)
+
+      // If user hasn't explicitly chosen a different week, sync to current live week
+      if (scoreboard.week?.number && isTargetingLive) {
+        setLiveWeek(scoreboard.week.number)
+        setSelectedWeek(scoreboard.week.number)
+      }
+      if (scoreboard.season?.type && isTargetingLive) {
+        setLiveSeasonType(scoreboard.season.type)
+        setSelectedSeasonType(scoreboard.season.type)
+      }
+
       setLastUpdated(new Date())
       setCountdown(10)
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
+    } catch (err: unknown) {
+      const isAbort = err instanceof Error && err.name === 'AbortError'
+      if (!isAbort) {
+        const errorMsg = err instanceof Error ? err.message : 'Failed to fetch live games from ESPN API'
         console.error('Error fetching scoreboard:', err)
-        setError(err?.message || 'Failed to fetch live games from ESPN API')
+        setError(errorMsg)
       }
     } finally {
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }, [useDemoMode])
+  }, [useDemoMode, selectedSeasonType, selectedWeek, hasUserSelectedWeek, liveSeasonType, liveWeek])
+
+  const handleSelectWeek = useCallback(
+    (seasonType: number, weekNumber: number) => {
+      const isLive = seasonType === liveSeasonType && weekNumber === liveWeek
+      setHasUserSelectedWeek(!isLive)
+      setSelectedSeasonType(seasonType)
+      setSelectedWeek(weekNumber)
+      setSelectedHeroId(null)
+      setIsLoading(true)
+      playTactileClick(isMuted)
+      setSrAnnouncement(`Navigated to ${getWeekLabel(seasonType, weekNumber)}`)
+      loadData(true, seasonType, weekNumber)
+    },
+    [liveSeasonType, liveWeek, isMuted, loadData]
+  )
 
   // Keep loadDataRef in sync with the latest loadData so stable event listeners always call the current version
   useEffect(() => {
@@ -105,7 +186,9 @@ export const Dashboard: React.FC = () => {
   // Polling setup with Page Visibility awareness (battery & network preservation)
   // Countdown is synced to the same interval as the poll to prevent drift.
   useEffect(() => {
-    loadData()
+    queueMicrotask(() => {
+      loadData()
+    })
 
     let pollInterval: ReturnType<typeof setInterval> | null = null
     let tickInterval: ReturnType<typeof setInterval> | null = null
@@ -240,6 +323,203 @@ export const Dashboard: React.FC = () => {
     )
   )
 
+  // Audio cue and screen reader announcement triggers on live events
+  useEffect(() => {
+    if (!data?.events) return
+
+    const currentRzSet = new Set<string>()
+    let newRzFound = false
+    let newScoreFound = false
+    let scoreAnnouncement = ''
+    let rzAnnouncement = ''
+
+    for (const ev of data.events) {
+      const comp = ev.competitions?.[0]
+      const isRz = isRedZoneSituation(comp?.situation, ev.status || comp?.status, comp?.competitors || [])
+      if (isRz) {
+        currentRzSet.add(ev.id)
+        if (!prevRedZoneSetRef.current.has(ev.id)) {
+          newRzFound = true
+          const offAbbr = comp?.situation?.possessionText || ev.shortName || 'Team'
+          rzAnnouncement = `Red zone alert: ${offAbbr} is driving inside the 20-yard line!`
+        }
+      }
+
+      // Check scores
+      const home = comp?.competitors?.find((c) => c.homeAway === 'home')
+      const away = comp?.competitors?.find((c) => c.homeAway === 'away')
+      const scoreKey = `${home?.score || 0}-${away?.score || 0}`
+      const prevScore = prevScoresMapRef.current.get(ev.id)
+      if (prevScore && prevScore !== scoreKey) {
+        newScoreFound = true
+        scoreAnnouncement = `Score update: ${ev.shortName || ev.name}, ${home?.team?.abbreviation || 'Home'} ${home?.score || 0}, ${away?.team?.abbreviation || 'Away'} ${away?.score || 0}.`
+      }
+      prevScoresMapRef.current.set(ev.id, scoreKey)
+    }
+
+    prevRedZoneSetRef.current = currentRzSet
+
+    if (newRzFound) {
+      playRedZoneSound(isMuted)
+      setTimeout(() => setSrAnnouncement(rzAnnouncement), 0)
+    } else if (newScoreFound) {
+      playScoreChime(isMuted)
+      setTimeout(() => setSrAnnouncement(scoreAnnouncement), 0)
+    }
+  }, [data, isMuted])
+
+  // Sound cues toggle handler
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('nfl_muted', String(next))
+      } catch {}
+      if (!next) playTactileClick(false)
+      setSrAnnouncement(next ? 'Sound cues muted' : 'Sound cues active')
+      return next
+    })
+  }, [])
+
+  // High contrast pro mode toggle handler
+  const toggleHighContrast = useCallback(() => {
+    setIsHighContrast((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('nfl_high_contrast', String(next))
+      } catch {}
+      playTactileClick(isMuted)
+      setSrAnnouncement(next ? 'High Contrast Pro mode enabled' : 'High Contrast Pro mode disabled')
+      return next
+    })
+  }, [isMuted])
+
+  // Sync high-contrast-pro class to root element
+  useEffect(() => {
+    if (isHighContrast) {
+      document.documentElement.classList.add('high-contrast-pro')
+    } else {
+      document.documentElement.classList.remove('high-contrast-pro')
+    }
+  }, [isHighContrast])
+
+  // Global Keyboard Shortcuts (WCAG 2.1.1 Keyboard Navigation & Power User Ergonomics)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        if (e.key === 'Escape') {
+          setSearchQuery('')
+          ;(e.target as HTMLElement).blur()
+        }
+        return
+      }
+
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault()
+        setIsShortcutsOpen((prev) => !prev)
+        return
+      }
+
+      if (e.key === 'Escape') {
+        setIsShortcutsOpen(false)
+        setSearchQuery('')
+        return
+      }
+
+      if (e.key === '1') {
+        setFilter('all')
+        setSrAnnouncement('Filter changed: Showing all matchups')
+      } else if (e.key === '2') {
+        setFilter('live')
+        setSrAnnouncement('Filter changed: Showing live games')
+      } else if (e.key === '3') {
+        setFilter('redzone')
+        setSrAnnouncement('Filter changed: Showing Red Zone games')
+      } else if (e.key === '4') {
+        setFilter('halftime')
+        setSrAnnouncement('Filter changed: Showing halftime games')
+      } else if (e.key === '5') {
+        setFilter('upcoming')
+        setSrAnnouncement('Filter changed: Showing upcoming games')
+      } else if (e.key.toLowerCase() === 'r') {
+        e.preventDefault()
+        setCountdown(10)
+        playTactileClick(isMuted)
+        loadData(true)
+        setSrAnnouncement('Refreshing live scores')
+      } else if (e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        setUseDemoMode((prev) => !prev)
+        setSelectedHeroId(null)
+      } else if (e.key.toLowerCase() === 'a') {
+        e.preventDefault()
+        setAutoRedZoneSpotlight((prev) => !prev)
+      } else if (e.key.toLowerCase() === 'm') {
+        e.preventDefault()
+        toggleMute()
+      } else if (e.key.toLowerCase() === 'h') {
+        e.preventDefault()
+        toggleHighContrast()
+      } else if (e.key === '/') {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      } else if (e.key === '[') {
+        e.preventDefault()
+        const prev = getPrevWeek(selectedSeasonType, selectedWeek)
+        handleSelectWeek(prev.seasonType, prev.weekNumber)
+      } else if (e.key === ']') {
+        e.preventDefault()
+        const next = getNextWeek(selectedSeasonType, selectedWeek)
+        handleSelectWeek(next.seasonType, next.weekNumber)
+      } else if (e.key === '0' || e.key.toLowerCase() === 'w') {
+        e.preventDefault()
+        handleSelectWeek(liveSeasonType, liveWeek)
+      } else if (e.key.toLowerCase() === 'p') {
+        e.preventDefault()
+        handleSelectWeek(3, 5) // Jump to Super Bowl / Playoffs
+      } else if (e.key.toLowerCase() === 'j') {
+        if (filteredEvents.length > 0) {
+          const currentIndex = filteredEvents.findIndex((ev) => ev.id === heroMatchup?.id)
+          const nextIndex = (currentIndex + 1) % filteredEvents.length
+          setSelectedHeroId(filteredEvents[nextIndex].id)
+          setAutoRedZoneSpotlight(false)
+          setSrAnnouncement(`Spotlighted ${filteredEvents[nextIndex].name}`)
+        }
+      } else if (e.key.toLowerCase() === 'f') {
+        e.preventDefault()
+        setShowAllFieldRadars((prev) => {
+          const next = !prev
+          playTactileClick(isMuted)
+          setSrAnnouncement(next ? 'All 100-yard field radars expanded' : 'All field radars collapsed')
+          return next
+        })
+      } else if (e.key.toLowerCase() === 'k') {
+        if (filteredEvents.length > 0) {
+          const currentIndex = filteredEvents.findIndex((ev) => ev.id === heroMatchup?.id)
+          const prevIndex = (currentIndex - 1 + filteredEvents.length) % filteredEvents.length
+          setSelectedHeroId(filteredEvents[prevIndex].id)
+          setAutoRedZoneSpotlight(false)
+          setSrAnnouncement(`Spotlighted ${filteredEvents[prevIndex].name}`)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [
+    filteredEvents,
+    heroMatchup,
+    isMuted,
+    loadData,
+    toggleHighContrast,
+    toggleMute,
+    handleSelectWeek,
+    selectedSeasonType,
+    selectedWeek,
+    liveSeasonType,
+    liveWeek,
+  ])
+
   const liveCount = events.filter(
     (e) => (e.status?.type?.state || e.competitions?.[0]?.status?.type?.state) === 'in'
   ).length
@@ -262,11 +542,23 @@ export const Dashboard: React.FC = () => {
     (e) => (e.status?.type?.state || e.competitions?.[0]?.status?.type?.state) === 'post'
   ).length
 
-  const weekNumber = data?.week?.number || 1
   const seasonYear = data?.season?.year || 2026
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className={`min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] ${isHighContrast ? 'high-contrast-pro' : ''}`}>
+      {/* Screen Reader Live Announcer */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {srAnnouncement}
+      </div>
+
+      {/* Skip to Main Content Link for Keyboard and Screen Reader Accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-sky-500 focus:px-4 focus:py-2.5 focus:text-sm focus:font-bold focus:text-white focus:shadow-2xl focus:ring-2 focus:ring-white focus:outline-none"
+      >
+        Skip to main content
+      </a>
+
       {/* OFFLINE STATUS BANNER */}
       {!isOnline && (
         <div
@@ -291,29 +583,81 @@ export const Dashboard: React.FC = () => {
                 <span className="text-xl">🏈</span>
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="font-['Oswald'] font-bold text-xl tracking-wide text-white uppercase">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="font-['Oswald'] font-bold text-xl tracking-wide text-white uppercase shrink-0">
                     NFL Live Command
                   </h1>
-                  <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-slate-300">
-                    W{weekNumber}
-                  </span>
+                  <WeekSelector
+                    currentSeasonType={selectedSeasonType}
+                    currentWeek={selectedWeek}
+                    liveSeasonType={liveSeasonType}
+                    liveWeek={liveWeek}
+                    seasonYear={seasonYear}
+                    onSelectWeek={handleSelectWeek}
+                  />
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  {seasonYear} Regular Season • Real-Time Field Tracker
+                  {getSeasonPhaseDescription(selectedSeasonType, seasonYear, selectedWeek)} • Real-Time Field Tracker
                 </p>
               </div>
             </div>
 
             {/* Context & Polling Status */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* High Contrast Pro Toggle */}
+              <button
+                onClick={toggleHighContrast}
+                className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                  isHighContrast
+                    ? 'bg-amber-400 text-black border border-amber-300'
+                    : 'bg-[#111927] text-slate-400 border border-white/[0.08] hover:text-white'
+                }`}
+                title="Toggle High-Contrast Pro Mode (Shortcut: H)"
+                aria-pressed={isHighContrast}
+                aria-label={isHighContrast ? "High Contrast Mode Active. Click to disable." : "Enable High Contrast Mode"}
+              >
+                <Eye className="h-4 w-4" />
+                <span className="sr-only sm:not-sr-only sm:ml-1 hidden xl:inline">
+                  {isHighContrast ? 'Contrast ON' : 'Contrast'}
+                </span>
+              </button>
+
+              {/* Sound Cues Toggle */}
+              <button
+                onClick={toggleMute}
+                className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                  !isMuted
+                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
+                    : 'bg-[#111927] text-slate-400 border border-white/[0.08] hover:text-white'
+                }`}
+                title="Toggle Audio Feedback Cues (Shortcut: M)"
+                aria-pressed={!isMuted}
+                aria-label={isMuted ? "Sound Cues Muted. Click to unmute." : "Sound Cues Active. Click to mute."}
+              >
+                {isMuted ? <VolumeX className="h-4 w-4 text-slate-400" /> : <Volume2 className="h-4 w-4 text-sky-400" />}
+                <span className="sr-only sm:not-sr-only sm:ml-1 hidden xl:inline">
+                  {isMuted ? 'Muted' : 'Audio On'}
+                </span>
+              </button>
+
+              {/* Keyboard Shortcuts Help Button */}
+              <button
+                onClick={() => setIsShortcutsOpen(true)}
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-[#111927] hover:bg-[#162032] border border-white/[0.08] px-2.5 py-1.5 text-xs font-semibold text-slate-300 transition-all hover:text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                title="Keyboard Shortcuts & Accessibility Info (Shortcut: ?)"
+                aria-label="Open Keyboard Shortcuts and Accessibility Guide"
+              >
+                <Keyboard className="h-4 w-4 text-indigo-400" />
+                <span className="sr-only sm:not-sr-only sm:ml-1 hidden xl:inline">Help (?)</span>
+              </button>
+
               {/* Simulation Mode Toggle */}
               <button
                 onClick={() => {
                   setUseDemoMode((prev) => !prev)
                   setSelectedHeroId(null)
                 }}
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-1 focus:ring-amber-400 ${
+                className={`flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-amber-400 ${
                   useDemoMode
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                     : 'bg-[#111927] text-slate-400 border border-white/[0.08] hover:text-white'
@@ -323,13 +667,13 @@ export const Dashboard: React.FC = () => {
               >
                 <Sparkles className="h-3.5 w-3.5 text-amber-400" />
                 <span className="hidden sm:inline">
-                  {useDemoMode ? 'Demo Active' : 'Simulation Mode'}
+                  {useDemoMode ? 'Demo Active' : 'Simulation'}
                 </span>
               </button>
 
               {/* Polling countdown badge */}
               <div
-                className="hidden md:flex items-center gap-2 rounded-lg bg-[#111927] border border-white/[0.08] px-3 py-1.5 text-xs select-none"
+                className="hidden md:flex min-h-[44px] items-center gap-2 rounded-lg bg-[#111927] border border-white/[0.08] px-3 py-1.5 text-xs select-none"
                 role="status"
                 aria-live="polite"
               >
@@ -355,7 +699,7 @@ export const Dashboard: React.FC = () => {
                   loadData(true)
                 }}
                 disabled={isRefreshing}
-                className="flex items-center gap-1.5 rounded-lg bg-[#162032] hover:bg-[#1e2c45] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-all border border-white/[0.08] active:scale-95 disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-sky-400"
+                className="flex min-h-[44px] items-center gap-1.5 rounded-lg bg-[#162032] hover:bg-[#1e2c45] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-all border border-white/[0.08] active:scale-95 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-sky-400"
                 title="Force refresh live scoreboard"
                 aria-label="Refresh scoreboard data"
               >
@@ -372,7 +716,7 @@ export const Dashboard: React.FC = () => {
       </header>
 
       {/* MAIN CONTAINER */}
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 lg:px-8 py-6 space-y-8 focus:outline-none">
         {/* Error notification banner */}
         {error && (
           <div
@@ -421,7 +765,7 @@ export const Dashboard: React.FC = () => {
                 All Matchups
               </h2>
               <p className="text-xs text-slate-400">
-                Click Spotlight on any matchup to inspect its tactical field radar above
+                Click any matchup to select and inspect its tactical radar above • Red Zone threats highlighted in red
               </p>
             </div>
 
@@ -509,8 +853,35 @@ export const Dashboard: React.FC = () => {
                 </button>
               </div>
 
+              {/* Expand All / Collapse All Field Radars Toggle */}
+              <button
+                onClick={() => {
+                  setShowAllFieldRadars((prev) => {
+                    const next = !prev
+                    playTactileClick(isMuted)
+                    setSrAnnouncement(next ? 'All field radars expanded' : 'All field radars collapsed')
+                    return next
+                  })
+                }}
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all border focus:outline-none focus:ring-2 focus:ring-sky-400 min-h-[36px] ${
+                  showAllFieldRadars
+                    ? 'bg-sky-500/20 text-sky-300 border-sky-500/50 shadow-sm'
+                    : 'bg-[#111927] text-slate-400 border-white/[0.08] hover:text-white'
+                }`}
+                title="Toggle 100-yard field radar for all matchups (Shortcut: F)"
+                aria-pressed={showAllFieldRadars}
+              >
+                <Compass className={`h-3.5 w-3.5 ${showAllFieldRadars ? 'text-sky-400' : 'text-slate-400'}`} />
+                <span className="hidden sm:inline">
+                  {showAllFieldRadars ? 'Hide All Radars' : 'Expand All Radars'}
+                </span>
+                <span className="sm:hidden">
+                  {showAllFieldRadars ? 'Hide Radars' : 'All Radars'}
+                </span>
+              </button>
+
               {/* Search Bar */}
-              <div className="relative min-w-[200px]" role="search">
+              <div className="relative min-w-[180px] sm:min-w-[200px]" role="search">
                 <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
@@ -521,7 +892,7 @@ export const Dashboard: React.FC = () => {
                   }}
                   placeholder="Filter team..."
                   aria-label="Filter teams by name or city"
-                  className="w-full rounded-lg border border-white/[0.08] bg-[#111927] pl-8 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
+                  className="w-full rounded-lg border border-white/[0.08] bg-[#111927] pl-8 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none min-h-[36px]"
                 />
                 {searchQuery && (
                   <button
@@ -589,7 +960,7 @@ export const Dashboard: React.FC = () => {
 
           {/* GAME CARDS GRID */}
           {!isLoading && filteredEvents.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
               {filteredEvents.map((event) => (
                 <GameCard
                   key={event.id}
@@ -600,6 +971,8 @@ export const Dashboard: React.FC = () => {
                     setAutoRedZoneSpotlight(false)
                     window.scrollTo({ top: 0, behavior: 'smooth' })
                   }}
+                  showField={showAllFieldRadars}
+                  onToggleAllRadars={() => setShowAllFieldRadars((prev) => !prev)}
                 />
               ))}
             </div>
@@ -614,6 +987,12 @@ export const Dashboard: React.FC = () => {
           <span>Last sync: {lastUpdated.toLocaleTimeString()} • Sourced from ESPN API</span>
         </div>
       </footer>
+
+      {/* Keyboard Shortcuts & Accessibility Modal */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
+      />
     </div>
   )
 }

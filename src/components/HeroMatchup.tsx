@@ -2,8 +2,8 @@ import React from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation } from '../utils/nflHelpers'
-import { Radio, Flame, Tv, MapPin, Compass, Sparkles, Pause } from 'lucide-react'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel } from '../utils/nflHelpers'
+import { Radio, Flame, Tv, MapPin, Compass, Sparkles, Pause, Trophy } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 
 interface HeroMatchupProps {
@@ -46,7 +46,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
 
   const broadcastNetwork =
     competition.broadcasts?.[0]?.names?.join(', ') ||
-    (event as any).broadcast ||
+    (event as { broadcast?: string }).broadcast ||
     'National Broadcast'
 
   const venueText = competition.venue
@@ -75,21 +75,46 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
 
   return (
     <section
-      className="relative overflow-hidden rounded-2xl border border-white/[0.12] bg-gradient-to-b from-[#111927] to-[#0c1322] shadow-2xl"
+      className={`relative overflow-hidden rounded-2xl border shadow-2xl transition-all duration-300 ${
+        isRedZone
+          ? 'border-rose-500/70 bg-gradient-to-b from-[#180d16] via-[#111927] to-[#0c1322] shadow-[0_0_35px_rgba(244,63,94,0.25)]'
+          : 'border-sky-500/40 bg-gradient-to-b from-[#0f172a] via-[#111927] to-[#0c1322] shadow-[0_0_30px_rgba(56,189,248,0.18)]'
+      }`}
       aria-labelledby="hero-matchup-heading"
     >
+      {/* Accessible Heading for Screen Readers */}
+      <h2 id="hero-matchup-heading" className="sr-only">
+        {`Spotlight Matchup: ${awayComp?.team?.displayName || awayAbbr} at ${homeComp?.team?.displayName || homeAbbr}`}
+      </h2>
+
+      {/* Top Accent Bar */}
+      {isRedZone ? (
+        <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 animate-pulse" />
+      ) : (
+        <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500" />
+      )}
+
       {/* Editorial Spotlight Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] bg-[#090e18] px-5 py-3">
+      <div className={`flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3 transition-colors ${
+        isRedZone ? 'border-rose-500/20 bg-[#12080d]' : 'border-white/[0.08] bg-[#090e18]'
+      }`}>
         <div className="flex flex-wrap items-center gap-2.5">
-          <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs font-bold text-emerald-300 border border-emerald-500/30">
+          <span className="flex items-center gap-1.5 rounded-full bg-sky-500/20 px-2.5 py-1 text-xs font-bold text-sky-300 border border-sky-500/40">
             <Compass className="h-3.5 w-3.5" />
-            SPOTLIGHT MATCHUP
+            SPOTLIGHT RADAR
           </span>
 
-          {isAutoSelectedRedZone && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600/30 border border-rose-500/50 px-2.5 py-1 text-xs font-bold text-rose-200 animate-pulse shadow-sm shadow-rose-950">
+          {event.season?.type === 3 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-black tracking-wide text-amber-300 border border-amber-500/50 shadow-sm shadow-amber-950">
+              <Trophy className="h-3.5 w-3.5 text-amber-400" />
+              {getWeekLabel(3, event.week?.number).toUpperCase()}
+            </span>
+          )}
+
+          {isRedZone && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600/30 border border-rose-500/60 px-2.5 py-1 text-xs font-black tracking-wide text-rose-200 animate-pulse shadow-sm shadow-rose-950">
               <Flame className="h-3.5 w-3.5 text-rose-400 fill-rose-400" />
-              AUTO-SPOTLIGHT: RED ZONE
+              RED ZONE THREAT
             </span>
           )}
 
@@ -203,10 +228,16 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                   />
                   {isLive && isAwayPossession && (
                     <span
-                      className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] shadow"
+                      className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 shadow-md ring-1 ring-amber-300/80"
                       title="Possession"
+                      aria-label="Possession"
                     >
-                      🏈
+                      <svg viewBox="0 0 24 24" className="h-2.5 w-2.5 fill-amber-950 stroke-amber-950" strokeWidth="0.8">
+                        <path d="M 2.5,12 C 4.5,5 12,3.5 21.5,2.5 C 20.5,12 19,19.5 12,21.5 C 4.5,20.5 3.5,19 2.5,12 Z" />
+                        <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" />
+                        <line x1="9" y1="13" x2="13" y2="9" stroke="#ffffff" strokeWidth="1.3" strokeLinecap="round" />
+                        <line x1="11" y1="15" x2="15" y2="11" stroke="#ffffff" strokeWidth="1.3" strokeLinecap="round" />
+                      </svg>
                     </span>
                   )}
                 </div>
@@ -258,10 +289,16 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                   />
                   {isLive && isHomePossession && (
                     <span
-                      className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] shadow"
+                      className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 shadow-md ring-1 ring-amber-300/80"
                       title="Possession"
+                      aria-label="Possession"
                     >
-                      🏈
+                      <svg viewBox="0 0 24 24" className="h-2.5 w-2.5 fill-amber-950 stroke-amber-950" strokeWidth="0.8">
+                        <path d="M 2.5,12 C 4.5,5 12,3.5 21.5,2.5 C 20.5,12 19,19.5 12,21.5 C 4.5,20.5 3.5,19 2.5,12 Z" />
+                        <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" />
+                        <line x1="9" y1="13" x2="13" y2="9" stroke="#ffffff" strokeWidth="1.3" strokeLinecap="round" />
+                        <line x1="11" y1="15" x2="15" y2="11" stroke="#ffffff" strokeWidth="1.3" strokeLinecap="round" />
+                      </svg>
                     </span>
                   )}
                 </div>
@@ -367,6 +404,16 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
               <span className="font-semibold text-slate-200">When: </span>
               {scorigamiInfo.whenScenario}
             </div>
+
+            {scorigamiInfo.lastGameSummary && (
+              <div className="mt-2 flex items-start gap-1.5 text-xs text-slate-400 border-t border-white/[0.06] pt-2">
+                <span className="font-semibold text-slate-200 flex-shrink-0">Last Occurred:</span>
+                <span className="text-slate-300">
+                  <strong className="text-amber-300/90 font-medium">{scorigamiInfo.lastGameSummary}</strong>
+                  <span className="text-slate-400 ml-1.5 font-mono text-[11px]">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

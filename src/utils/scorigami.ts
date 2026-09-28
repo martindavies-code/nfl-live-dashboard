@@ -8,9 +8,10 @@
 //   1. Determine whether the current score is already a scorigami.
 //   2. Estimate the % chance the game ends on a never-before-seen score.
 //   3. Identify the most likely novel score and precisely WHEN / HOW it occurs.
+//   4. Provide the exact date, winning team, and losing team when a score last happened.
 // -----------------------------------------------------------------------------
 
-import { HISTORICAL_OCCURRED, TOTAL_UNIQUE_SCORIGAMIS } from './scorigamiHistoricalData.ts'
+import { HISTORICAL_OCCURRED, TOTAL_UNIQUE_SCORIGAMIS, type HistoricalScoreRecord } from './scorigamiHistoricalData.ts'
 import { isHalftimeSituation } from './nflHelpers.ts'
 
 export interface ScorigamiInfo {
@@ -29,17 +30,62 @@ export interface ScorigamiInfo {
    * e.g. "Target: 36-23 (Pre-game projection)"
    * or "When score reaches 32-22 (Needs +18 KC, +13 LAC)"
    * or "Current score (25-18) is a Scorigami right now if it holds!"
-   * or "Final: Occurred 303x in NFL history (last in 2026)"
+   * or "Final: Occurred 303x in NFL history (last: Green Bay Packers 20, New York Jets 17 on Sep 20, 2026)"
    */
   whenScenario: string
   /** Total historical occurrences of the current score (0 if never occurred) */
   currentOccurrences: number
   /** Year current score was last seen, or null */
   lastSeenYear: number | null
+  /** Formatted date current score was last seen (e.g. "Sep 20, 2026"), or null */
+  lastDate: string | null
+  /** Raw ISO date current score was last seen (e.g. "2026-09-20"), or null */
+  lastDateIso: string | null
+  /** Winning team in the last matchup that produced this score, e.g. "Green Bay Packers" */
+  lastWinner: string | null
+  /** Losing team in the last matchup that produced this score, e.g. "New York Jets" */
+  lastLoser: string | null
+  /** Formatted summary of the exact last game: "Green Bay Packers 20, New York Jets 17 on Sep 20, 2026" */
+  lastGameSummary: string | null
   /** Points needed by home team to reach the most likely novel score */
   pointsNeededHome: number
   /** Points needed by away team to reach the most likely novel score */
   pointsNeededAway: number
+}
+
+/**
+ * Formats an ISO date string (YYYY-MM-DD) into user-friendly US date ("Sep 20, 2026").
+ */
+export function formatHistoricalDate(isoDate: string): string {
+  if (!isoDate) return ''
+  const parts = isoDate.split('-').map(Number)
+  if (parts.length < 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) {
+    return isoDate
+  }
+  const [y, m, d] = parts
+  const date = new Date(Date.UTC(y, m - 1, d))
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+}
+
+/**
+ * Formats a complete summary of the last historical matchup for a given score:
+ * e.g. "Green Bay Packers 20, New York Jets 17 on Sep 20, 2026"
+ */
+export function formatLastGameSummary(
+  scoreKey: string,
+  winner?: string | null,
+  loser?: string | null,
+  isoDate?: string | null
+): string | null {
+  if (!winner || !loser || !isoDate) return null
+  const [hi, lo] = scoreKey.split('-')
+  const formattedDate = formatHistoricalDate(isoDate)
+  return `${winner} ${hi}, ${loser} ${lo} on ${formattedDate}`
 }
 
 /**
@@ -59,9 +105,9 @@ export function hasOccurred(a: number, b: number): boolean {
 }
 
 /**
- * Get historical record [count, lastYear] for a score pair, or null if novel.
+ * Get historical record [count, lastYear, lastDate, lastWinner, lastLoser] for a score pair, or null if novel.
  */
-export function getHistoricalRecord(a: number, b: number): [count: number, lastYear: number] | null {
+export function getHistoricalRecord(a: number, b: number): HistoricalScoreRecord | null {
   return HISTORICAL_OCCURRED[makeScoreKey(a, b)] || null
 }
 
@@ -165,6 +211,13 @@ export function getScorigamiInfo(
   const isCurrentScorigami = !histRecord
   const currentOccurrences = histRecord ? histRecord[0] : 0
   const lastSeenYear = histRecord ? histRecord[1] : null
+  const lastDateIso = histRecord ? histRecord[2] : null
+  const lastDate = lastDateIso ? formatHistoricalDate(lastDateIso) : null
+  const lastWinner = histRecord ? histRecord[3] : null
+  const lastLoser = histRecord ? histRecord[4] : null
+  const lastGameSummary = histRecord
+    ? formatLastGameSummary(key, lastWinner, lastLoser, lastDateIso)
+    : null
 
   // 1. Post-game: Game is over, outcome is definitive
   if (gameState === 'post') {
@@ -177,9 +230,14 @@ export function getScorigamiInfo(
       mostLikelyLabel: isCurrentScorigami ? `${key} ✨` : key,
       whenScenario: isCurrentScorigami
         ? `Final: Novel score #${TOTAL_UNIQUE_SCORIGAMIS + 1} in NFL history!`
-        : `Final: Occurred ${currentOccurrences}x in NFL history (last in ${lastSeenYear})`,
+        : `Final: Occurred ${currentOccurrences}x in NFL history (last: ${lastGameSummary || `in ${lastSeenYear}`})`,
       currentOccurrences,
       lastSeenYear,
+      lastDate,
+      lastDateIso,
+      lastWinner,
+      lastLoser,
+      lastGameSummary,
       pointsNeededHome: 0,
       pointsNeededAway: 0,
     }
@@ -267,6 +325,11 @@ export function getScorigamiInfo(
     whenScenario,
     currentOccurrences,
     lastSeenYear,
+    lastDate,
+    lastDateIso,
+    lastWinner,
+    lastLoser,
+    lastGameSummary,
     pointsNeededHome: top ? top.dh : 0,
     pointsNeededAway: top ? top.da : 0,
   }

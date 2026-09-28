@@ -163,12 +163,32 @@ export interface NFLEvent {
   }
 }
 
+export interface NFLCalendarEntry {
+  label: string
+  alternateLabel?: string
+  detail?: string
+  value: string
+  startDate?: string
+  endDate?: string
+}
+
+export interface NFLCalendarSection {
+  label: string
+  value: string
+  startDate?: string
+  endDate?: string
+  entries?: NFLCalendarEntry[]
+}
+
+export interface NFLLeague {
+  id: string
+  name: string
+  abbreviation: string
+  calendar?: NFLCalendarSection[]
+}
+
 export interface NFLScoreboardData {
-  leagues?: Array<{
-    id: string
-    name: string
-    abbreviation: string
-  }>
+  leagues?: NFLLeague[]
   season?: {
     type: number
     year: number
@@ -179,4 +199,11 @@ export interface NFLScoreboardData {
   events: NFLEvent[]
 }
 
+export interface NFLWeekSelection {
+  seasonType: number // 1 = Preseason, 2 = Regular, 3 = Postseason (Playoffs)
+  weekNumber: number
+  year?: number
+}
+
 export type GameFilter = 'all' | 'live' | 'redzone' | 'halftime' | 'upcoming' | 'final'
+

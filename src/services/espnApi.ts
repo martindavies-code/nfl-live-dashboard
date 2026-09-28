@@ -4,7 +4,20 @@ const ESPN_PRIMARY_URL = 'https://site.api.espn.com/apis/site/v2/sports/football
 const ESPN_PROXY_URL = '/api/espn/apis/site/v2/sports/football/nfl/scoreboard'
 const FETCH_TIMEOUT_MS = 8000
 
-export async function fetchNFLScoreboard(externalSignal?: AbortSignal): Promise<NFLScoreboardData> {
+export interface ScoreboardQueryParams {
+  seasonType?: number // 1 = Preseason, 2 = Regular Season, 3 = Postseason (Playoffs)
+  week?: number       // 1-18 for Regular, 1-5 for Postseason
+  year?: number       // e.g. 2026
+}
+
+export async function fetchNFLScoreboard(
+  paramsOrSignal?: ScoreboardQueryParams | AbortSignal,
+  externalSignalArg?: AbortSignal
+): Promise<NFLScoreboardData> {
+  const isSignal = paramsOrSignal instanceof AbortSignal
+  const params: ScoreboardQueryParams | undefined = isSignal ? undefined : paramsOrSignal
+  const externalSignal: AbortSignal | undefined = isSignal ? (paramsOrSignal as AbortSignal) : externalSignalArg
+
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
 
@@ -26,52 +39,47 @@ export async function fetchNFLScoreboard(externalSignal?: AbortSignal): Promise<
     }
   }
 
-  // Cache buster parameter to ensure fresh responses on each 10s poll
-  const cacheBuster = `_t=${Date.now()}`
-  const primaryUrl = `${ESPN_PRIMARY_URL}?${cacheBuster}`
-  const proxyUrl = `${ESPN_PROXY_URL}?${cacheBuster}`
-
-  // 1. Direct fetch to ESPN API
-  try {
-    const res = await fetch(primaryUrl, {
-      signal: controller.signal,
-      headers: { 'Accept': 'application/json' },
-    })
-    if (res.ok) {
-      const data = await res.json()
-      if (data && Array.isArray(data.events)) {
-        cleanup()
-        return data as NFLScoreboardData
-      }
-    }
-  } catch (err: any) {
-    if (err?.name === 'AbortError' && externalSignal?.aborted) {
-      cleanup()
-      throw err // Cancelled by caller — propagate immediately
-    }
-    // Network or CORS issue — fall through to proxy
+  // Construct query parameters
+  const queryParts: string[] = []
+  if (params?.seasonType !== undefined) {
+    queryParts.push(`seasontype=${params.seasonType}`)
   }
+  if (params?.week !== undefined) {
+    queryParts.push(`week=${params.week}`)
+  }
+  if (params?.year !== undefined) {
+    queryParts.push(`dates=${params.year}`)
+  }
+  queryParts.push(`_t=${Date.now()}`)
+  const queryString = queryParts.join('&')
 
-  // 2. Fallback to local Vite dev proxy
-  try {
-    const proxyRes = await fetch(proxyUrl, {
-      signal: controller.signal,
-      headers: { 'Accept': 'application/json' },
-    })
-    if (proxyRes.ok) {
-      const data = await proxyRes.json()
-      if (data && Array.isArray(data.events)) {
-        cleanup()
-        return data as NFLScoreboardData
+  const primaryUrl = `${ESPN_PRIMARY_URL}?${queryString}`
+  const proxyUrl = `${ESPN_PROXY_URL}?${queryString}`
+
+  const isLocalDev = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  const urlsToTry = isLocalDev ? [proxyUrl, primaryUrl] : [primaryUrl, proxyUrl]
+
+  for (const url of urlsToTry) {
+    try {
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data && Array.isArray(data.events)) {
+          cleanup()
+          return data as NFLScoreboardData
+        }
       }
-    }
-  } catch (proxyErr: any) {
-    if (proxyErr?.name === 'AbortError' && externalSignal?.aborted) {
-      cleanup()
-      throw proxyErr
+    } catch (err: any) {
+      if (err?.name === 'AbortError' && externalSignal?.aborted) {
+        cleanup()
+        throw err // Cancelled by caller — propagate immediately
+      }
+      // Continue to next endpoint in list
     }
   }
-
   cleanup()
   throw new Error('Unable to connect to ESPN NFL Scoreboard. Check network connection or try again.')
 }
@@ -169,7 +177,462 @@ const SIMULATION_SCENARIOS = [
   },
 ]
 
-export function getMockLiveGames(): NFLEvent[] {
+export function getMockLiveGames(seasonType: number = 2, week: number = 4): NFLEvent[] {
+  // 1. Super Bowl (Season Type 3, Week 5)
+  if (seasonType === 3 && week === 5) {
+    const currentScenario = SIMULATION_SCENARIOS[_sim.step % SIMULATION_SCENARIOS.length]
+    _sim.step++
+    return [
+      {
+        id: 'mock-sb-1',
+        uid: 's:20~l:28~e:mock-sb1',
+        date: new Date().toISOString(),
+        name: 'Super Bowl LXI: Kansas City Chiefs vs Philadelphia Eagles',
+        shortName: 'KC vs PHI (SB LXI)',
+        season: { year: 2026, type: 3, slug: 'post-season' },
+        week: { number: 5 },
+        competitions: [
+          {
+            id: 'mock-sb-1-comp',
+            uid: 's:20~l:28~e:mock-sb1~c:1',
+            date: new Date().toISOString(),
+            status: {
+              clock: currentScenario.clockSeconds,
+              displayClock: currentScenario.clock,
+              period: currentScenario.period,
+              type: {
+                id: '2',
+                name: 'STATUS_IN_PROGRESS',
+                state: 'in',
+                completed: false,
+                description: 'In Progress',
+                detail: `${currentScenario.clock} - 4th Quarter`,
+                shortDetail: `${currentScenario.clock} - 4th`,
+              },
+            },
+            competitors: [
+              {
+                id: '21',
+                homeAway: 'home',
+                score: currentScenario.homeScore,
+                records: [{ summary: '16-3' }],
+                team: {
+                  id: '21',
+                  name: 'Eagles',
+                  displayName: 'Philadelphia Eagles',
+                  abbreviation: 'PHI',
+                  color: '004c54',
+                  alternateColor: 'a5acaf',
+                  logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/phi.png',
+                },
+              },
+              {
+                id: '12',
+                homeAway: 'away',
+                score: currentScenario.awayScore,
+                records: [{ summary: '16-3' }],
+                team: {
+                  id: '12',
+                  name: 'Chiefs',
+                  displayName: 'Kansas City Chiefs',
+                  abbreviation: 'KC',
+                  color: 'e31837',
+                  alternateColor: 'ffb81c',
+                  logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/kc.png',
+                },
+              },
+            ],
+            situation: {
+              down: currentScenario.down,
+              yardLine: currentScenario.yardLine,
+              distance: currentScenario.distance,
+              downDistanceText: currentScenario.downDistanceText,
+              shortDownDistanceText: currentScenario.downDistanceText,
+              possessionText: currentScenario.possessionText,
+              possession: currentScenario.down === 1 && currentScenario.yardLine === 32 ? '21' : '12',
+              isRedZone: currentScenario.isRedZone,
+              homeTimeouts: 2,
+              awayTimeouts: 1,
+              lastPlay: {
+                id: `play-mock-sb-${_sim.step}`,
+                text: currentScenario.lastPlayText,
+                statYardage: 8,
+                probability: {
+                  homeWinPercentage: currentScenario.homeWinPct,
+                  awayWinPercentage: currentScenario.awayWinPct,
+                },
+              },
+            },
+            broadcasts: [{ market: 'National', names: ['CBS'] }],
+            venue: {
+              fullName: 'SoFi Stadium',
+              address: { city: 'Inglewood', state: 'CA' },
+            },
+            odds: [
+              {
+                provider: { id: 'draftkings', name: 'DraftKings', displayName: 'DraftKings' },
+                details: 'KC -1.5',
+                overUnder: 51.5,
+                spread: -1.5,
+              },
+            ],
+          },
+        ],
+        status: {
+          clock: currentScenario.clockSeconds,
+          displayClock: currentScenario.clock,
+          period: currentScenario.period,
+          type: {
+            id: '2',
+            name: 'STATUS_IN_PROGRESS',
+            state: 'in',
+            completed: false,
+            description: 'In Progress',
+            detail: `${currentScenario.clock} - 4th Quarter`,
+            shortDetail: `${currentScenario.clock} - 4th`,
+          },
+        },
+      },
+    ]
+  }
+
+  // 2. Playoff Conference Championships (Season Type 3, Week 3)
+  if (seasonType === 3 && week === 3) {
+    return [
+      {
+        id: 'mock-afc-champ',
+        uid: 's:20~l:28~e:mock-afc',
+        date: new Date().toISOString(),
+        name: 'AFC Championship: Kansas City Chiefs at Buffalo Bills',
+        shortName: 'KC @ BUF (AFC Title)',
+        season: { year: 2026, type: 3, slug: 'post-season' },
+        week: { number: 3 },
+        competitions: [
+          {
+            id: 'mock-afc-comp',
+            uid: 's:20~l:28~e:mock-afc~c:1',
+            date: new Date().toISOString(),
+            status: {
+              clock: 0,
+              displayClock: '0:00',
+              period: 4,
+              type: {
+                id: '3',
+                name: 'STATUS_FINAL',
+                state: 'post',
+                completed: true,
+                description: 'Final',
+                detail: 'Final',
+                shortDetail: 'Final',
+              },
+            },
+            competitors: [
+              {
+                id: '2',
+                homeAway: 'home',
+                winner: false,
+                score: '24',
+                records: [{ summary: '13-4' }],
+                team: {
+                  id: '2',
+                  name: 'Bills',
+                  displayName: 'Buffalo Bills',
+                  abbreviation: 'BUF',
+                  color: '00338d',
+                  alternateColor: 'd50a0a',
+                  logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/buf.png',
+                },
+              },
+              {
+                id: '12',
+                homeAway: 'away',
+                winner: true,
+                score: '27',
+                records: [{ summary: '15-2' }],
+                team: {
+                  id: '12',
+                  name: 'Chiefs',
+                  displayName: 'Kansas City Chiefs',
+                  abbreviation: 'KC',
+                  color: 'e31837',
+                  alternateColor: 'ffb81c',
+                  logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/kc.png',
+                },
+              },
+            ],
+            situation: null,
+            broadcasts: [{ market: 'National', names: ['CBS'] }],
+            venue: { fullName: 'Highmark Stadium', address: { city: 'Orchard Park', state: 'NY' } },
+          },
+        ],
+        status: {
+          clock: 0,
+          displayClock: '0:00',
+          period: 4,
+          type: {
+            id: '3',
+            name: 'STATUS_FINAL',
+            state: 'post',
+            completed: true,
+            description: 'Final',
+            detail: 'Final',
+            shortDetail: 'Final',
+          },
+        },
+      },
+      {
+        id: 'mock-nfc-champ',
+        uid: 's:20~l:28~e:mock-nfc',
+        date: new Date().toISOString(),
+        name: 'NFC Championship: Green Bay Packers at Detroit Lions',
+        shortName: 'GB @ DET (NFC Title)',
+        season: { year: 2026, type: 3, slug: 'post-season' },
+        week: { number: 3 },
+        competitions: [
+          {
+            id: 'mock-nfc-comp',
+            uid: 's:20~l:28~e:mock-nfc~c:1',
+            date: new Date().toISOString(),
+            status: {
+              clock: 0,
+              displayClock: '0:00',
+              period: 4,
+              type: {
+                id: '3',
+                name: 'STATUS_FINAL',
+                state: 'post',
+                completed: true,
+                description: 'Final',
+                detail: 'Final',
+                shortDetail: 'Final',
+              },
+            },
+            competitors: [
+              {
+                id: '8',
+                homeAway: 'home',
+                winner: false,
+                score: '28',
+                records: [{ summary: '14-3' }],
+                team: {
+                  id: '8',
+                  name: 'Lions',
+                  displayName: 'Detroit Lions',
+                  abbreviation: 'DET',
+                  color: '0076b6',
+                  alternateColor: 'b0b7bc',
+                  logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/det.png',
+                },
+              },
+              {
+                id: '21',
+                homeAway: 'away',
+                winner: true,
+                score: '31',
+                records: [{ summary: '14-3' }],
+                team: {
+                  id: '21',
+                  name: 'Eagles',
+                  displayName: 'Philadelphia Eagles',
+                  abbreviation: 'PHI',
+                  color: '004c54',
+                  alternateColor: 'a5acaf',
+                  logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/phi.png',
+                },
+              },
+            ],
+            situation: null,
+            broadcasts: [{ market: 'National', names: ['FOX'] }],
+            venue: { fullName: 'Ford Field', address: { city: 'Detroit', state: 'MI' } },
+          },
+        ],
+        status: {
+          clock: 0,
+          displayClock: '0:00',
+          period: 4,
+          type: {
+            id: '3',
+            name: 'STATUS_FINAL',
+            state: 'post',
+            completed: true,
+            description: 'Final',
+            detail: 'Final',
+            shortDetail: 'Final',
+          },
+        },
+      },
+    ]
+  }
+
+  // 3. Past Regular Season Week 1
+  if (seasonType === 2 && week === 1) {
+    return [
+      {
+        id: 'mock-w1-1',
+        uid: 's:20~l:28~e:mock-w1-1',
+        date: '2026-09-10T00:20Z',
+        name: 'Baltimore Ravens at Kansas City Chiefs',
+        shortName: 'BAL @ KC',
+        season: { year: 2026, type: 2, slug: 'regular-season' },
+        week: { number: 1 },
+        competitions: [
+          {
+            id: 'mock-w1-1-comp',
+            uid: 's:20~l:28~e:mock-w1-1~c:1',
+            date: '2026-09-10T00:20Z',
+            status: {
+              clock: 0,
+              displayClock: '0:00',
+              period: 4,
+              type: {
+                id: '3',
+                name: 'STATUS_FINAL',
+                state: 'post',
+                completed: true,
+                description: 'Final',
+                detail: 'Final',
+                shortDetail: 'Final',
+              },
+            },
+            competitors: [
+              {
+                id: '12',
+                homeAway: 'home',
+                winner: true,
+                score: '27',
+                records: [{ summary: '1-0' }],
+                team: {
+                  id: '12',
+                  name: 'Chiefs',
+                  displayName: 'Kansas City Chiefs',
+                  abbreviation: 'KC',
+                  color: 'e31837',
+                  alternateColor: 'ffb81c',
+                  logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/kc.png',
+                },
+              },
+              {
+                id: '33',
+                homeAway: 'away',
+                winner: false,
+                score: '20',
+                records: [{ summary: '0-1' }],
+                team: {
+                  id: '33',
+                  name: 'Ravens',
+                  displayName: 'Baltimore Ravens',
+                  abbreviation: 'BAL',
+                  color: '241773',
+                  alternateColor: '9e7c0c',
+                  logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/bal.png',
+                },
+              },
+            ],
+            situation: null,
+            broadcasts: [{ market: 'National', names: ['NBC'] }],
+            venue: { fullName: 'GEHA Field at Arrowhead Stadium', address: { city: 'Kansas City', state: 'MO' } },
+          },
+        ],
+        status: {
+          clock: 0,
+          displayClock: '0:00',
+          period: 4,
+          type: {
+            id: '3',
+            name: 'STATUS_FINAL',
+            state: 'post',
+            completed: true,
+            description: 'Final',
+            detail: 'Final',
+            shortDetail: 'Final',
+          },
+        },
+      },
+      {
+        id: 'mock-w1-2',
+        uid: 's:20~l:28~e:mock-w1-2',
+        date: '2026-09-11T00:15Z',
+        name: 'Green Bay Packers at Philadelphia Eagles',
+        shortName: 'GB @ PHI',
+        season: { year: 2026, type: 2, slug: 'regular-season' },
+        week: { number: 1 },
+        competitions: [
+          {
+            id: 'mock-w1-2-comp',
+            uid: 's:20~l:28~e:mock-w1-2~c:1',
+            date: '2026-09-11T00:15Z',
+            status: {
+              clock: 0,
+              displayClock: '0:00',
+              period: 4,
+              type: {
+                id: '3',
+                name: 'STATUS_FINAL',
+                state: 'post',
+                completed: true,
+                description: 'Final',
+                detail: 'Final',
+                shortDetail: 'Final',
+              },
+            },
+            competitors: [
+              {
+                id: '21',
+                homeAway: 'home',
+                winner: true,
+                score: '34',
+                records: [{ summary: '1-0' }],
+                team: {
+                  id: '21',
+                  name: 'Eagles',
+                  displayName: 'Philadelphia Eagles',
+                  abbreviation: 'PHI',
+                  color: '004c54',
+                  alternateColor: 'a5acaf',
+                  logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/phi.png',
+                },
+              },
+              {
+                id: '9',
+                homeAway: 'away',
+                winner: false,
+                score: '29',
+                records: [{ summary: '0-1' }],
+                team: {
+                  id: '9',
+                  name: 'Packers',
+                  displayName: 'Green Bay Packers',
+                  abbreviation: 'GB',
+                  color: '203731',
+                  alternateColor: 'ffb612',
+                  logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/gb.png',
+                },
+              },
+            ],
+            situation: null,
+            broadcasts: [{ market: 'National', names: ['Peacock'] }],
+            venue: { fullName: 'Corinthians Arena', address: { city: 'São Paulo', state: 'Brazil' } },
+          },
+        ],
+        status: {
+          clock: 0,
+          displayClock: '0:00',
+          period: 4,
+          type: {
+            id: '3',
+            name: 'STATUS_FINAL',
+            state: 'post',
+            completed: true,
+            description: 'Final',
+            detail: 'Final',
+            shortDetail: 'Final',
+          },
+        },
+      },
+    ]
+  }
+
+  // 4. Default: Live Active Simulation Mode (Week 4)
   const currentScenario = SIMULATION_SCENARIOS[_sim.step % SIMULATION_SCENARIOS.length]
   _sim.step++
 
@@ -332,23 +795,23 @@ export function getMockLiveGames(): NFLEvent[] {
             },
           ],
           situation: {
-            down: 1,
-            yardLine: 65,
-            distance: 10,
-            downDistanceText: '1st & 10 at DET 35',
-            shortDownDistanceText: '1st & 10',
-            possessionText: 'DET 35',
+            down: 2,
+            yardLine: 88,
+            distance: 4,
+            downDistanceText: '2nd & 4 at DET 12',
+            shortDownDistanceText: '2nd & 4',
+            possessionText: 'DET 12',
             possession: '9',
-            isRedZone: false,
+            isRedZone: true,
             homeTimeouts: 3,
             awayTimeouts: 3,
             lastPlay: {
               id: 'play-mock-2',
-              text: 'J.Love deep left to C.Watson for 29 yards to the DET 35 (B.Branch).',
-              statYardage: 29,
+              text: 'J.Love pass short right to J.Reed for 9 yards to the DET 12. Red Zone threat!',
+              statYardage: 9,
               probability: {
-                homeWinPercentage: 0.442,
-                awayWinPercentage: 0.558,
+                homeWinPercentage: 0.582,
+                awayWinPercentage: 0.418,
               },
             },
           },

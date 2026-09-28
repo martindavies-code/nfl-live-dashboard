@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "node --test --experimental-strip-types src/**/*.test.mjs",
+    "test:browser": "node scripts/headless-runner.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
+    "puppeteer-core": "^25.12.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
   }

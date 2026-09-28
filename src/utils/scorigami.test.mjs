@@ -116,12 +116,18 @@ test('Historic outlier scores and defensive resilience in Scorigami engine', () 
   const rec73 = getHistoricalRecord(73, 0)
   assert.ok(rec73 !== null)
   assert.equal(rec73[1], 1940)
+  assert.equal(rec73[2], '1940-12-08')
+  assert.equal(rec73[3], 'Chicago Bears')
+  assert.equal(rec73[4], 'Washington Redskins')
 
   // 70-20 (Dolphins vs Broncos 2023) occurred
   assert.equal(hasOccurred(70, 20), true)
   const rec70 = getHistoricalRecord(70, 20)
   assert.ok(rec70 !== null)
   assert.equal(rec70[1], 2023)
+  assert.equal(rec70[2], '2023-09-24')
+  assert.equal(rec70[3], 'Miami Dolphins')
+  assert.equal(rec70[4], 'Denver Broncos')
 
   // 2-0 safety game occurred
   assert.equal(hasOccurred(2, 0), true)
@@ -132,4 +138,20 @@ test('Historic outlier scores and defensive resilience in Scorigami engine', () 
   assert.ok(Number.isFinite(nanRes.chancePct))
   assert.ok(nanRes.chanceLabel.length > 0)
 })
+
+test('Post-game non-scorigami displays exact last game matchup and date', () => {
+  const postCommon = getScorigamiInfo(20, 17, 0, 'post')
+  assert.equal(postCommon.isCurrentScorigami, false)
+  assert.ok(postCommon.lastDate !== null)
+  assert.ok(postCommon.lastWinner !== null)
+  assert.ok(postCommon.lastLoser !== null)
+  assert.ok(postCommon.lastGameSummary !== null)
+  assert.equal(postCommon.lastDateIso, '2026-09-20')
+  assert.equal(postCommon.lastDate, 'Sep 20, 2026')
+  assert.equal(postCommon.lastWinner, 'Green Bay Packers')
+  assert.equal(postCommon.lastLoser, 'New York Jets')
+  assert.equal(postCommon.lastGameSummary, 'Green Bay Packers 20, New York Jets 17 on Sep 20, 2026')
+  assert.match(postCommon.whenScenario, /Green Bay Packers 20, New York Jets 17 on Sep 20, 2026/)
+})
+
 

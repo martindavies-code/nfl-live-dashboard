@@ -38,3 +38,25 @@ test('getMockLiveGames advances sequence across sequential calls', () => {
 
   assert.notEqual(sit1.lastPlay.id, sit2.lastPlay.id)
 })
+
+test('Multiple games can be in the Red Zone simultaneously', async () => {
+  const { isRedZoneSituation } = await import('../utils/nflHelpers.ts')
+  const games = getMockLiveGames()
+
+  const redZoneGames = games.filter((g) => {
+    const comp = g.competitions?.[0]
+    return isRedZoneSituation(comp?.situation, g.status || comp?.status, comp?.competitors || [])
+  })
+
+  // We should have at least 1 or 2 Red Zone games simultaneously
+  assert.ok(redZoneGames.length >= 1, 'Expected at least 1 Red Zone game')
+  const mock2 = games.find((g) => g.id === 'mock-2')
+  assert.ok(mock2)
+  const mock2Comp = mock2.competitions[0]
+  assert.equal(
+    isRedZoneSituation(mock2Comp.situation, mock2.status, mock2Comp.competitors),
+    true,
+    'mock-2 (GB @ DET 12) should be in the Red Zone'
+  )
+})
+

@@ -77,9 +77,40 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   const gainZoneLeft = Math.min(scrimmageX, firstDownX)
   const gainZoneWidth = Math.abs(firstDownX - scrimmageX)
 
+  // Boundary-clamped Badge coordinates to avoid clipping into endzones (0..100 and 1100..1200)
+  const losBadgeX = Math.max(124, Math.min(1076, scrimmageX))
+  const firstDownBadgeX = Math.max(126, Math.min(1074, firstDownX))
+  const pillX = Math.max(180, Math.min(1020, scrimmageX))
+
+  // Mathematically invariant Big Play Direction Arrow coordinates (never collapses, perfectly centered text)
+  const arrowLength = 110
+  let arrowStartX: number
+  let arrowTipX: number
+  let arrowHeadBaseX: number
+  let arrowTextX: number
+  let arrowPathD: string
+
+  if (direction === 'right') {
+    const rawTipX = scrimmageX + 28 + arrowLength
+    arrowTipX = Math.min(1185, rawTipX)
+    arrowStartX = arrowTipX - arrowLength
+    arrowHeadBaseX = arrowTipX - 32
+    arrowTextX = (arrowStartX + arrowHeadBaseX) / 2
+    arrowPathD = `M ${arrowStartX},157 L ${arrowHeadBaseX},157 L ${arrowHeadBaseX},142 L ${arrowTipX},170 L ${arrowHeadBaseX},198 L ${arrowHeadBaseX},183 L ${arrowStartX},183 Z`
+  } else {
+    const rawTipX = scrimmageX - 28 - arrowLength
+    arrowTipX = Math.max(15, rawTipX)
+    arrowStartX = arrowTipX + arrowLength
+    arrowHeadBaseX = arrowTipX + 32
+    arrowTextX = (arrowStartX + arrowHeadBaseX) / 2
+    arrowPathD = `M ${arrowStartX},157 L ${arrowHeadBaseX},157 L ${arrowHeadBaseX},142 L ${arrowTipX},170 L ${arrowHeadBaseX},198 L ${arrowHeadBaseX},183 L ${arrowStartX},183 Z`
+  }
+
   // SVG Unique Def IDs
   const turfGradId = `turf-grad-${uniqueId}`
   const turfPatternId = `turf-pat-${uniqueId}`
+  const ballGradId = `ball-grad-${uniqueId}`
+  const arrowGradId = `arrow-grad-${uniqueId}`
 
   const offensiveAbbr = offensiveTeam?.team?.abbreviation || 'Offense'
   const accessibilityDesc = hasSituation
@@ -91,18 +122,35 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
       className={`w-full overflow-hidden rounded-xl border border-white/[0.08] bg-[#0c121e] ${
         isHero ? 'shadow-lg ring-1 ring-white/[0.04]' : ''
       }`}
-      role="img"
+      role="region"
       aria-label={accessibilityDesc}
     >
+      {/* Screen Reader Detailed Tactical Breakdown */}
+      <div className="sr-only">
+        <h4>Tactical Drive Breakdown</h4>
+        <dl>
+          <dt>Offense</dt>
+          <dd>{offensiveAbbr} (attacking {direction === 'right' ? awayAbbr : homeAbbr} end zone)</dd>
+          <dt>Line of Scrimmage</dt>
+          <dd>{losLabel}</dd>
+          <dt>Down and Distance</dt>
+          <dd>{situation?.downDistanceText || 'Between plays'}</dd>
+          <dt>Target Line</dt>
+          <dd>{firstDownLabel}</dd>
+          <dt>Red Zone Status</dt>
+          <dd>{inRedZone ? 'Active Red Zone Threat' : 'Regular Field Position'}</dd>
+        </dl>
+      </div>
+
       {/* Context Strip */}
-      <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#080d16] px-3.5 py-2">
+      <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#080d16] px-3.5 py-2.5">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            Field Position
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+            Field Position Radar
           </span>
           {inRedZone && (
-            <span className="rounded bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold text-rose-300 border border-rose-500/30">
-              RED ZONE
+            <span className="rounded bg-rose-500/25 px-2 py-0.5 text-[10px] font-black text-rose-300 border border-rose-500/40 animate-pulse">
+              🔥 RED ZONE
             </span>
           )}
           {isHalftime && (
@@ -120,13 +168,14 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
           </div>
         ) : hasSituation ? (
           <div className="flex items-center gap-2 text-xs font-semibold">
-            <span className="text-amber-300 font-mono">
+            <span className="text-amber-300 font-mono font-bold bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded">
               {situation?.downDistanceText || `${situation?.shortDownDistanceText || 'Current Drive'}`}
             </span>
             <span className="text-slate-500">•</span>
-            <span className="text-slate-300">
-              <strong className="text-white">{offensiveTeam?.team?.abbreviation || 'Offense'}</strong> Driving{' '}
-              <span className="text-amber-400 font-mono">{direction === 'right' ? '➔' : '⬅'}</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-black text-amber-200 border border-amber-500/40 shadow-sm">
+              <strong className="text-white">{offensiveAbbr}</strong>
+              <span>DRIVING</span>
+              <span className="text-base font-extrabold text-amber-400">{direction === 'right' ? '➔' : '◀'}</span>
             </span>
           </div>
         ) : (
@@ -154,6 +203,20 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               <rect x="0" y="0" width="50" height="340" fill="rgba(255,255,255,0.02)" />
               <rect x="50" y="0" width="50" height="340" fill="rgba(0,0,0,0.04)" />
             </pattern>
+
+            {/* Pro Football Saddle Leather Gradient */}
+            <linearGradient id={ballGradId} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#b45309" />
+              <stop offset="35%" stopColor="#92400e" />
+              <stop offset="70%" stopColor="#78350f" />
+              <stop offset="100%" stopColor="#451a03" />
+            </linearGradient>
+
+            {/* Tactical Drive Arrow Broadcast Gradient */}
+            <linearGradient id={arrowGradId} x1={direction === 'right' ? "0%" : "100%"} y1="0%" x2={direction === 'right' ? "100%" : "0%"} y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="1" />
+            </linearGradient>
           </defs>
 
           {/* Turf Background */}
@@ -331,7 +394,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                   />
 
                   {/* Direct 1st Down Label Tag (offset to bottom on short-yardage plays to eliminate collision with LOS badge) */}
-                  <g transform={`translate(${firstDownX}, ${Math.abs(firstDownX - scrimmageX) < 55 ? 322 : 18})`}>
+                  <g transform={`translate(${firstDownBadgeX}, ${Math.abs(firstDownX - scrimmageX) < 55 ? 322 : 18})`}>
                     <rect x="-24" y="-12" width="48" height="20" rx="4" fill="#eab308" />
                     <text
                       x="0"
@@ -360,7 +423,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               />
 
               {/* Direct Line of Scrimmage Label */}
-              <g transform={`translate(${scrimmageX}, 18)`}>
+              <g transform={`translate(${losBadgeX}, 18)`}>
                 <rect x="-22" y="-12" width="44" height="20" rx="4" fill="#0284c7" />
                 <text
                   x="0"
@@ -376,21 +439,61 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 </text>
               </g>
 
-              {/* Play Direction Arrow (Only on active scrimmage plays) */}
+              {/* BIG PLAY DIRECTION ARROW & BROADCAST DRIVING PILL (Only on active scrimmage plays) */}
               {isRegularPlay && (
-                <g transform={`translate(${scrimmageX}, 170)`}>
-                  <path
-                    d={
-                      direction === 'right'
-                        ? 'M 20,-14 L 38,0 L 20,14'
-                        : 'M -20,-14 L -38,0 L -20,14'
-                    }
-                    fill="none"
-                    stroke="#eab308"
-                    strokeWidth="3.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                <g>
+                  {/* High-Impact Tactical Ground Arrow pointing toward opponent's endzone (never collapses or clips) */}
+                  <g>
+                    <path
+                      d={arrowPathD}
+                      fill={`url(#${arrowGradId})`}
+                      stroke="#ffffff"
+                      strokeWidth="2.5"
+                      filter="drop-shadow(0 4px 10px rgba(0,0,0,0.85))"
+                    />
+                    {/* High-Contrast Directional Drive Text precisely centered inside arrow shaft */}
+                    <text
+                      x={arrowTextX}
+                      y="171"
+                      fill="#0f172a"
+                      fontSize="12"
+                      fontWeight="900"
+                      fontFamily="var(--font-mono)"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      letterSpacing="1.5"
+                    >
+                      {direction === 'right' ? 'DRIVE ➔' : '◀ DRIVE'}
+                    </text>
+                  </g>
+
+                  {/* Prominent Drive Direction Pill Tag above Line of Scrimmage (boundary-clamped) */}
+                  <g transform={`translate(${pillX}, 82)`}>
+                    <rect
+                      x="-75"
+                      y="-15"
+                      width="150"
+                      height="30"
+                      rx="7"
+                      fill="#080e18"
+                      stroke="#f59e0b"
+                      strokeWidth="2.5"
+                      filter="drop-shadow(0 4px 10px rgba(0,0,0,0.8))"
+                    />
+                    <text
+                      x="0"
+                      y="2"
+                      fill="#fbbf24"
+                      fontSize="12"
+                      fontWeight="900"
+                      fontFamily="var(--font-mono)"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      letterSpacing="1"
+                    >
+                      {direction === 'right' ? `${offensiveAbbr} DRIVING ➔` : `◀ DRIVING ${offensiveAbbr}`}
+                    </text>
+                  </g>
                 </g>
               )}
 
@@ -433,49 +536,60 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 </g>
               )}
 
-              {/* Football positioned at exact yard line */}
-              <g
-                transform={`translate(${scrimmageX}, 170) ${
-                  direction === 'left' ? 'rotate(-20)' : 'rotate(20)'
-                }`}
-              >
+              {/* Authentic Wilson-Style NFL Pro Football */}
+              <g transform={`translate(${scrimmageX}, 170)`}>
+                {/* Turf Ground Shadow */}
+                <ellipse cx="0" cy="16" rx="22" ry="5" fill="rgba(0,0,0,0.6)" filter="blur(1px)" />
+
+                {/* Tactical Radar Pulse Ring */}
+                <circle cx="0" cy="0" r="26" fill="none" stroke="#38bdf8" strokeWidth="1" strokeDasharray="3,3" opacity="0.6" />
+
+                {/* Pro Leather Football Body */}
                 <path
-                  d="M -22,0 C -22,-14 22,-14 22,0 C 22,14 -22,14 -22,0 Z"
-                  fill="#854d0e"
-                  stroke="#451a03"
-                  strokeWidth="1.5"
+                  d="M -22,0 C -19,-13 -7,-13 0,-13 C 7,-13 19,-13 22,0 C 19,13 7,13 0,13 C -7,13 -19,13 -22,0 Z"
+                  fill={`url(#${ballGradId})`}
+                  stroke="#270e02"
+                  strokeWidth="1.4"
+                  filter="drop-shadow(0 3px 6px rgba(0,0,0,0.7))"
                 />
-                <path d="M -15,-8 C -14,-8 -14,8 -15,8" stroke="#ffffff" strokeWidth="2" fill="none" />
-                <path d="M 15,-8 C 14,-8 14,8 15,8" stroke="#ffffff" strokeWidth="2" fill="none" />
-                <line x1="-7" y1="0" x2="7" y2="0" stroke="#ffffff" strokeWidth="2" />
-                <line x1="-5" y1="-2.5" x2="-5" y2="2.5" stroke="#ffffff" strokeWidth="1.2" />
-                <line x1="-1" y1="-3" x2="-1" y2="3" stroke="#ffffff" strokeWidth="1.2" />
-                <line x1="3" y1="-3" x2="3" y2="3" stroke="#ffffff" strokeWidth="1.2" />
+
+                {/* White Pro Tip Stripes */}
+                <path d="M -15,-9.5 C -13,-4 -13,4 -15,9.5" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" fill="none" opacity="0.95" />
+                <path d="M 15,-9.5 C 13,-4 13,4 15,9.5" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" fill="none" opacity="0.95" />
+
+                {/* White NFL Seam & Laces */}
+                <line x1="-9" y1="0" x2="9" y2="0" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
+                <line x1="-6" y1="-3" x2="-6" y2="3" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" />
+                <line x1="-3" y1="-3" x2="-3" y2="3" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" />
+                <line x1="0" y1="-3" x2="0" y2="3" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" />
+                <line x1="3" y1="-3" x2="3" y2="3" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" />
+                <line x1="6" y1="-3" x2="6" y2="3" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" />
               </g>
 
               {/* Direct Yard Line Callout under Ball */}
-              <g transform={`translate(${scrimmageX}, 215)`}>
+              <g transform={`translate(${scrimmageX}, 216)`}>
                 <rect
-                  x="-38"
-                  y="-10"
-                  width="76"
-                  height="20"
-                  rx="4"
+                  x="-44"
+                  y="-11"
+                  width="88"
+                  height="22"
+                  rx="5"
                   fill="#090d16"
                   stroke="#38bdf8"
-                  strokeWidth="1"
+                  strokeWidth="1.5"
+                  filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))"
                 />
                 <text
                   x="0"
                   y="2"
                   fill="#f1f5f9"
                   fontSize="10"
-                  fontWeight="700"
+                  fontWeight="800"
                   fontFamily="var(--font-mono)"
                   textAnchor="middle"
                   dominantBaseline="middle"
                 >
-                  {losLabel}
+                  BALL AT {losLabel}
                 </text>
               </g>
             </>
