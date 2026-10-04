@@ -229,14 +229,14 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
         </div>
       </div>
 
-      {/* Hero Content: Mobile First Hierarchy (Teams -> Field Radar -> Situation) & Desktop Side-by-Side */}
+      {/* Hero Content: Mobile First Hierarchy (Teams -> Field Radar -> Situation) & Desktop Balanced Grid */}
       <div className={
         isMultiThreat
           ? "flex flex-col gap-4 p-4"
-          : "flex flex-col lg:grid lg:grid-cols-12 gap-5 sm:gap-6 p-4 sm:p-6"
+          : "grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 p-4 sm:p-6"
       }>
-        {/* Block 1: Teams & Scores */}
-        <div className={isMultiThreat ? "flex flex-col space-y-3" : "order-1 lg:order-1 lg:col-span-5 flex flex-col space-y-4 sm:space-y-6"}>
+        {/* Block 1: Teams & Scores (Top-Left on Desktop, 6 columns) */}
+        <div className={isMultiThreat ? "flex flex-col space-y-3" : "order-1 lg:order-1 col-span-12 lg:col-span-6 flex flex-col space-y-4 sm:space-y-6"}>
           {/* Quarter & Game Clock Banner */}
           <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
             <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             </div>
 
             {venueText && (
-              <span className="flex items-center gap-1 text-xs text-slate-400 truncate max-w-[200px]" title={venueText}>
+              <span className="flex items-center gap-1 text-xs text-slate-400 truncate max-w-[280px] sm:max-w-none" title={venueText}>
                 <MapPin className="h-3 w-3 text-slate-500 flex-shrink-0" />
                 {venueText}
               </span>
@@ -400,8 +400,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
           </div>
         </div>
 
-        {/* Block 2: Full Dynamic 100-Yard Field Radar (Immediately below scores on mobile & tablet, right column on desktop) */}
-        <div className={isMultiThreat ? "flex flex-col justify-center" : "order-2 lg:order-3 lg:col-span-7 lg:row-span-2 flex flex-col justify-center"}>
+        {/* Block 2: Full Dynamic 100-Yard Field Radar (Immediately below scores on mobile, Full-Width 12-Columns across Bottom on Desktop) */}
+        <div className={isMultiThreat ? "flex flex-col justify-center" : "order-2 lg:order-3 col-span-12 flex flex-col justify-center"}>
           <FieldDiagram
             situation={situation}
             competitors={competitors}
@@ -421,8 +421,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
           />
         </div>
 
-        {/* Block 3: Key Situation, Win Probability Bar & Scorigami */}
-        <div className={isMultiThreat ? "flex flex-col space-y-3.5" : "order-3 lg:order-2 lg:col-span-5 flex flex-col space-y-4"}>
+        {/* Block 3: Key Situation, Win Probability Bar & Scorigami (Top-Right on Desktop, 6 columns) */}
+        <div className={isMultiThreat ? "flex flex-col space-y-3.5" : "order-3 lg:order-2 col-span-12 lg:col-span-6 flex flex-col space-y-4"}>
           {/* Key Situation Box */}
           {isLive && (
             <div className="rounded-xl border border-white/[0.08] bg-[#090e18] p-3.5">
