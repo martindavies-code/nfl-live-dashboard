@@ -118,16 +118,21 @@ export async function fetchNFLScoreboard(
     sourcesToTry.sort((a, b) => (a.id === 'local-dev-proxy' ? -1 : b.id === 'local-dev-proxy' ? 1 : 0))
   }
 
-  // Construct query parameters
+  // Sanitize and strictly validate query parameters
   const queryParts: string[] = []
-  if (params?.seasonType !== undefined) {
-    queryParts.push(`seasontype=${params.seasonType}`)
-  }
-  if (params?.week !== undefined) {
-    queryParts.push(`week=${params.week}`)
-  }
-  if (params?.year !== undefined) {
-    queryParts.push(`dates=${params.year}`)
+  if (params && typeof params === 'object') {
+    if (typeof params.seasonType === 'number' && Number.isFinite(params.seasonType)) {
+      const clampedSeason = Math.max(1, Math.min(4, Math.floor(params.seasonType)))
+      queryParts.push(`seasontype=${clampedSeason}`)
+    }
+    if (typeof params.week === 'number' && Number.isFinite(params.week)) {
+      const clampedWeek = Math.max(1, Math.min(25, Math.floor(params.week)))
+      queryParts.push(`week=${clampedWeek}`)
+    }
+    if (typeof params.year === 'number' && Number.isFinite(params.year)) {
+      const clampedYear = Math.max(1920, Math.min(2100, Math.floor(params.year)))
+      queryParts.push(`dates=${clampedYear}`)
+    }
   }
   queryParts.push(`_t=${Date.now()}`)
   const queryString = queryParts.join('&')
@@ -154,9 +159,6 @@ export async function fetchNFLScoreboard(
         headers: { Accept: 'application/json' },
       })
 
-      clearTimeout(timeoutId)
-      if (externalSignal) externalSignal.removeEventListener('abort', abortHandler)
-
       if (res.ok) {
         const json = await res.json()
         const parsedData = source.parseResponse(json)
@@ -167,6 +169,12 @@ export async function fetchNFLScoreboard(
           // Persist verified real data cache in localStorage for offline resiliency
           try {
             if (typeof window !== 'undefined' && window.localStorage) {
+              const safeSeason = typeof params?.seasonType === 'number' && Number.isFinite(params.seasonType)
+                ? String(Math.max(1, Math.min(4, Math.floor(params.seasonType))))
+                : 'live'
+              const safeWeek = typeof params?.week === 'number' && Number.isFinite(params.week)
+                ? String(Math.max(1, Math.min(25, Math.floor(params.week))))
+                : 'live'
               const cachePayload = {
                 timestamp: new Date().toISOString(),
                 sourceId: source.id,
@@ -175,7 +183,7 @@ export async function fetchNFLScoreboard(
                 week: params?.week,
                 data: parsedData,
               }
-              const cacheKey = `nfl_real_cache_${params?.seasonType ?? 'live'}_${params?.week ?? 'live'}`
+              const cacheKey = `nfl_real_cache_${safeSeason}_${safeWeek}`
               window.localStorage.setItem(cacheKey, JSON.stringify(cachePayload))
               window.localStorage.setItem('nfl_real_cache_latest', JSON.stringify(cachePayload))
             }
@@ -194,32 +202,48 @@ export async function fetchNFLScoreboard(
         }
       }
     } catch (err: any) {
-      clearTimeout(timeoutId)
-      if (externalSignal) externalSignal.removeEventListener('abort', abortHandler)
-
       if (externalSignal?.aborted) {
         throw new DOMException('Aborted', 'AbortError')
       }
       // If this source timed out or failed, log and try next redundant source
       console.warn(`[Redundancy Engine] Source ${source.name} unavailable, failing over to next mirror...`, err?.message || err)
+    } finally {
+      // Guaranteed cleanup: prevent event listener and timer leaks across all exit paths
+      clearTimeout(timeoutId)
+      if (externalSignal) {
+        externalSignal.removeEventListener('abort', abortHandler)
+      }
     }
   }
 
   // If ALL live remote sources failed, check localStorage for the last verified real NFL dataset
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      const cacheKey = `nfl_real_cache_${params?.seasonType ?? 'live'}_${params?.week ?? 'live'}`
+      const safeSeason = typeof params?.seasonType === 'number' && Number.isFinite(params.seasonType)
+        ? String(Math.max(1, Math.min(4, Math.floor(params.seasonType))))
+        : 'live'
+      const safeWeek = typeof params?.week === 'number' && Number.isFinite(params.week)
+        ? String(Math.max(1, Math.min(25, Math.floor(params.week))))
+        : 'live'
+      const cacheKey = `nfl_real_cache_${safeSeason}_${safeWeek}`
       const cachedRaw = window.localStorage.getItem(cacheKey) || window.localStorage.getItem('nfl_real_cache_latest')
       if (cachedRaw) {
         const cached = JSON.parse(cachedRaw)
-        if (cached?.data?.events && Array.isArray(cached.data.events)) {
+        if (
+          cached &&
+          typeof cached === 'object' &&
+          !Array.isArray(cached) &&
+          cached.data &&
+          typeof cached.data === 'object' &&
+          Array.isArray(cached.data.events)
+        ) {
           return {
             data: sanitizePatriotsInScoreboardData(cached.data as NFLScoreboardData),
             sourceId: 'offline-cache',
-            sourceName: `${cached.sourceName} (Verified Real Cache)`,
+            sourceName: `${String(cached.sourceName || 'Offline Cache')} (Verified Real Cache)`,
             responseTimeMs: 0,
             isCached: true,
-            cachedTimestamp: cached.timestamp,
+            cachedTimestamp: typeof cached.timestamp === 'string' ? cached.timestamp : undefined,
           }
         }
       }

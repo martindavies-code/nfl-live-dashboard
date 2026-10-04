@@ -58,44 +58,116 @@ export interface NormalizedEvent {
 }
 
 /**
- * Sanitize URLs to prevent XSS, prototype injection, and malicious protocol schemes.
- * - Blocks control characters / non-printable ASCII
- * - Blocks dangerous pseudo-protocols (javascript:, vbscript:, file:)
+ * Sanitize URLs to prevent XSS, prototype injection, SSRF, and malicious protocol schemes.
+ * - Blocks control characters, non-printable ASCII (0-31, 127), and Unicode directional overrides
+ * - Blocks dangerous pseudo-protocols (javascript:, vbscript:, file:, blob:)
+ * - Blocks userinfo credential injection (http://user:pass@host)
  * - Validates HTTP and HTTPS schemes via RFC URL parser
- * - Blocks active script injection vectors in data:image/ (e.g. malicious SVG scripts)
+ * - For data:image/ URIs:
+ *   - Allows safe raster images (png, jpeg, webp, gif)
+ *   - For SVG data URIs (utf8 or base64): strictly decodes and scans against XSS vectors:
+ *     script tags, event handlers (on[a-z]+), foreignObject, use, animate, set, handler,
+ *     javascript:/vbscript: links, XML entity declarations, CDATA blocks.
  */
 export function sanitizeUrl(url?: string | null, fallback = FALLBACK_LOGO): string {
   if (!url || typeof url !== 'string') return fallback
   const trimmed = url.trim()
   if (!trimmed) return fallback
 
-  // Block control characters and null bytes
+  // Block control characters, null bytes, and unicode directional formatting controls
   for (let i = 0; i < trimmed.length; i++) {
     const code = trimmed.charCodeAt(i)
-    if ((code >= 0 && code <= 31) || code === 127) {
+    if (
+      (code >= 0 && code <= 31) ||
+      code === 127 ||
+      (code >= 0x200e && code <= 0x200f) || // LTR / RTL marks
+      (code >= 0x202a && code <= 0x202e)    // Embedding / override controls
+    ) {
       return fallback
     }
   }
 
-  // Explicitly disallow dangerous pseudo-protocols
-  if (/^(?:javascript|vbscript|file):/i.test(trimmed)) return fallback
+  // Explicitly disallow dangerous pseudo-protocols and forbidden schemes
+  if (/^(?:javascript|vbscript|file|blob|data:text|data:application):/i.test(trimmed)) {
+    return fallback
+  }
 
   // Parse HTTP/HTTPS URLs strictly
   try {
     const parsed = new URL(trimmed)
     if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      // Reject URLs with embedded credentials (prevents credential-leakage or phishing vectors)
+      if (parsed.username || parsed.password) {
+        return fallback
+      }
       return parsed.href
     }
   } catch {
     // Fall through to data URI check
   }
 
-  // Safe data:image URIs (strictly reject script tags and event handlers in SVGs)
+  // Safe data:image URIs
   if (/^data:image\//i.test(trimmed)) {
-    if (/<script|onload|onerror|onclick|javascript:/i.test(trimmed)) {
-      return fallback
+    // 1. Safe raster formats (png, jpeg, jpg, webp, gif)
+    if (/^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(trimmed)) {
+      return trimmed
     }
-    return trimmed
+
+    // 2. SVG data URIs: require rigorous inspection
+    if (/^data:image\/svg\+xml/i.test(trimmed)) {
+      let decodedContent = trimmed
+
+      if (/;base64,/i.test(trimmed)) {
+        const base64Part = trimmed.split(/;base64,/i)[1] || ''
+        try {
+          if (typeof atob === 'function') {
+            decodedContent = atob(base64Part)
+          } else if (typeof globalThis !== 'undefined' && 'Buffer' in globalThis) {
+            const nodeBuf = (globalThis as unknown as { Buffer: { from: (s: string, e: string) => { toString: (e: string) => string } } }).Buffer
+            decodedContent = nodeBuf.from(base64Part, 'base64').toString('utf-8')
+          } else {
+            return fallback
+          }
+        } catch {
+          return fallback
+        }
+      } else {
+        // Percent-decode if needed
+        try {
+          decodedContent = decodeURIComponent(trimmed)
+        } catch {
+          // If percent-decode fails, proceed with raw trimmed
+        }
+      }
+
+      // Check decoded content for malicious SVG script execution vectors
+      const maliciousPatterns = [
+        /<script/i,
+        /<\/script/i,
+        /\bon[a-z]+\s*=/i, // any event handler (onload, onerror, onclick, onbegin, etc.)
+        /<foreignObject/i,
+        /<use/i,
+        /<animate/i,
+        /<set/i,
+        /<handler/i,
+        /<iframe/i,
+        /<embed/i,
+        /<object/i,
+        /javascript:/i,
+        /vbscript:/i,
+        /data:\s*text\/html/i,
+        /<!ENTITY/i,
+        /SYSTEM\s+["']/i,
+      ]
+
+      for (const pattern of maliciousPatterns) {
+        if (pattern.test(decodedContent)) {
+          return fallback
+        }
+      }
+
+      return trimmed
+    }
   }
 
   return fallback

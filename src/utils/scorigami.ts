@@ -159,18 +159,22 @@ const DRIVE_OUTCOMES = [
 ] as const
 
 /**
- * 1D Dynamic Programming: Compute the probability distribution of additional points
- * scored over a given number of remaining offensive drives.
- * Uses ping-pong buffers to achieve zero GC pressure inside simulation loops.
- * Runs in under 0.05ms (constant state space).
+ * Precomputed 1D Dynamic Programming distributions for 0..16 remaining offensive drives.
+ * Zero dynamic memory allocations during live game simulation or ticker updates.
  */
-function getDrivePointsDistribution(drives: number): Float64Array {
+const PRECOMPUTED_DRIVE_DISTRIBUTIONS: Float64Array[] = (() => {
+  const table: Float64Array[] = []
+
+  // Index 0: 0 additional points with probability 1.0
+  const zeroDrives = new Float64Array(100)
+  zeroDrives[0] = 1.0
+  table.push(zeroDrives)
+
   let current = new Float64Array(100)
   let next = new Float64Array(100)
   current[0] = 1.0
-  const numDrives = Math.max(1, Math.min(16, Math.round(drives)))
 
-  for (let d = 0; d < numDrives; d++) {
+  for (let d = 1; d <= 16; d++) {
     next.fill(0)
     for (let s = 0; s < 70; s++) {
       const ps = current[s]
@@ -182,12 +186,24 @@ function getDrivePointsDistribution(drives: number): Float64Array {
         }
       }
     }
+    table.push(new Float64Array(next))
     const temp = current
     current = next
     next = temp
   }
 
-  return current
+  return table
+})()
+
+/**
+ * 1D Dynamic Programming: Compute the probability distribution of additional points
+ * scored over a given number of remaining offensive drives.
+ * Returns precomputed distribution array with zero memory allocation.
+ * Runs in O(1) constant time.
+ */
+export function getDrivePointsDistribution(drives: number): Float64Array {
+  const numDrives = Math.max(1, Math.min(16, Number.isFinite(drives) ? Math.round(drives) : 1))
+  return PRECOMPUTED_DRIVE_DISTRIBUTIONS[numDrives]
 }
 
 /**

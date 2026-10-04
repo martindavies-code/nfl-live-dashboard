@@ -21,10 +21,11 @@ export function normalCdf(z: number): number {
 /**
  * Converts American Moneyline Odds (e.g. -395, +310) to raw implied probability.
  */
-function moneylineToImplied(mlStr?: string): number | null {
-  if (!mlStr) return null
-  const num = parseInt(mlStr.replace('+', ''), 10)
-  if (isNaN(num) || num === 0) return null
+function moneylineToImplied(mlVal?: string | number | null): number | null {
+  if (mlVal === undefined || mlVal === null) return null
+  const cleanStr = String(mlVal).replace('+', '').trim()
+  const num = parseInt(cleanStr, 10)
+  if (!Number.isFinite(num) || num === 0) return null
 
   if (num < 0) {
     return -num / (-num + 100)

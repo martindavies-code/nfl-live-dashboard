@@ -199,10 +199,10 @@ export const Dashboard: React.FC = () => {
   })
 
   // Polling setup with Page Visibility awareness (battery & network preservation)
-  // Countdown is synced to the same interval as the poll to prevent drift.
+  // Uses loadDataRef so intervals and event listeners remain stable without thrashing
   useEffect(() => {
     queueMicrotask(() => {
-      loadData()
+      loadDataRef.current?.()
     })
 
     let pollInterval: ReturnType<typeof setInterval> | null = null
@@ -216,7 +216,7 @@ export const Dashboard: React.FC = () => {
       setCountdown(10)
 
       pollInterval = setInterval(() => {
-        loadData()
+        loadDataRef.current?.()
         setCountdown(10)
       }, 10000)
 
@@ -237,7 +237,7 @@ export const Dashboard: React.FC = () => {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        loadData(true)
+        loadDataRef.current?.(true)
         startTimers()
       } else {
         stopTimers()
@@ -253,7 +253,7 @@ export const Dashboard: React.FC = () => {
         abortControllerRef.current.abort()
       }
     }
-  }, [loadData])
+  }, [])
 
   const events = useMemo(() => {
     return (data?.events || []).map(sanitizePatriotsInEvent)
