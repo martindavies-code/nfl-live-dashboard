@@ -72,7 +72,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
   if (compact) {
     return (
       <div
-        className="w-full rounded-lg bg-black/30 border border-white/[0.05] px-3 py-1.5 select-none"
+        className="w-full select-none"
         role="region"
         aria-label={`Win probability: ${homeAbbr} ${homePct.toFixed(1)}%, ${awayAbbr} ${awayPct.toFixed(1)}%`}
       >

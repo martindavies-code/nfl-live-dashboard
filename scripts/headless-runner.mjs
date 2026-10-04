@@ -104,7 +104,7 @@ async function runAudit(options = {}) {
   ensureDir(outDir)
 
   // Current artifact directory
-  const artifactDir = 'C:\\Users\\Martin\\.gemini\\antigravity-ide\\brain\\8aaad804-1ee1-413e-9ee1-fa57c62f56f4'
+  const artifactDir = 'C:\\Users\\Martin\\.gemini\\antigravity-ide\\brain\\f8fb1880-542c-4b0d-9418-fa1e3678d497'
 
   let spawnedServer = null
   if (!(await isServerUp(targetUrl))) {
@@ -303,7 +303,8 @@ async function runAudit(options = {}) {
     // 8. Test Mobile Responsive Viewport (390x844 iPhone standard)
     console.log(`[9/9] Testing Mobile Responsive Viewport (390x844)...`)
     await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
-    await new Promise((r) => setTimeout(r, 500))
+    await page.waitForSelector('#matchups-grid article', { timeout: 4000 }).catch(() => {})
+    await new Promise((r) => setTimeout(r, 600))
 
     const mobilePath = path.join(outDir, '05-mobile-viewport.png')
     await page.screenshot({ path: mobilePath, fullPage: false })

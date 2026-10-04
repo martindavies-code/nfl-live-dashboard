@@ -1,6 +1,6 @@
 import React, { useId, memo } from 'react'
 import type { NFLSituation, NFLCompetitor, NFLStatus } from '../types/nfl'
-import { sanitizeHexColor, getOffensiveDrive, isRedZoneSituation, isHalftimeSituation } from '../utils/nflHelpers'
+import { sanitizeHexColor, getOffensiveDrive, isRedZoneSituation, isHalftimeSituation, formatDownAndDistance } from '../utils/nflHelpers'
 
 interface FieldDiagramProps {
   situation?: NFLSituation | null
@@ -162,38 +162,8 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
         </dl>
       </div>
 
-      {/* Context Strip */}
-      {isCompact ? (
-        <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#060a12] px-3 py-1.5 text-xs">
-          <div className="flex items-center gap-1.5 min-w-0">
-            {isHalftime ? (
-              <span className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30">
-                HALFTIME
-              </span>
-            ) : hasSituation ? (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-bold text-amber-200 truncate">
-                <span className="text-white font-extrabold">{offensiveAbbr}</span>
-                <span>DRIVING</span>
-                <span className="text-amber-400 font-black">{direction === 'right' ? '➔' : '◀'}</span>
-              </div>
-            ) : (
-              <span className="text-[11px] text-slate-400 italic">
-                {gameState === 'pre' ? 'Pregame' : gameState === 'post' ? 'Final' : gameStatusDetail}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 text-[11px] font-mono shrink-0">
-            {isHalftime ? (
-              <span className="text-amber-300 font-semibold">2nd Half Kickoff Upcoming</span>
-            ) : hasSituation ? (
-              <span className="text-slate-400">
-                Ball on <strong className="text-white font-bold">{losLabel}</strong>
-              </span>
-            ) : null}
-          </div>
-        </div>
-      ) : (
+      {/* Context Strip (Hero Mode Only) */}
+      {!isCompact && (
         <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#080d16] px-3.5 py-2.5">
           <div className="flex items-center gap-2 min-w-0 shrink-0">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 whitespace-nowrap">
@@ -746,23 +716,33 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
       {/* Direct In-place Context Strip */}
       {isCompact ? (
         <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#060a12] px-3 py-1.5 text-[11px] font-mono text-slate-400">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-400 shrink-0" />
-              <span className="text-slate-400">LOS:</span>
-              <strong className="text-slate-200">{isHalftime ? 'Halftime' : hasSituation ? losLabel : '50 YD'}</strong>
-            </span>
-            {isRegularPlay && (
-              <span className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
-                <span className="text-slate-400">To Gain:</span>
-                <strong className="text-amber-300">{isGoalToGo ? 'Goal Line' : `${distance} Yds`}</strong>
+          <div className="flex items-center gap-2 min-w-0">
+            {isHalftime ? (
+              <span className="flex items-center gap-1.5 text-amber-300 font-bold">
+                <span>⏸️</span>
+                <span>AT HALFTIME</span>
               </span>
+            ) : hasSituation ? (
+              <span className="flex items-center gap-1.5 min-w-0">
+                <span className="h-1.5 w-1.5 rounded-full bg-sky-400 shrink-0" />
+                <strong className="text-amber-300 font-bold shrink-0">
+                  {formatDownAndDistance(situation)}
+                </strong>
+              </span>
+            ) : (
+              <span className="text-slate-400">{gameStatusDetail || 'Pregame'}</span>
             )}
           </div>
-          <span className="text-[10px] text-slate-400 font-semibold tracking-wide">
-            {direction === 'right' ? `➔ ${awayAbbr}` : `◀ ${homeAbbr}`}
-          </span>
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
+            {isRegularPlay && (
+              <span className="text-slate-400 text-[10px] hidden sm:inline">
+                {isGoalToGo ? 'Goal to Go' : `Target: +${distance}y`}
+              </span>
+            )}
+            <span className="text-[10px] font-bold text-amber-400 tracking-wider">
+              {direction === 'right' ? `${offensiveAbbr} ➔` : `◀ ${offensiveAbbr}`}
+            </span>
+          </div>
         </div>
       ) : (
         <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#080d16] px-3 py-1.5 text-xs text-slate-400">

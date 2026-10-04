@@ -503,6 +503,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                 : `Kickoff: ${formattedKickoff}`
             }
             isHero={true}
+            compact={Boolean(totalThreats && totalThreats > 1)}
             status={status}
           />
         </div>

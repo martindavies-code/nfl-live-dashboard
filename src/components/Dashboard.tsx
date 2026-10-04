@@ -1085,7 +1085,7 @@ export const Dashboard: React.FC = () => {
               id="matchups-grid"
               role="tabpanel"
               aria-labelledby={`tab-${filter}`}
-              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start"
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch"
             >
               {filteredEvents.map((event) => (
                 <GameCard
