@@ -66,46 +66,37 @@ test('Boundary Audit: FieldDiagram Play Direction Arrow & Badges Mathematical In
       // Badges must NEVER cross into end zones (0..100 and 1100..1200)
       const losBadgeX = Math.max(124, Math.min(1076, scrimmageX))
       const firstDownBadgeX = Math.max(126, Math.min(1074, firstDownX))
-      const pillX = Math.max(180, Math.min(1020, scrimmageX))
 
       assert.ok(losBadgeX >= 124 && losBadgeX <= 1076, `LOS badge out of bounds: ${losBadgeX}`)
       assert.ok(firstDownBadgeX >= 126 && firstDownBadgeX <= 1074, `1st Down badge out of bounds: ${firstDownBadgeX}`)
-      assert.ok(pillX >= 180 && pillX <= 1020, `Driving pill out of bounds: ${pillX}`)
 
-      // Big Direction Arrow invariants
-      const arrowLength = 110
+      // Streamlined Broadcast Direction Arrow invariants (60px length, clamped tip)
+      const arrowLength = 60
       let arrowStartX
       let arrowTipX
       let arrowHeadBaseX
-      let arrowTextX
 
       if (direction === 'right') {
-        const rawTipX = scrimmageX + 28 + arrowLength
+        const rawTipX = scrimmageX + 26 + arrowLength
         arrowTipX = Math.min(1185, rawTipX)
         arrowStartX = arrowTipX - arrowLength
-        arrowHeadBaseX = arrowTipX - 32
-        arrowTextX = (arrowStartX + arrowHeadBaseX) / 2
+        arrowHeadBaseX = arrowTipX - 22
       } else {
-        const rawTipX = scrimmageX - 28 - arrowLength
+        const rawTipX = scrimmageX - 26 - arrowLength
         arrowTipX = Math.max(15, rawTipX)
         arrowStartX = arrowTipX + arrowLength
-        arrowHeadBaseX = arrowTipX + 32
-        arrowTextX = (arrowStartX + arrowHeadBaseX) / 2
+        arrowHeadBaseX = arrowTipX + 22
       }
 
-      // Invariant 1: Total arrow length MUST be exactly 110px
+      // Invariant 1: Total arrow length MUST be exactly 60px
       const measuredLength = Math.abs(arrowTipX - arrowStartX)
-      assert.equal(measuredLength, 110, `Arrow length collapsed at yard ${yard}, dir ${direction}`)
+      assert.equal(measuredLength, 60, `Arrow length collapsed at yard ${yard}, dir ${direction}`)
 
       // Invariant 2: Arrow tip must never exceed canvas boundaries (0..1200)
       assert.ok(arrowTipX >= 15 && arrowTipX <= 1185, `Arrow tip out of bounds: ${arrowTipX}`)
       assert.ok(arrowStartX >= 15 && arrowStartX <= 1185, `Arrow start out of bounds: ${arrowStartX}`)
 
-      // Invariant 3: Text X must be strictly centered inside the shaft
-      const expectedCenter = (arrowStartX + arrowHeadBaseX) / 2
-      assert.equal(arrowTextX, expectedCenter, `Text centering error at yard ${yard}`)
-
-      // Invariant 4: Arrow head must point in the correct direction
+      // Invariant 3: Arrow head must point in the correct direction
       if (direction === 'right') {
         assert.ok(arrowTipX > arrowHeadBaseX, `Right arrow tip not ahead of base at yard ${yard}`)
       } else {
