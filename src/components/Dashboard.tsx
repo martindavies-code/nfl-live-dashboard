@@ -825,23 +825,18 @@ export const Dashboard: React.FC = () => {
           ) : (
             <section className="space-y-4" aria-label="Simultaneous Red Zone Spotlights">
               {/* Multi-Threat Red Zone Header Banner */}
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-500/30 bg-gradient-to-r from-rose-950/70 via-red-950/40 to-[#0e1626] p-4 shadow-xl shadow-rose-950/30">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-500/30 bg-gradient-to-r from-rose-950/70 via-red-950/40 to-[#0e1626] p-3.5 sm:p-4 shadow-xl shadow-rose-950/30">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-600/30 border border-rose-500/50 text-rose-300 shadow-md">
-                    <Flame className="h-6 w-6 text-rose-400 fill-rose-400 animate-pulse" />
+                  <span className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-rose-600/30 border border-rose-500/50 text-rose-300 shadow-md shrink-0">
+                    <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-rose-400 fill-rose-400 animate-pulse" />
                   </span>
-                  <div>
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <h2 className="font-['Oswald'] text-lg sm:text-xl font-bold uppercase tracking-wide text-white">
-                        Multi-Threat Red Zone Spotlight
-                      </h2>
-                      <span className="rounded-full bg-rose-500/30 border border-rose-500/60 px-2.5 py-0.5 text-xs font-black text-rose-200 animate-pulse">
-                        {spotlightMatchups.length} ACTIVE THREATS
-                      </span>
-                    </div>
-                    <p className="text-xs text-rose-200/80 mt-0.5">
-                      Multiple games threatening to score simultaneously • Showing all active Red Zone drives side-by-side without flicking
-                    </p>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h2 className="font-['Oswald'] text-base sm:text-xl font-bold uppercase tracking-wide text-white">
+                      Multi-Threat Red Zone Spotlight
+                    </h2>
+                    <span className="rounded-full bg-rose-500/30 border border-rose-500/60 px-2.5 py-0.5 text-xs font-black text-rose-200 animate-pulse">
+                      {spotlightMatchups.length} ACTIVE THREATS
+                    </span>
                   </div>
                 </div>
 

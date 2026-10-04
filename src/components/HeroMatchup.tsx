@@ -26,6 +26,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   threatIndex,
   totalThreats,
 }) => {
+  const isMultiThreat = Boolean(totalThreats && totalThreats > 1)
   const [isCopied, setIsCopied] = useState(false)
   const [showScorigamiDetails, setShowScorigamiDetails] = useState(false)
   const competition = event.competitions?.[0]
@@ -186,8 +187,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2.5 text-xs text-slate-400 shrink-0">
-          {/* Interactive Auto Red Zone Toggle */}
-          {onToggleAutoRedZone && (
+          {/* Interactive Auto Red Zone Toggle (Only on single hero, multi-threat banner has global toggle) */}
+          {!isMultiThreat && onToggleAutoRedZone && (
             <button
               onClick={onToggleAutoRedZone}
               className={`inline-flex items-center gap-1.5 rounded-md px-2 sm:px-2.5 py-1 text-xs font-semibold border transition-all ${
@@ -229,9 +230,13 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
       </div>
 
       {/* Hero Content: Mobile First Hierarchy (Teams -> Field Radar -> Situation) & Desktop Side-by-Side */}
-      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-5 sm:gap-6 p-4 sm:p-6">
+      <div className={
+        isMultiThreat
+          ? "flex flex-col gap-4 p-4"
+          : "flex flex-col lg:grid lg:grid-cols-12 gap-5 sm:gap-6 p-4 sm:p-6"
+      }>
         {/* Block 1: Teams & Scores */}
-        <div className="order-1 lg:order-1 lg:col-span-5 flex flex-col space-y-4 sm:space-y-6">
+        <div className={isMultiThreat ? "flex flex-col space-y-3" : "order-1 lg:order-1 lg:col-span-5 flex flex-col space-y-4 sm:space-y-6"}>
           {/* Quarter & Game Clock Banner */}
           <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
             <div className="flex items-center gap-2">
@@ -396,7 +401,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
         </div>
 
         {/* Block 2: Full Dynamic 100-Yard Field Radar (Immediately below scores on mobile & tablet, right column on desktop) */}
-        <div className="order-2 lg:order-3 lg:col-span-7 lg:row-span-2 flex flex-col justify-center">
+        <div className={isMultiThreat ? "flex flex-col justify-center" : "order-2 lg:order-3 lg:col-span-7 lg:row-span-2 flex flex-col justify-center"}>
           <FieldDiagram
             situation={situation}
             competitors={competitors}
@@ -417,7 +422,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
         </div>
 
         {/* Block 3: Key Situation, Win Probability Bar & Scorigami */}
-        <div className="order-3 lg:order-2 lg:col-span-5 flex flex-col space-y-4">
+        <div className={isMultiThreat ? "flex flex-col space-y-3.5" : "order-3 lg:order-2 lg:col-span-5 flex flex-col space-y-4"}>
           {/* Key Situation Box */}
           {isLive && (
             <div className="rounded-xl border border-white/[0.08] bg-[#090e18] p-3.5">
@@ -515,19 +520,41 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
       </div>
 
       {/* UK Broadcast, Radio & Live Announcers Center */}
-      <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-3.5 py-3 sm:px-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs">
-          {/* UK TV & UK Radio Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-2.5 sm:gap-3">
+      {isMultiThreat ? (
+        <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-3.5 py-2.5">
+          <div className="flex flex-col gap-1.5 text-xs">
+            <div className="flex items-center justify-between gap-2 text-slate-300">
+              <span className="flex items-center gap-1.5 truncate">
+                <Tv className="h-3.5 w-3.5 text-sky-400 shrink-0" />
+                <strong className="text-white truncate">{broadcastDetails.ukTv}</strong>
+                <span className="text-slate-400 text-[11px] font-mono shrink-0">({broadcastDetails.ukTvChannelNumber})</span>
+              </span>
+              <span className="flex items-center gap-1.5 shrink-0 text-slate-400">
+                <Radio className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                <span className="text-slate-300 truncate max-w-[130px]">{broadcastDetails.ukRadio}</span>
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-white/[0.04] pt-1">
+              <span className="flex items-center gap-1.5 truncate">
+                <Mic className="h-3 w-3 text-rose-400 shrink-0" />
+                <span className="text-slate-300 truncate">{broadcastDetails.announcers.leadDuo}</span>
+              </span>
+              <span className="text-slate-500 font-mono text-[10px] shrink-0">({broadcastDetails.usTv})</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-3.5 py-3 sm:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
             {/* UK TV Channel */}
             <div className="flex items-center gap-2.5 rounded-lg bg-sky-500/10 border border-sky-500/25 px-3 py-2 text-sky-200 shadow-sm">
               <div className="p-1.5 rounded-md bg-sky-500/20 text-sky-300 flex-shrink-0">
                 <Tv className="h-4 w-4" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-sky-400 block">UK Television</span>
-                <span className="font-bold text-white text-xs sm:text-sm">{broadcastDetails.ukTv}</span>
-                <span className="text-[11px] text-sky-300/80 ml-1.5 font-mono">({broadcastDetails.ukTvChannelNumber})</span>
+                <span className="font-bold text-white text-xs sm:text-sm truncate block">{broadcastDetails.ukTv}</span>
+                <span className="text-[11px] text-sky-300/80 font-mono">({broadcastDetails.ukTvChannelNumber})</span>
               </div>
             </div>
 
@@ -536,46 +563,46 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
               <div className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 flex-shrink-0">
                 <Radio className="h-4 w-4" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 block">UK Radio Broadcast</span>
-                <span className="font-bold text-white text-xs sm:text-sm">{broadcastDetails.ukRadio}</span>
-                <span className="text-[11px] text-amber-300/80 ml-1.5 font-mono">({broadcastDetails.ukRadioFrequency})</span>
+                <span className="font-bold text-white text-xs sm:text-sm truncate block">{broadcastDetails.ukRadio}</span>
+                <span className="text-[11px] text-amber-300/80 font-mono">({broadcastDetails.ukRadioFrequency})</span>
+              </div>
+            </div>
+
+            {/* Announcers Calling the Game */}
+            <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2">
+              <div className="p-1.5 rounded-md bg-rose-500/20 text-rose-300 flex-shrink-0">
+                <Mic className="h-4 w-4 text-rose-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-rose-400">Live Commentary Booth</span>
+                  <span className="text-[10px] text-slate-400 font-mono">({broadcastDetails.usTv})</span>
+                </div>
+                <div className="text-slate-200 font-medium text-xs sm:text-sm truncate">
+                  <strong className="text-white font-bold">{broadcastDetails.announcers.leadDuo}</strong>
+                  {broadcastDetails.announcers.sideline && (
+                    <span className="text-slate-400 text-xs font-normal"> • Sideline: {broadcastDetails.announcers.sideline}</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Announcers Calling the Game */}
-          <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2">
-            <div className="p-1.5 rounded-md bg-rose-500/20 text-rose-300 flex-shrink-0">
-              <Mic className="h-4 w-4 text-rose-400" />
+          {/* UK Studio Pundits & Streaming Options */}
+          <div className="mt-2.5 pt-2 border-t border-white/[0.05] flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold text-slate-300">UK Studio:</span>
+              <span>{broadcastDetails.ukPundits}</span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-rose-400">Live Commentary Booth</span>
-                <span className="text-[10px] text-slate-400 font-mono">({broadcastDetails.usTv} Production)</span>
-              </div>
-              <div className="text-slate-200 font-medium text-xs sm:text-sm">
-                <strong className="text-white font-bold">{broadcastDetails.announcers.leadDuo}</strong>
-                {broadcastDetails.announcers.sideline && (
-                  <span className="text-slate-400 text-xs font-normal"> • Sideline: <span className="text-slate-300">{broadcastDetails.announcers.sideline}</span></span>
-                )}
-              </div>
+            <div className="flex items-center gap-1.5 text-slate-400">
+              <span className="font-semibold text-slate-300">Streaming:</span>
+              <span className="text-slate-400">{broadcastDetails.streaming}</span>
             </div>
           </div>
         </div>
-
-        {/* UK Studio Pundits & Streaming Options */}
-        <div className="mt-2.5 pt-2 border-t border-white/[0.05] flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
-          <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-slate-300">UK Studio:</span>
-            <span>{broadcastDetails.ukPundits}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <span className="font-semibold text-slate-300">Streaming:</span>
-            <span className="text-slate-400">{broadcastDetails.streaming}</span>
-          </div>
-        </div>
-      </div>
+      )}
     </section>
   )
 }

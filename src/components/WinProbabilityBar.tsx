@@ -287,12 +287,12 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
       </div>
 
       {/* Bar Scale Labels (25%, 50%, 75%) */}
-      <div className="mt-1.5 flex items-center justify-between px-1 text-xs font-mono text-slate-400">
-        <span>{homeAbbr} 100%</span>
+      <div className="mt-1.5 flex items-center justify-between px-1 text-[11px] font-mono text-slate-400 select-none">
+        <span>{homeAbbr}</span>
         <span>25%</span>
-        <span className="font-bold text-slate-200">50% EVEN</span>
+        <span className="font-bold text-slate-200">50%</span>
         <span>75%</span>
-        <span>{awayAbbr} 100%</span>
+        <span>{awayAbbr}</span>
       </div>
 
       {/* Favored / Projected Insight Strip */}
