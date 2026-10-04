@@ -622,20 +622,21 @@ export const Dashboard: React.FC = () => {
 
       {/* HEADER: Sleek, Purposeful, Zero Redundant Clutter */}
       <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#090d16]/90 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+          <div className="flex min-h-[56px] py-2 sm:py-0 sm:h-16 items-center justify-between gap-2 sm:gap-4">
             {/* Logo & Season Context */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-800 shadow-md ring-1 ring-white/20 select-none"
+                className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-800 shadow-md ring-1 ring-white/20 select-none"
                 aria-hidden="true"
               >
-                <span className="text-xl">🏈</span>
+                <span className="text-base sm:text-xl">🏈</span>
               </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="font-['Oswald'] font-bold text-xl tracking-wide text-white uppercase shrink-0">
-                    NFL Live Command
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <h1 className="font-['Oswald'] font-bold text-sm sm:text-xl tracking-wide text-white uppercase truncate shrink-0">
+                    <span className="sm:hidden">NFL</span>
+                    <span className="hidden sm:inline">NFL Live Command</span>
                   </h1>
                   <WeekSelector
                     currentSeasonType={selectedSeasonType}
@@ -646,18 +647,18 @@ export const Dashboard: React.FC = () => {
                     onSelectWeek={handleSelectWeek}
                   />
                 </div>
-                <p className="text-[11px] text-slate-400">
-                  {getSeasonPhaseDescription(selectedSeasonType, seasonYear, selectedWeek)} • Real-Time Field Tracker
+                <p className="text-[10px] sm:text-[11px] text-slate-400 truncate hidden xs:block">
+                  <span className="hidden md:inline">{getSeasonPhaseDescription(selectedSeasonType, seasonYear, selectedWeek)} • </span>Real-Time Field Tracker
                 </p>
               </div>
             </div>
 
             {/* Context & Polling Status */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
               {/* High Contrast Pro Toggle */}
               <button
                 onClick={toggleHighContrast}
-                className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                className={`flex min-h-[38px] min-w-[38px] sm:min-h-[44px] sm:min-w-[44px] items-center justify-center rounded-lg p-2 sm:px-2.5 sm:py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
                   isHighContrast
                     ? 'bg-amber-400 text-black border border-amber-300'
                     : 'bg-[#111927] text-slate-400 border border-white/[0.08] hover:text-white'
@@ -675,7 +676,7 @@ export const Dashboard: React.FC = () => {
               {/* Sound Cues Toggle */}
               <button
                 onClick={toggleMute}
-                className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                className={`flex min-h-[38px] min-w-[38px] sm:min-h-[44px] sm:min-w-[44px] items-center justify-center rounded-lg p-2 sm:px-2.5 sm:py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
                   !isMuted
                     ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
                     : 'bg-[#111927] text-slate-400 border border-white/[0.08] hover:text-white'
@@ -690,10 +691,10 @@ export const Dashboard: React.FC = () => {
                 </span>
               </button>
 
-              {/* Keyboard Shortcuts Help Button */}
+              {/* Keyboard Shortcuts Help Button (Desktop only with keyboard) */}
               <button
                 onClick={() => setIsShortcutsOpen(true)}
-                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-[#111927] hover:bg-[#162032] border border-white/[0.08] px-2.5 py-1.5 text-xs font-semibold text-slate-300 transition-all hover:text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="hidden lg:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-[#111927] hover:bg-[#162032] border border-white/[0.08] px-2.5 py-1.5 text-xs font-semibold text-slate-300 transition-all hover:text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
                 title="Keyboard Shortcuts & Accessibility Info (Shortcut: ?)"
                 aria-label="Open Keyboard Shortcuts and Accessibility Guide"
               >
@@ -704,7 +705,7 @@ export const Dashboard: React.FC = () => {
               {/* Active Live Data Feed & Redundancy Inspector */}
               <button
                 onClick={() => setIsSourcesModalOpen(true)}
-                className={`flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                className={`hidden lg:flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
                   activeSource.isCached
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                     : 'bg-emerald-950/40 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-900/40'
@@ -713,15 +714,15 @@ export const Dashboard: React.FC = () => {
                 aria-label={`Active Data Source: ${activeSource.name}. Click to view redundant sources.`}
               >
                 <Server className="h-3.5 w-3.5 text-emerald-400" />
-                <span className="hidden sm:inline font-mono text-[11px]">
+                <span className="font-mono text-[11px]">
                   {activeSource.isCached ? 'Offline Cache' : activeSource.name.replace('ESPN ', '')}
                   {activeSource.responseTimeMs > 0 && !activeSource.isCached ? ` • ${activeSource.responseTimeMs}ms` : ''}
                 </span>
               </button>
 
-              {/* Polling countdown badge (purely visual ticker, screen reader announcements are event-driven) */}
+              {/* Polling countdown badge (Desktop wide ticker) */}
               <div
-                className="hidden md:flex min-h-[44px] items-center gap-2 rounded-lg bg-[#111927] border border-white/[0.08] px-3 py-1.5 text-xs select-none"
+                className="hidden xl:flex min-h-[44px] items-center gap-2 rounded-lg bg-[#111927] border border-white/[0.08] px-3 py-1.5 text-xs select-none"
                 aria-hidden="true"
               >
                 <div className="relative flex h-2 w-2 items-center justify-center">
@@ -746,7 +747,7 @@ export const Dashboard: React.FC = () => {
                   loadData(true)
                 }}
                 disabled={isRefreshing}
-                className="flex min-h-[44px] items-center gap-1.5 rounded-lg bg-[#162032] hover:bg-[#1e2c45] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-all border border-white/[0.08] active:scale-95 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="flex min-h-[40px] min-w-[40px] sm:min-h-[44px] items-center justify-center sm:justify-start gap-1.5 rounded-lg bg-[#162032] hover:bg-[#1e2c45] p-2 sm:px-3 sm:py-1.5 text-xs font-semibold text-slate-200 transition-all border border-white/[0.08] active:scale-95 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-sky-400"
                 title="Force refresh live scoreboard"
                 aria-label="Refresh scoreboard data"
               >
@@ -763,7 +764,7 @@ export const Dashboard: React.FC = () => {
       </header>
 
       {/* MAIN CONTAINER */}
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 lg:px-8 py-6 space-y-8 focus:outline-none">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-8 focus:outline-none">
         {/* Error notification banner */}
         {error && (
           <div
@@ -894,9 +895,9 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Filter Tabs & Search */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 max-w-full">
               <div
-                className="flex items-center gap-1 rounded-lg bg-[#111927] p-1 border border-white/[0.08]"
+                className="flex items-center gap-1 rounded-lg bg-[#111927] p-1 border border-white/[0.08] overflow-x-auto no-scrollbar max-w-full"
                 role="tablist"
                 aria-label="Filter games by state"
               >
@@ -947,7 +948,7 @@ export const Dashboard: React.FC = () => {
                           btns[targetIdx]?.focus()
                         }
                       }}
-                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[34px] ${
+                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all shrink-0 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[34px] ${
                         isSelected
                           ? tab.id === 'live'
                             ? 'bg-rose-600 text-white shadow-sm ring-1 ring-white/20'

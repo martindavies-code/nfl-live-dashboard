@@ -300,9 +300,10 @@ async function runAudit(options = {}) {
     await page.keyboard.press('0')
     await new Promise((r) => setTimeout(r, 400))
 
-    // 8. Test Mobile Responsive Viewport (390x844 iPhone standard)
-    console.log(`[9/9] Testing Mobile Responsive Viewport (390x844)...`)
+    // 8. Test Mobile Responsive Viewport (390x844 iPhone / Android standard)
+    console.log(`[9/10] Testing Mobile Responsive Viewport (390x844)...`)
     await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
+    await page.evaluate(() => window.scrollTo(0, 0))
     await page.waitForSelector('#matchups-grid article', { timeout: 4000 }).catch(() => {})
     await new Promise((r) => setTimeout(r, 600))
 
@@ -311,6 +312,19 @@ async function runAudit(options = {}) {
     console.log(`  ✔ Saved: ${mobilePath}`)
     if (fs.existsSync(artifactDir)) {
       fs.copyFileSync(mobilePath, path.join(artifactDir, '05-mobile-viewport.png'))
+    }
+
+    // 9. Test Tablet Responsive Viewport (820x1180 iPad Air standard)
+    console.log(`[10/10] Testing Tablet Responsive Viewport (820x1180)...`)
+    await page.setViewport({ width: 820, height: 1180, isMobile: true, hasTouch: true })
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await new Promise((r) => setTimeout(r, 600))
+
+    const tabletPath = path.join(outDir, '05b-tablet-viewport.png')
+    await page.screenshot({ path: tabletPath, fullPage: false })
+    console.log(`  ✔ Saved: ${tabletPath}`)
+    if (fs.existsSync(artifactDir)) {
+      fs.copyFileSync(tabletPath, path.join(artifactDir, '05b-tablet-viewport.png'))
     }
 
     console.log(`\n======================================================`)

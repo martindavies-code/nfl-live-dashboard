@@ -59,22 +59,22 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
   return (
     <section
       aria-label="Slate Executive Briefing and Navigation Pathways"
-      className="rounded-2xl border border-white/[0.08] bg-gradient-to-r from-[#0c1322] via-[#0e172a] to-[#0c1322] p-4 sm:p-5 shadow-lg"
+      className="rounded-2xl border border-white/[0.08] bg-gradient-to-r from-[#0c1322] via-[#0e172a] to-[#0c1322] p-3.5 sm:p-5 shadow-lg"
     >
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
         {/* Narrative Orientation (Kucharski Reason #1 Fix) */}
-        <div className="space-y-1.5">
+        <div className="space-y-1 sm:space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-xs font-bold text-sky-300 uppercase tracking-wider">
-              <Zap className="h-3.5 w-3.5 text-sky-400" />
-              SLATE SITUATION BRIEFING
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-[11px] sm:text-xs font-bold text-sky-300 uppercase tracking-wider">
+              <Zap className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-sky-400" />
+              SLATE BRIEFING
             </span>
-            <span className="text-xs text-slate-400 font-semibold">
-              {weekLabel} • {events.length} Total Matchups
+            <span className="text-[11px] sm:text-xs text-slate-400 font-semibold">
+              {weekLabel} • {events.length} Games
             </span>
           </div>
 
-          <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex flex-wrap items-center gap-2">
+          <h2 className="text-sm sm:text-lg font-bold text-white tracking-tight flex flex-wrap items-center gap-1.5 sm:gap-2">
             {liveEvents.length > 0 ? (
               <>
                 <span className="flex items-center gap-1.5 text-rose-400">
@@ -97,13 +97,13 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
 
           {/* Prime Storyline Callout */}
           {primeAlertEvent && (
-            <p className="text-xs text-slate-300 flex items-center gap-1.5 flex-wrap">
+            <p className="text-[11px] sm:text-xs text-slate-300 flex items-center gap-1.5 flex-wrap">
               <span className="font-semibold text-slate-400">Featured Action:</span>
               <span className="text-white font-medium">
                 {sanitizePatriotsAbbreviation(primeAway?.team?.abbreviation) || 'Away'} ({primeAway?.score ?? '-'}) @ {sanitizePatriotsAbbreviation(primeHome?.team?.abbreviation) || 'Home'} ({primeHome?.score ?? '-'})
               </span>
               {redZoneEvents.includes(primeAlertEvent) ? (
-                <span className="text-rose-400 font-semibold">• Active Red Zone Threat inside the 20</span>
+                <span className="text-rose-400 font-semibold">• Active Red Zone Threat</span>
               ) : liveEvents.includes(primeAlertEvent) ? (
                 <span className="text-emerald-400 font-medium">• Q{primeAlertEvent.status?.period} {primeAlertEvent.status?.displayClock}</span>
               ) : (
@@ -121,13 +121,13 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
           )}
         </div>
 
-        {/* Guided Journey Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/[0.06]">
+        {/* Guided Journey Action Buttons - Horizontally Scrollable on Mobile */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 -mx-1 px-1 touch-pan-x pt-2 lg:pt-0 border-t lg:border-t-0 border-white/[0.06]">
           {/* Live Action Quick Route */}
           {liveEvents.length > 0 && (
             <button
               onClick={() => onSelectFilter('live')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all shrink-0 whitespace-nowrap min-h-[36px] ${
                 activeFilter === 'live'
                   ? 'bg-rose-600 text-white shadow-md ring-1 ring-white/20'
                   : 'bg-rose-950/40 text-rose-300 border border-rose-500/40 hover:bg-rose-900/50'
@@ -142,7 +142,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
           {redZoneEvents.length > 0 && (
             <button
               onClick={() => onSelectFilter('redzone')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all shrink-0 whitespace-nowrap min-h-[36px] ${
                 activeFilter === 'redzone'
                   ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-md ring-1 ring-white/20'
                   : 'bg-amber-950/40 text-amber-300 border border-amber-500/40 hover:bg-amber-900/50'
@@ -157,7 +157,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
           {halftimeEvents.length > 0 && (
             <button
               onClick={() => onSelectFilter('halftime')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 whitespace-nowrap min-h-[36px] ${
                 activeFilter === 'halftime'
                   ? 'bg-amber-600 text-white shadow-md'
                   : 'bg-amber-950/30 text-amber-300 border border-amber-500/30 hover:bg-amber-900/40'
@@ -171,7 +171,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
           {/* All Matchups Route */}
           <button
             onClick={() => onSelectFilter('all')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 whitespace-nowrap min-h-[36px] ${
               activeFilter === 'all'
                 ? 'bg-slate-700 text-white shadow-sm ring-1 ring-white/20'
                 : 'bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08] hover:text-white'

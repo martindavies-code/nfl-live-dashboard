@@ -135,61 +135,62 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
       )}
 
       {/* Editorial Spotlight Banner */}
-      <div className={`flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3 transition-colors ${
+      <div className={`flex items-center justify-between gap-2 border-b px-3.5 sm:px-5 py-2.5 sm:py-3 transition-colors ${
         isRedZone ? 'border-rose-500/20 bg-[#12080d]' : 'border-white/[0.08] bg-[#090e18]'
       }`}>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span className="flex items-center gap-1.5 rounded-md bg-sky-500/20 px-2.5 py-1 text-xs font-bold text-sky-300 border border-sky-500/40">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-sky-500/20 px-2.5 py-1 text-xs font-bold text-sky-300 border border-sky-500/40 shrink-0">
             <Compass className="h-3.5 w-3.5" />
             SPOTLIGHT RADAR
           </span>
 
           {event.season?.type === 3 && (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/20 px-2.5 py-1 text-xs font-bold tracking-wide text-amber-300 border border-amber-500/50">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/20 px-2 sm:px-2.5 py-1 text-xs font-bold tracking-wide text-amber-300 border border-amber-500/50 shrink-0">
               <Trophy className="h-3.5 w-3.5 text-amber-400" />
-              {getWeekLabel(3, event.week?.number).toUpperCase()}
+              <span>{getWeekLabel(3, event.week?.number).toUpperCase()}</span>
             </span>
           )}
 
-          {isRedZone && (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-600/30 border border-rose-500/60 px-2.5 py-1 text-xs font-bold tracking-wide text-rose-200 animate-pulse">
+          {isRedZone ? (
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-600/30 border border-rose-500/60 px-2 sm:px-2.5 py-1 text-xs font-bold tracking-wide text-rose-200 animate-pulse shrink-0">
               <Flame className="h-3.5 w-3.5 text-rose-400 fill-rose-400" />
-              {totalThreats && totalThreats > 1
-                ? `RED ZONE THREAT #${threatIndex} OF ${totalThreats}`
-                : isAutoSelectedRedZone
-                ? 'AUTO-TRACKED RED ZONE'
-                : 'RED ZONE THREAT'}
+              <span className="hidden xs:inline">
+                {totalThreats && totalThreats > 1
+                  ? `RED ZONE THREAT #${threatIndex} OF ${totalThreats}`
+                  : isAutoSelectedRedZone
+                  ? 'AUTO-TRACKED RED ZONE'
+                  : 'RED ZONE THREAT'}
+              </span>
+              <span className="xs:hidden">RED ZONE</span>
             </span>
-          )}
-
-          {isHalftime ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/20 px-2.5 py-1 text-xs font-bold text-amber-300 border border-amber-500/30">
+          ) : isHalftime ? (
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/20 px-2 sm:px-2.5 py-1 text-xs font-bold text-amber-300 border border-amber-500/30 shrink-0">
               <Pause className="h-3.5 w-3.5 text-amber-400" />
               AT HALFTIME
             </span>
           ) : isLive ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-500/20 px-2.5 py-1 text-xs font-bold text-rose-300 border border-rose-500/30">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-500/20 px-2 sm:px-2.5 py-1 text-xs font-bold text-rose-300 border border-rose-500/30 shrink-0">
               <Radio className="h-3.5 w-3.5 animate-pulse" />
-              LIVE IN PROGRESS
+              <span>LIVE IN PROGRESS</span>
             </span>
           ) : isFinal ? (
-            <span className="rounded-md bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-300">
+            <span className="rounded-md bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-300 shrink-0">
               FINAL RECAP
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-950 px-2.5 py-1 text-xs font-semibold text-sky-300 border border-sky-800/40">
-              <Clock className="h-3.5 w-3.5 text-sky-400" />
-              KICKOFF: {formattedKickoff.toUpperCase()}
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-950 px-2 sm:px-2.5 py-1 text-xs font-semibold text-sky-300 border border-sky-800/40 shrink-0 truncate">
+              <Clock className="h-3.5 w-3.5 text-sky-400 shrink-0" />
+              <span className="truncate">KICKOFF: {formattedKickoff.toUpperCase()}</span>
             </span>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-400">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 text-xs text-slate-400 shrink-0">
           {/* Interactive Auto Red Zone Toggle */}
           {onToggleAutoRedZone && (
             <button
               onClick={onToggleAutoRedZone}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold border transition-all ${
+              className={`inline-flex items-center gap-1.5 rounded-md px-2 sm:px-2.5 py-1 text-xs font-semibold border transition-all ${
                 autoRedZone
                   ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 shadow-sm'
                   : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
@@ -201,14 +202,15 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
               }
             >
               <Flame className={`h-3.5 w-3.5 ${autoRedZone ? 'text-rose-400 fill-rose-400 animate-pulse' : 'text-slate-500'}`} />
-              <span>Auto Red Zone: <strong className="font-bold text-white">{autoRedZone ? 'ON' : 'OFF'}</strong></span>
+              <span className="hidden xs:inline">Auto Red Zone: <strong className="font-bold text-white">{autoRedZone ? 'ON' : 'OFF'}</strong></span>
+              <span className="xs:hidden">Auto RZ: <strong className="font-bold text-white">{autoRedZone ? 'ON' : 'OFF'}</strong></span>
             </button>
           )}
 
           {/* 1-Click Share Snapshot Button */}
           <button
             onClick={handleCopySnapshot}
-            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold border transition-all ${
+            className={`inline-flex items-center gap-1.5 rounded-md px-2 sm:px-2.5 py-1 text-xs font-semibold border transition-all ${
               isCopied
                 ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
                 : 'bg-sky-500/15 border-sky-500/40 text-sky-200 hover:bg-sky-500/25 hover:text-white'
@@ -221,15 +223,15 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             ) : (
               <Share2 className="h-3.5 w-3.5 text-sky-400" />
             )}
-            <span>{isCopied ? 'Copied' : 'Share'}</span>
+            <span className="hidden xs:inline">{isCopied ? 'Copied' : 'Share'}</span>
           </button>
         </div>
       </div>
 
-      {/* Hero Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-5 sm:p-6">
-        {/* Left Column: Teams & Scores */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-6">
+      {/* Hero Content: Mobile First Hierarchy (Teams -> Field Radar -> Situation) & Desktop Side-by-Side */}
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-5 sm:gap-6 p-4 sm:p-6">
+        {/* Block 1: Teams & Scores */}
+        <div className="order-1 lg:order-1 lg:col-span-5 flex flex-col space-y-4 sm:space-y-6">
           {/* Quarter & Game Clock Banner */}
           <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
             <div className="flex items-center gap-2">
@@ -271,8 +273,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
           <div className="space-y-4">
             {/* Away Team */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3.5">
-                <div className="relative h-14 w-14 flex-shrink-0">
+              <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+                <div className="relative h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0">
                   <img
                     src={awayComp?.team?.logo || DEFAULT_NFL_LOGO}
                     alt={awayComp?.team?.displayName || 'Away Team'}
@@ -298,12 +300,12 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                     </span>
                   )}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xl font-black text-white tracking-tight">
+                    <span className="text-lg sm:text-xl font-black text-white tracking-tight truncate">
                       {awayComp?.team?.displayName || awayComp?.team?.name}
                     </span>
-                    <span className="font-mono text-xs text-slate-400 font-bold">
+                    <span className="font-mono text-xs text-slate-400 font-bold shrink-0">
                       {sanitizePatriotsAbbreviation(awayComp?.team?.abbreviation)}
                     </span>
                   </div>
@@ -325,15 +327,15 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                 </div>
               </div>
 
-              <span className="font-['Oswald'] text-4xl sm:text-5xl font-bold tracking-tight text-white tabular-nums">
+              <span className="font-['Oswald'] text-3xl sm:text-5xl font-bold tracking-tight text-white tabular-nums shrink-0 ml-3">
                 {awayComp?.score ?? '-'}
               </span>
             </div>
 
             {/* Home Team */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3.5">
-                <div className="relative h-14 w-14 flex-shrink-0">
+              <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+                <div className="relative h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0">
                   <img
                     src={homeComp?.team?.logo || DEFAULT_NFL_LOGO}
                     alt={homeComp?.team?.displayName || 'Home Team'}
@@ -359,12 +361,12 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                     </span>
                   )}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xl font-black text-white tracking-tight">
+                    <span className="text-lg sm:text-xl font-black text-white tracking-tight truncate">
                       {homeComp?.team?.displayName || homeComp?.team?.name}
                     </span>
-                    <span className="font-mono text-xs text-slate-400 font-bold">
+                    <span className="font-mono text-xs text-slate-400 font-bold shrink-0">
                       {sanitizePatriotsAbbreviation(homeComp?.team?.abbreviation)}
                     </span>
                   </div>
@@ -386,12 +388,36 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                 </div>
               </div>
 
-              <span className="font-['Oswald'] text-4xl sm:text-5xl font-bold tracking-tight text-white tabular-nums">
+              <span className="font-['Oswald'] text-3xl sm:text-5xl font-bold tracking-tight text-white tabular-nums shrink-0 ml-3">
                 {homeComp?.score ?? '-'}
               </span>
             </div>
           </div>
+        </div>
 
+        {/* Block 2: Full Dynamic 100-Yard Field Radar (Immediately below scores on mobile & tablet, right column on desktop) */}
+        <div className="order-2 lg:order-3 lg:col-span-7 lg:row-span-2 flex flex-col justify-center">
+          <FieldDiagram
+            situation={situation}
+            competitors={competitors}
+            gameState={state}
+            gameStatusDetail={
+              isHalftime
+                ? 'At Halftime'
+                : isLive
+                ? `Quarter ${status?.period} ${status?.displayClock}`
+                : isFinal
+                ? (status?.type?.detail || 'Final')
+                : `Kickoff: ${formattedKickoff}`
+            }
+            isHero={true}
+            compact={Boolean(totalThreats && totalThreats > 1)}
+            status={status}
+          />
+        </div>
+
+        {/* Block 3: Key Situation, Win Probability Bar & Scorigami */}
+        <div className="order-3 lg:order-2 lg:col-span-5 flex flex-col space-y-4">
           {/* Key Situation Box */}
           {isLive && (
             <div className="rounded-xl border border-white/[0.08] bg-[#090e18] p-3.5">
@@ -486,34 +512,13 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             )}
           </div>
         </div>
-
-        {/* Right Column: Full Dynamic 100-Yard Field Radar */}
-        <div className="lg:col-span-7 flex flex-col justify-center">
-          <FieldDiagram
-            situation={situation}
-            competitors={competitors}
-            gameState={state}
-            gameStatusDetail={
-              isHalftime
-                ? 'At Halftime'
-                : isLive
-                ? `Quarter ${status?.period} ${status?.displayClock}`
-                : isFinal
-                ? (status?.type?.detail || 'Final')
-                : `Kickoff: ${formattedKickoff}`
-            }
-            isHero={true}
-            compact={Boolean(totalThreats && totalThreats > 1)}
-            status={status}
-          />
-        </div>
       </div>
 
       {/* UK Broadcast, Radio & Live Announcers Center */}
-      <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-5 py-3.5 sm:px-6">
+      <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-3.5 py-3 sm:px-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs">
           {/* UK TV & UK Radio Cards */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-2.5 sm:gap-3">
             {/* UK TV Channel */}
             <div className="flex items-center gap-2.5 rounded-lg bg-sky-500/10 border border-sky-500/25 px-3 py-2 text-sky-200 shadow-sm">
               <div className="p-1.5 rounded-md bg-sky-500/20 text-sky-300 flex-shrink-0">
