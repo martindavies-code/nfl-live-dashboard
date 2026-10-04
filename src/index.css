@@ -4,6 +4,7 @@
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-display: 'Oswald', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --breakpoint-xs: 480px;
 }
 
 /* Custom scrollbars */

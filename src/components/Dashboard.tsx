@@ -897,12 +897,12 @@ export const Dashboard: React.FC = () => {
                 aria-label="Filter games by state"
               >
                 {[
-                  { id: 'all' as GameFilter, label: 'All', count: events.length },
-                  { id: 'live' as GameFilter, label: 'Live', count: liveCount },
-                  { id: 'redzone' as GameFilter, label: 'Red Zone', count: redZoneCount },
-                  { id: 'halftime' as GameFilter, label: 'At Halftime', count: halftimeCount },
-                  { id: 'upcoming' as GameFilter, label: 'Upcoming', count: upcomingCount },
-                  { id: 'final' as GameFilter, label: 'Final', count: finalCount },
+                  { id: 'all' as GameFilter, label: 'All', mobileLabel: 'All', count: events.length },
+                  { id: 'live' as GameFilter, label: 'Live', mobileLabel: 'Live', count: liveCount },
+                  { id: 'redzone' as GameFilter, label: 'Red Zone', mobileLabel: 'Red Zone', count: redZoneCount },
+                  { id: 'halftime' as GameFilter, label: 'At Halftime', mobileLabel: 'Half', count: halftimeCount },
+                  { id: 'upcoming' as GameFilter, label: 'Upcoming', mobileLabel: 'Upcoming', count: upcomingCount },
+                  { id: 'final' as GameFilter, label: 'Final', mobileLabel: 'Final', count: finalCount },
                 ].map((tab, idx, arr) => {
                   const isSelected = filter === tab.id
                   return (
@@ -964,7 +964,10 @@ export const Dashboard: React.FC = () => {
                       {tab.id === 'halftime' && (
                         <Pause className={`h-3 w-3 ${isSelected ? 'text-amber-200 fill-amber-200' : halftimeCount > 0 ? 'text-amber-400' : 'text-slate-400'}`} />
                       )}
-                      <span>{tab.label} ({tab.count})</span>
+                      <span>
+                        <span className="sm:hidden">{tab.mobileLabel}</span>
+                        <span className="hidden sm:inline">{tab.label}</span> ({tab.count})
+                      </span>
                     </button>
                   )
                 })}

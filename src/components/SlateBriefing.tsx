@@ -121,20 +121,23 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
           )}
         </div>
 
-        {/* Guided Journey Action Buttons - Horizontally Scrollable on Mobile */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 -mx-1 px-1 touch-pan-x pt-2 lg:pt-0 border-t lg:border-t-0 border-white/[0.06]">
+        {/* Guided Journey Action Buttons - Responsive Wrapping with Compact Mobile Labels */}
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 pt-2.5 lg:pt-0 border-t lg:border-t-0 border-white/[0.06]">
           {/* Live Action Quick Route */}
           {liveEvents.length > 0 && (
             <button
               onClick={() => onSelectFilter('live')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all shrink-0 whitespace-nowrap min-h-[36px] ${
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold transition-all shrink-0 whitespace-nowrap min-h-[32px] sm:min-h-[36px] ${
                 activeFilter === 'live'
                   ? 'bg-rose-600 text-white shadow-md ring-1 ring-white/20'
                   : 'bg-rose-950/40 text-rose-300 border border-rose-500/40 hover:bg-rose-900/50'
               }`}
             >
-              <Radio className="h-3.5 w-3.5 animate-pulse" />
-              <span>Live Action ({liveEvents.length})</span>
+              <Radio className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-pulse" />
+              <span>
+                <span className="sm:hidden">Live</span>
+                <span className="hidden sm:inline">Live Action</span> ({liveEvents.length})
+              </span>
             </button>
           )}
 
@@ -142,13 +145,13 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
           {redZoneEvents.length > 0 && (
             <button
               onClick={() => onSelectFilter('redzone')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all shrink-0 whitespace-nowrap min-h-[36px] ${
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold transition-all shrink-0 whitespace-nowrap min-h-[32px] sm:min-h-[36px] ${
                 activeFilter === 'redzone'
                   ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-md ring-1 ring-white/20'
                   : 'bg-amber-950/40 text-amber-300 border border-amber-500/40 hover:bg-amber-900/50'
               }`}
             >
-              <Flame className="h-3.5 w-3.5 text-rose-400 fill-rose-400 animate-pulse" />
+              <Flame className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-rose-400 fill-rose-400 animate-pulse" />
               <span>Red Zone ({redZoneEvents.length})</span>
             </button>
           )}
@@ -157,28 +160,34 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
           {halftimeEvents.length > 0 && (
             <button
               onClick={() => onSelectFilter('halftime')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 whitespace-nowrap min-h-[36px] ${
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold transition-all shrink-0 whitespace-nowrap min-h-[32px] sm:min-h-[36px] ${
                 activeFilter === 'halftime'
                   ? 'bg-amber-600 text-white shadow-md'
                   : 'bg-amber-950/30 text-amber-300 border border-amber-500/30 hover:bg-amber-900/40'
               }`}
             >
-              <Pause className="h-3.5 w-3.5" />
-              <span>Halftime ({halftimeEvents.length})</span>
+              <Pause className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <span>
+                <span className="sm:hidden">Half</span>
+                <span className="hidden sm:inline">Halftime</span> ({halftimeEvents.length})
+              </span>
             </button>
           )}
 
           {/* All Matchups Route */}
           <button
             onClick={() => onSelectFilter('all')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shrink-0 whitespace-nowrap min-h-[36px] ${
+            className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold transition-all shrink-0 whitespace-nowrap min-h-[32px] sm:min-h-[36px] ${
               activeFilter === 'all'
                 ? 'bg-slate-700 text-white shadow-sm ring-1 ring-white/20'
                 : 'bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08] hover:text-white'
             }`}
           >
-            <Compass className="h-3.5 w-3.5 text-slate-400" />
-            <span>All Games ({events.length})</span>
+            <Compass className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-400" />
+            <span>
+              <span className="sm:hidden">All</span>
+              <span className="hidden sm:inline">All Games</span> ({events.length})
+            </span>
           </button>
         </div>
       </div>

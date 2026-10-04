@@ -165,14 +165,17 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
 
       {/* Context Strip (Hero Mode Only) */}
       {!isCompact && (
-        <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#080d16] px-3.5 py-2.5">
-          <div className="flex items-center gap-2 min-w-0 shrink-0">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 whitespace-nowrap">
+        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 sm:gap-2 border-b border-white/[0.06] bg-[#080d16] px-3 sm:px-3.5 py-2 sm:py-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <span className="hidden sm:inline text-[11px] font-extrabold uppercase tracking-wider text-slate-400 whitespace-nowrap">
               Field Position Radar
             </span>
+            <span className="sm:hidden text-[10px] font-extrabold uppercase tracking-wider text-slate-400 whitespace-nowrap">
+              Radar
+            </span>
             {inRedZone && (
-              <span className="rounded bg-rose-500/25 px-2 py-0.5 text-[10px] font-black text-rose-300 border border-rose-500/40 animate-pulse whitespace-nowrap">
-                🔥 RED ZONE
+              <span className="rounded bg-rose-500/25 px-1.5 sm:px-2 py-0.5 text-[10px] font-black text-rose-300 border border-rose-500/40 animate-pulse whitespace-nowrap">
+                🔥 <span className="hidden sm:inline">RED ZONE</span>
               </span>
             )}
             {isHalftime && (
@@ -183,21 +186,21 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
           </div>
 
           {isHalftime ? (
-            <div className="flex items-center gap-2 text-xs font-semibold shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold shrink-0">
               <span className="text-amber-300 font-mono whitespace-nowrap">AT HALFTIME</span>
-              <span className="text-slate-500">•</span>
-              <span className="text-slate-300 whitespace-nowrap">2nd Half Kickoff Upcoming</span>
+              <span className="text-slate-500 hidden sm:inline">•</span>
+              <span className="text-slate-300 whitespace-nowrap hidden sm:inline">2nd Half Kickoff Upcoming</span>
             </div>
           ) : hasSituation ? (
-            <div className="flex items-center gap-2 text-xs font-semibold min-w-0">
-              <span className="text-amber-300 font-mono font-bold bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded whitespace-nowrap shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 text-xs font-semibold shrink-0 flex-wrap">
+              <span className="text-amber-300 font-mono font-bold bg-amber-950/60 border border-amber-500/40 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs whitespace-nowrap shrink-0">
                 {situation?.downDistanceText || `${situation?.shortDownDistanceText || 'Current Drive'}`}
               </span>
               <span className="text-slate-500 shrink-0">•</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-black text-amber-200 border border-amber-500/40 shadow-sm shrink-0 whitespace-nowrap">
+              <span className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full bg-amber-500/20 px-1.5 sm:px-2.5 py-0.5 text-[10px] sm:text-xs font-black text-amber-200 border border-amber-500/40 shadow-sm shrink-0 whitespace-nowrap">
                 <strong className="text-white">{offensiveAbbr}</strong>
-                <span>DRIVING</span>
-                <span className="text-base font-extrabold text-amber-400">{direction === 'right' ? '➔' : '◀'}</span>
+                <span className="hidden sm:inline">DRIVING</span>
+                <span className="text-xs sm:text-base font-extrabold text-amber-400">{direction === 'right' ? '➔' : '◀'}</span>
               </span>
             </div>
           ) : (

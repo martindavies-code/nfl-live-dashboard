@@ -296,10 +296,10 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
       </div>
 
       {/* Favored / Projected Insight Strip */}
-      <div className="mt-2 flex items-center justify-between text-xs text-slate-300 border-t border-white/[0.06] pt-1.5">
+      <div className="mt-2 flex flex-wrap sm:flex-nowrap items-center justify-between gap-1 text-[11px] sm:text-xs text-slate-300 border-t border-white/[0.06] pt-1.5">
         <div className="truncate min-w-0 mr-1.5 flex items-center gap-1">
           {isHomeFavored || isAwayFavored ? (
-            <span className="flex items-center gap-1 truncate text-xs">
+            <span className="flex items-center gap-1 truncate text-[11px] sm:text-xs">
               <TrendingUp className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
               <strong className="text-white font-bold truncate">{favoredName}</strong>
               <span className="font-mono font-black text-emerald-400 shrink-0">+{spreadPct}%</span>
@@ -309,7 +309,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
             <span className="text-slate-400 font-medium">Even matchup (50.0% / 50.0%)</span>
           )}
         </div>
-        <span className="text-xs font-mono font-semibold text-slate-400 uppercase shrink-0 bg-white/[0.04] px-1.5 py-0.5 rounded-md border border-white/[0.06]">
+        <span className="text-[10px] sm:text-xs font-mono font-semibold text-slate-400 uppercase shrink-0 bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/[0.06]">
           {modelSource}
         </span>
       </div>

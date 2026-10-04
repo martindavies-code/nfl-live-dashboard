@@ -238,8 +238,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
         {/* Block 1: Teams & Scores (Top-Left on Desktop, 6 columns) */}
         <div className={isMultiThreat ? "flex flex-col space-y-3" : "order-1 lg:order-1 col-span-12 lg:col-span-6 flex flex-col space-y-4 sm:space-y-6"}>
           {/* Quarter & Game Clock Banner */}
-          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-y-1.5 gap-x-2 border-b border-white/[0.06] pb-2.5 sm:pb-3">
+            <div className="flex items-center gap-2 shrink-0">
               {isHalftime ? (
                 <span className="font-mono text-xs font-extrabold text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded border border-amber-500/40 uppercase tracking-wider flex items-center gap-1.5">
                   <Pause className="h-3.5 w-3.5 text-amber-400" />
@@ -247,8 +247,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                 </span>
               ) : isLive ? (
                 <>
-                  <span className="font-mono text-xs font-bold text-white bg-slate-800/80 px-2 py-0.5 rounded">
-                    Quarter {status.period}
+                  <span className="font-mono text-xs font-bold text-white bg-slate-800/80 px-2 py-0.5 rounded whitespace-nowrap">
+                    <span className="sm:hidden">Q{status.period}</span>
+                    <span className="hidden sm:inline">Quarter {status.period}</span>
                   </span>
                   <span className="font-mono text-sm font-extrabold text-emerald-400 tabular-nums">
                     {status.displayClock}
@@ -267,9 +268,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             </div>
 
             {venueText && (
-              <span className="flex items-center gap-1 text-xs text-slate-400 truncate max-w-[280px] sm:max-w-none" title={venueText}>
+              <span className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-400 min-w-0 max-w-full sm:max-w-[280px] truncate" title={venueText}>
                 <MapPin className="h-3 w-3 text-slate-500 flex-shrink-0" />
-                {venueText}
+                <span className="truncate">{venueText}</span>
               </span>
             )}
           </div>
