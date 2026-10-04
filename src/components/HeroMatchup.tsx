@@ -538,7 +538,24 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-white/[0.04] pt-1">
               <span className="flex items-center gap-1.5 truncate">
                 <Mic className="h-3 w-3 text-rose-400 shrink-0" />
-                <span className="text-slate-300 truncate">{broadcastDetails.announcers.leadDuo}</span>
+                <span className={broadcastDetails.announcers.verified ? 'text-slate-200 font-medium truncate' : 'text-amber-300/90 italic truncate'}>
+                  {broadcastDetails.announcers.leadDuo}
+                </span>
+                {broadcastDetails.announcers.verified ? (
+                  <span
+                    className="inline-flex shrink-0 text-emerald-400"
+                    title={`Fact-checked ${broadcastDetails.announcers.verifiedOn ?? ''}`}
+                  >
+                    <Check className="h-3 w-3" aria-hidden="true" />
+                  </span>
+                ) : (
+                  <span
+                    className="inline-flex shrink-0 text-amber-400"
+                    title="Announce team not yet confirmed"
+                  >
+                    <Clock className="h-3 w-3" aria-hidden="true" />
+                  </span>
+                )}
               </span>
               <span className="text-slate-500 font-mono text-[10px] shrink-0">({broadcastDetails.usTv})</span>
             </div>
@@ -582,7 +599,24 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                   <span className="text-[10px] text-slate-400 font-mono">({broadcastDetails.usTv})</span>
                 </div>
                 <div className="text-slate-200 font-medium text-xs sm:text-sm truncate">
-                  <strong className="text-white font-bold">{broadcastDetails.announcers.leadDuo}</strong>
+                  <strong className={broadcastDetails.announcers.verified ? 'text-white font-bold' : 'text-amber-300 font-bold italic'}>{broadcastDetails.announcers.leadDuo}</strong>
+                  {broadcastDetails.announcers.verified ? (
+                    <span
+                      className="inline-flex items-center gap-0.5 ml-1.5 align-middle text-[10px] font-semibold text-emerald-400"
+                      title={`Fact-checked ${broadcastDetails.announcers.verifiedOn ?? ''} — ${broadcastDetails.announcers.sources.map((s) => s.label).join('; ')}`}
+                    >
+                      <Check className="h-3 w-3" aria-hidden="true" />
+                      <span>Verified</span>
+                    </span>
+                  ) : (
+                    <span
+                      className="inline-flex items-center gap-0.5 ml-1.5 align-middle text-[10px] font-semibold text-amber-400"
+                      title="Announce team not yet confirmed by the network — names are never guessed"
+                    >
+                      <Clock className="h-3 w-3" aria-hidden="true" />
+                      <span>Awaiting confirmation</span>
+                    </span>
+                  )}
                   {broadcastDetails.announcers.sideline && (
                     <span className="text-slate-400 text-xs font-normal"> • Sideline: {broadcastDetails.announcers.sideline}</span>
                   )}

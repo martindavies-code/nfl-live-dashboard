@@ -7,10 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node --test --experimental-strip-types src/**/*.test.mjs",
+    "test": "node --test --experimental-strip-types src/data/*.test.mjs src/services/*.test.mjs src/utils/*.test.mjs",
     "test:browser": "node scripts/headless-runner.mjs",
     "preview": "vite preview",
-    "sync": "node scripts/sync.mjs"
+    "sync": "node scripts/sync.mjs",
+    "audit:announcers": "node --experimental-strip-types scripts/audit-announcers.mjs",
+    "fetch:announcers": "node --experimental-strip-types scripts/fetch-announcers.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

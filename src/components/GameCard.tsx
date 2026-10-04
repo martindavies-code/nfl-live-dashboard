@@ -98,7 +98,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const broadcastPanelId = `broadcast-panel-${event.id}`
   const scorigamiPanelId = `scorigami-panel-${event.id}`
   const broadcastDetails = getGameBroadcastDetails(event)
-  const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in Quarter ${status.period} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''} Televised in UK on ${broadcastDetails.ukTv}, UK radio on ${broadcastDetails.ukRadio}, commentary by ${broadcastDetails.announcers.leadDuo}.`
+  const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in Quarter ${status.period} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''} Televised in UK on ${broadcastDetails.ukTv}, UK radio on ${broadcastDetails.ukRadio}, ${broadcastDetails.announcers.verified ? `commentary by ${broadcastDetails.announcers.leadDuo}` : 'commentary crew not yet confirmed'}.`
 
   return (
     <article
@@ -397,7 +397,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           </div>
           <div className="flex items-center gap-1.5 text-slate-300 border-t border-white/[0.04] pt-1.5">
             <Mic className="h-3.5 w-3.5 text-rose-400 shrink-0" />
-            <span className="text-white font-medium">{broadcastDetails.announcers.leadDuo}</span>
+            <span className={broadcastDetails.announcers.verified ? 'text-white font-medium' : 'text-amber-300/90 font-medium italic'} title={broadcastDetails.announcers.verified ? `Fact-checked ${broadcastDetails.announcers.verifiedOn ?? ''}` : 'Announce team not yet confirmed — names are never guessed'}>{broadcastDetails.announcers.leadDuo}</span>
             <span className="text-slate-400 text-[11px] shrink-0 ml-auto font-mono">({broadcastDetails.usTv})</span>
           </div>
           {broadcastDetails.announcers.sideline && (
