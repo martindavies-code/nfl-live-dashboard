@@ -38,6 +38,14 @@ export interface VerifiedGameCrew {
   sources: AnnouncerSource[]
   /** Date (YYYY-MM-DD) the crew was last checked against the sources. */
   verifiedOn: string
+  /** Confirmed UK TV broadcast partner (e.g. Channel 5 free-to-air, Sky Sports NFL) */
+  ukTv?: string
+  ukTvShort?: string
+  ukTvChannelNumber?: string
+  /** Confirmed UK Radio broadcast partner (e.g. talkSPORT 2, BBC Radio 5 Live) */
+  ukRadio?: string
+  ukRadioShort?: string
+  ukRadioFrequency?: string
 }
 
 const YAHOO_WEEK4 = {
@@ -65,6 +73,12 @@ export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
     playByPlay: 'Dave Pasch', analysts: ['Kurt Warner', 'Jason Kelce'], sideline: ['Molly McGrath'],
     sources: [YAHOO_WEEK4],
     verifiedOn: '2026-10-04',
+    ukTv: 'Sky Sports NFL & Channel 5 (Free-to-Air)',
+    ukTvShort: 'Sky Sports & Channel 5',
+    ukTvChannelNumber: 'Freeview 5 • Sky 105/407 • Virgin 105/507',
+    ukRadio: 'talkSPORT 2 (Full Live Match Commentary)',
+    ukRadioShort: 'talkSPORT 2',
+    ukRadioFrequency: 'DAB Digital Radio • talkSPORT App',
   },
   {
     season: 2026, week: 4, away: 'TEN', home: 'BAL', kickoffUtc: '2026-10-04T17:00:00Z',

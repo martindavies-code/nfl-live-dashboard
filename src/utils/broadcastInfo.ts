@@ -112,7 +112,16 @@ export interface BroadcastContext {
 export function getVerifiedAnnouncers(
   event?: NFLEvent | null,
   context?: BroadcastContext
-): { announcers: BroadcastAnnouncers; network?: string } {
+): {
+  announcers: BroadcastAnnouncers
+  network?: string
+  ukTv?: string
+  ukTvShort?: string
+  ukTvChannelNumber?: string
+  ukRadio?: string
+  ukRadioShort?: string
+  ukRadioFrequency?: string
+} {
   const competitors = event?.competitions?.[0]?.competitors || []
   const away = competitors.find((c) => c.homeAway === 'away')?.team?.abbreviation || ''
   const home = competitors.find((c) => c.homeAway === 'home')?.team?.abbreviation || ''
@@ -122,6 +131,12 @@ export function getVerifiedAnnouncers(
     const booth = [crew.playByPlay, ...crew.analysts]
     return {
       network: crew.network,
+      ukTv: crew.ukTv,
+      ukTvShort: crew.ukTvShort,
+      ukTvChannelNumber: crew.ukTvChannelNumber,
+      ukRadio: crew.ukRadio,
+      ukRadioShort: crew.ukRadioShort,
+      ukRadioFrequency: crew.ukRadioFrequency,
       announcers: {
         playByPlay: crew.playByPlay,
         analyst: joinNames(crew.analysts),
@@ -300,7 +315,16 @@ export function getGameBroadcastDetails(event?: NFLEvent | null): GameBroadcastD
   // ---------------------------------------------------------------------------
   // 1. US NETWORK + ANNOUNCERS CALLING THE GAME
   // ---------------------------------------------------------------------------
-  const { announcers, network: verifiedNetwork } = getVerifiedAnnouncers(event, {
+  const {
+    announcers,
+    network: verifiedNetwork,
+    ukTv: verifiedUkTv,
+    ukTvShort: verifiedUkTvShort,
+    ukTvChannelNumber: verifiedUkTvChannelNumber,
+    ukRadio: verifiedUkRadio,
+    ukRadioShort: verifiedUkRadioShort,
+    ukRadioFrequency: verifiedUkRadioFrequency,
+  } = getVerifiedAnnouncers(event, {
     ukWeekday,
     ukHour,
     upperNet,
@@ -350,85 +374,111 @@ export function getGameBroadcastDetails(event?: NFLEvent | null): GameBroadcastD
   // ---------------------------------------------------------------------------
   // 2. UK TELEVISION BROADCAST
   // ---------------------------------------------------------------------------
-  let ukTv = 'Sky Sports NFL'
-  let ukTvShort = 'Sky Sports NFL'
-  let ukTvChannelNumber = 'Sky 407 • Virgin 507'
+  let ukTv = verifiedUkTv || 'Sky Sports NFL'
+  let ukTvShort = verifiedUkTvShort || 'Sky Sports NFL'
+  let ukTvChannelNumber = verifiedUkTvChannelNumber || 'Sky 407 • Virgin 507'
   let isNationalUkTv = true
   const isRedZoneWindow = ukWeekday === 'Sun' && ukHour >= 17 && ukHour <= 23
 
-  if (isSuperBowl) {
-    ukTv = 'Sky Sports NFL & ITV1 (Free-to-Air)'
-    ukTvShort = 'Sky Sports & ITV1'
-    ukTvChannelNumber = 'Sky 407 / Freeview 3 / Virgin 103'
-  } else if (isLondonVenue) {
-    ukTv = 'ITV1 & ITVX (Free-to-Air) • Sky Sports NFL'
-    ukTvShort = 'ITV1 & Sky Sports'
-    ukTvChannelNumber = 'Freeview 3 • Sky 103/407 • Virgin 103'
-  } else if (usTv.includes('ESPN') || usTv.includes('ABC')) {
-    ukTv = 'Sky Sports NFL & Channel 5 (NFL EndZone)'
-    ukTvShort = 'Sky Sports & Channel 5'
-    ukTvChannelNumber = 'Sky 407 • Freeview 5 • Virgin 507'
-  } else if (usTv.includes('NBC')) {
-    ukTv = 'Sky Sports NFL & Main Event'
-    ukTvShort = 'Sky Sports NFL'
-    ukTvChannelNumber = 'Sky 407 / Sky 401 • Virgin 507'
-  } else if (usTv.includes('Prime Video')) {
-    ukTv = 'Sky Sports NFL • Prime Video UK'
-    ukTvShort = 'Sky Sports & Prime'
-    ukTvChannelNumber = 'Sky 407 • Prime Video App'
-  } else if (usTv.includes('Netflix')) {
-    ukTv = 'Netflix UK • NFL Game Pass on DAZN'
-    ukTvShort = 'Netflix UK'
-    ukTvChannelNumber = 'Netflix App'
-  } else if (isRedZoneWindow && !isTier1Matchup) {
-    // Sunday afternoon game not on Sky Sports main game
-    ukTv = 'Sky Sports Mix (NFL RedZone) • DAZN'
-    ukTvShort = 'Sky Mix / RedZone'
-    ukTvChannelNumber = 'Sky 416 • Virgin 510 • NFL Game Pass'
-    isNationalUkTv = false
-  } else {
-    ukTv = 'Sky Sports NFL (Live Match)'
-    ukTvShort = 'Sky Sports NFL'
-    ukTvChannelNumber = 'Sky 407 • Virgin 507'
+  if (!verifiedUkTv) {
+    if (isSuperBowl) {
+      ukTv = 'Sky Sports NFL & Channel 5 (Free-to-Air)'
+      ukTvShort = 'Sky Sports & Channel 5'
+      ukTvChannelNumber = 'Freeview 5 • Sky 105/407 • Virgin 105/507'
+    } else if (isLondonVenue) {
+      ukTv = 'Sky Sports NFL & Channel 5 (Free-to-Air)'
+      ukTvShort = 'Sky Sports & Channel 5'
+      ukTvChannelNumber = 'Freeview 5 • Sky 105/407 • Virgin 105/507'
+    } else if (usTv.includes('ESPN') || usTv.includes('ABC')) {
+      // Monday Night Football
+      ukTv = 'Sky Sports NFL & Channel 5 (NFL on 5 / EndZone)'
+      ukTvShort = 'Sky Sports & Channel 5'
+      ukTvChannelNumber = 'Sky 407 • Freeview 5 • Virgin 507'
+    } else if (usTv.includes('NBC')) {
+      // Sunday Night Football
+      ukTv = 'Sky Sports NFL & Main Event'
+      ukTvShort = 'Sky Sports NFL'
+      ukTvChannelNumber = 'Sky 407 / Sky 401 • Virgin 507'
+    } else if (usTv.includes('Prime Video')) {
+      // Thursday Night Football
+      ukTv = 'Sky Sports NFL • Prime Video UK'
+      ukTvShort = 'Sky Sports & Prime'
+      ukTvChannelNumber = 'Sky 407 • Prime Video App'
+    } else if (usTv.includes('Netflix')) {
+      ukTv = 'Netflix UK • NFL Game Pass on DAZN'
+      ukTvShort = 'Netflix UK'
+      ukTvChannelNumber = 'Netflix App'
+    } else if (isRedZoneWindow && !isTier1Matchup) {
+      // Sunday afternoon game not on Sky Sports main game
+      ukTv = 'Sky Sports Mix (NFL RedZone) • DAZN'
+      ukTvShort = 'Sky Mix / RedZone'
+      ukTvChannelNumber = 'Sky 416 • Virgin 510 • NFL Game Pass'
+      isNationalUkTv = false
+    } else if (ukHour >= 21) {
+      // Sunday late afternoon game (9:00 / 9:25 PM UK) — Channel 5 Sunday headline fixture
+      ukTv = 'Sky Sports NFL & Channel 5 (Free-to-Air)'
+      ukTvShort = 'Sky Sports & Channel 5'
+      ukTvChannelNumber = 'Freeview 5 • Sky 105/407 • Virgin 105/507'
+    } else if (ukHour >= 17) {
+      // Sunday early afternoon game (6:00 PM UK) — 5Action free-to-air fixture
+      ukTv = 'Sky Sports NFL & 5Action (Free-to-Air)'
+      ukTvShort = 'Sky Sports & 5Action'
+      ukTvChannelNumber = 'Freeview 33 • Sky 150/407 • Virgin 130/507'
+    } else {
+      ukTv = 'Sky Sports NFL (Live Match)'
+      ukTvShort = 'Sky Sports NFL'
+      ukTvChannelNumber = 'Sky 407 • Virgin 507'
+    }
   }
 
   // ---------------------------------------------------------------------------
   // 3. UK RADIO BROADCAST
   // ---------------------------------------------------------------------------
-  let ukRadio = 'talkSPORT 2'
-  let ukRadioShort = 'talkSPORT 2'
-  let ukRadioFrequency = 'DAB Digital Radio • talkSPORT App • Online'
+  let ukRadio = verifiedUkRadio || 'talkSPORT 2'
+  let ukRadioShort = verifiedUkRadioShort || 'talkSPORT 2'
+  let ukRadioFrequency = verifiedUkRadioFrequency || 'DAB Digital Radio • talkSPORT App • Online'
 
-  if (isSuperBowl) {
-    ukRadio = 'BBC Radio 5 Live & talkSPORT'
-    ukRadioShort = 'BBC 5 Live & talkSPORT'
-    ukRadioFrequency = 'DAB Digital Radio • BBC Sounds • talkSPORT App'
-  } else if (isLondonVenue) {
-    ukRadio = 'BBC Radio 5 Live & BBC Sounds'
-    ukRadioShort = 'BBC Radio 5 Live'
-    ukRadioFrequency = 'DAB Digital Radio • 693 / 909 AM • BBC Sounds'
-  } else if (usTv.includes('ESPN') || usTv.includes('ABC') || usTv.includes('NBC')) {
-    ukRadio = 'talkSPORT 2 & Westwood One'
-    ukRadioShort = 'talkSPORT 2'
-    ukRadioFrequency = 'DAB Digital Radio • talkSPORT App'
-  } else if (isRedZoneWindow && !isTier1Matchup) {
-    ukRadio = 'talkSPORT 2 (NFL Live Around the Grounds)'
-    ukRadioShort = 'talkSPORT 2'
-    ukRadioFrequency = 'DAB Digital Radio • talkSPORT App • BBC Sounds'
-  } else {
-    ukRadio = 'talkSPORT 2 (Full Live Match Commentary)'
-    ukRadioShort = 'talkSPORT 2'
-    ukRadioFrequency = 'DAB Digital Radio • talkSPORT App'
+  if (!verifiedUkRadio) {
+    if (isSuperBowl) {
+      ukRadio = 'BBC Radio 5 Live & talkSPORT'
+      ukRadioShort = 'BBC 5 Live & talkSPORT'
+      ukRadioFrequency = 'DAB Digital Radio • BBC Sounds • talkSPORT App'
+    } else if (isLondonVenue) {
+      ukRadio = 'talkSPORT 2 (Full Live Match Commentary)'
+      ukRadioShort = 'talkSPORT 2'
+      ukRadioFrequency = 'DAB Digital Radio • talkSPORT App'
+    } else if (usTv.includes('NBC')) {
+      ukRadio = 'talkSPORT 2 (Exclusive UK Radio Coverage)'
+      ukRadioShort = 'talkSPORT 2'
+      ukRadioFrequency = 'DAB Digital Radio • talkSPORT App'
+    } else if (usTv.includes('ESPN') || usTv.includes('ABC')) {
+      ukRadio = 'talkSPORT 2 & Westwood One'
+      ukRadioShort = 'talkSPORT 2'
+      ukRadioFrequency = 'DAB Digital Radio • talkSPORT App'
+    } else if (isRedZoneWindow && !isTier1Matchup) {
+      ukRadio = 'talkSPORT 2 (NFL Live Around the Grounds)'
+      ukRadioShort = 'talkSPORT 2'
+      ukRadioFrequency = 'DAB Digital Radio • talkSPORT App • BBC Sounds'
+    } else {
+      ukRadio = 'talkSPORT 2 (Full Live Match Commentary)'
+      ukRadioShort = 'talkSPORT 2'
+      ukRadioFrequency = 'DAB Digital Radio • talkSPORT App'
+    }
   }
 
   // ---------------------------------------------------------------------------
   // 4. UK STUDIO PRESENTATION PUNDITS
   // ---------------------------------------------------------------------------
   let ukPundits = 'Sky Sports: Neil Reynolds, Phoebe Schecter & Jason Bell'
-  if (isLondonVenue || (isSuperBowl && ukTv.includes('ITV'))) {
-    ukPundits = 'ITV: Craig Doyle, Jason Bell & Osi Umenyiora • Sky: Neil Reynolds'
+  if (isLondonVenue || isSuperBowl || ukTv.includes('Channel 5') || ukTv.includes('5Action')) {
+    ukPundits = 'Sky: Neil Reynolds, Phoebe Schecter, Jason Bell • 5: Dermot O\'Leary, Osi Umenyiora'
   } else if (ukRadio.includes('talkSPORT')) {
     ukPundits = 'Sky: Neil Reynolds, Phoebe Schecter • Radio: Nat Coombs & Will Gavin'
+  }
+
+  let streaming = 'Sky Go • NOW TV • NFL Game Pass on DAZN'
+  if (ukTv.includes('Channel 5') || ukTv.includes('5Action')) {
+    streaming = 'Sky Go • NOW TV • My5 • NFL Game Pass on DAZN'
   }
 
   return {
@@ -443,6 +493,6 @@ export function getGameBroadcastDetails(event?: NFLEvent | null): GameBroadcastD
     ukPundits,
     isNationalUkTv,
     isRedZoneWindow,
-    streaming: 'Sky Go • NOW TV • NFL Game Pass on DAZN',
+    streaming,
   }
 }

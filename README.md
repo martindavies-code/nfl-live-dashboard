@@ -47,7 +47,7 @@ Data is streamed directly via the [ESPN NFL Scoreboard API](https://site.api.esp
   - `npm run fetch:announcers`: Automatically previews or ingests confirmed announcer pairings for any week (`--week <N>`). Auto-populates the 3 permanent primetime franchises and parses published weekly pairings from verified sources (`--url <article_url> --apply`).
   - `npm run audit:announcers`: Live integrity audit comparing registry against ESPN's active schedule, alerting if any game kicking off within 48 hours lacks verified crew data.
   - `npm test`: Enforces strict data invariants (valid full names, no concurrent double-bookings for any commentator, verified HTTPS sources, and strict week/season matching).
-- **Dual UK & US Coverage**: Derives UK television channels (Sky Sports NFL, ITV1, Channel 5), UK radio (talkSPORT 2, BBC Radio 5 Live), and studio pundits alongside US telecast crews.
+- **Dual UK & US Coverage**: Derives UK television channels (Sky Sports NFL, Channel 5, 5Action), UK radio (talkSPORT 2, BBC Radio 5 Live), and studio pundits alongside US telecast crews.
 
 ### 5. 🎯 Anti-Pattern Free Editorial Design
 

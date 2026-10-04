@@ -102,7 +102,7 @@ test('Broadcast: Thursday Night NFL Kickoff game on NBC resolves Mike Tirico & C
   assert.equal(nbcKickoff.announcers.verified, true)
 })
 
-test('Broadcast: London Games resolve ITV1 (Free-to-Air), BBC Radio 5 Live — crew stays TBA unless verified', () => {
+test('Broadcast: London Games resolve Channel 5 (Free-to-Air) & Sky Sports, talkSPORT 2 — crew stays TBA unless verified', () => {
   const info = getGameBroadcastDetails(
     game('NYJ', 'MIN', {
       week: 99,
@@ -112,13 +112,14 @@ test('Broadcast: London Games resolve ITV1 (Free-to-Air), BBC Radio 5 Live — c
     })
   )
   assert.equal(info.usTv, 'NFL Network')
-  assert.ok(info.ukTv.includes('ITV1'))
-  assert.ok(info.ukRadio.includes('BBC Radio 5 Live'))
-  assert.ok(info.ukPundits.includes('Craig Doyle'))
+  assert.ok(info.ukTv.includes('Channel 5'))
+  assert.ok(info.ukTv.includes('Sky Sports'))
+  assert.ok(info.ukRadio.includes('talkSPORT 2'))
+  assert.ok(info.ukPundits.includes('Dermot O\'Leary') || info.ukPundits.includes('Osi Umenyiora'))
   assertTba(info)
 })
 
-test('Broadcast: Super Bowl resolves dual Sky & ITV, dual BBC & talkSPORT — crew stays TBA unless verified', () => {
+test('Broadcast: Super Bowl resolves dual Sky & Channel 5, dual BBC & talkSPORT — crew stays TBA unless verified', () => {
   const info = getGameBroadcastDetails({
     name: 'Super Bowl LXI',
     date: '2027-02-14T23:30:00Z',
@@ -133,7 +134,7 @@ test('Broadcast: Super Bowl resolves dual Sky & ITV, dual BBC & talkSPORT — cr
       },
     ],
   })
-  assert.ok(info.ukTv.includes('ITV1'))
+  assert.ok(info.ukTv.includes('Channel 5'))
   assert.ok(info.ukTv.includes('Sky Sports'))
   assert.ok(info.ukRadio.includes('BBC Radio 5 Live'))
   assert.ok(info.ukRadio.includes('talkSPORT'))
@@ -213,7 +214,7 @@ test('Broadcast Fact-Check: all 16 Week 4 games resolve their exact verified cre
   }
 })
 
-test('Broadcast Fact-Check: London Series (IND@WSH) shows the three-man booth and ITV/BBC coverage', () => {
+test('Broadcast Fact-Check: London Series (IND@WSH) shows the three-man booth and Channel 5/Sky Sports coverage', () => {
   const info = getGameBroadcastDetails(
     game('IND', 'WSH', {
       network: 'NFL Net',
@@ -223,8 +224,9 @@ test('Broadcast Fact-Check: London Series (IND@WSH) shows the three-man booth an
   assert.equal(info.announcers.leadDuo, 'Dave Pasch, Kurt Warner & Jason Kelce')
   assert.equal(info.announcers.fullCrew, 'Dave Pasch, Kurt Warner, Jason Kelce, Molly McGrath')
   assert.equal(info.usTv, 'NFL Network')
-  assert.ok(info.ukTv.includes('ITV1'))
-  assert.ok(info.ukRadio.includes('BBC Radio 5 Live'))
+  assert.ok(info.ukTv.includes('Channel 5'))
+  assert.ok(info.ukTv.includes('Sky Sports NFL'))
+  assert.ok(info.ukRadio.includes('talkSPORT 2'))
 })
 
 test('Broadcast Fact-Check: marquee-team regressions from the Yahoo list stay correct', () => {
