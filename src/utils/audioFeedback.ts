@@ -7,7 +7,7 @@ let audioCtx: AudioContext | null = null
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null
-  if (!audioCtx) {
+  if (!audioCtx || audioCtx.state === 'closed') {
     const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
     if (AudioContextClass) {
       audioCtx = new AudioContextClass()
@@ -43,6 +43,13 @@ export function playRedZoneSound(isMuted = false): void {
     osc.connect(gain)
     gain.connect(ctx.destination)
 
+    osc.onended = () => {
+      try {
+        osc.disconnect()
+        gain.disconnect()
+      } catch {}
+    }
+
     osc.start(now)
     osc.stop(now + 0.35)
   } catch {
@@ -75,6 +82,13 @@ export function playScoreChime(isMuted = false): void {
       osc.connect(gain)
       gain.connect(ctx.destination)
 
+      osc.onended = () => {
+        try {
+          osc.disconnect()
+          gain.disconnect()
+        } catch {}
+      }
+
       osc.start(now + idx * 0.06)
       osc.stop(now + idx * 0.06 + 0.3)
     })
@@ -105,6 +119,13 @@ export function playTactileClick(isMuted = false): void {
 
     osc.connect(gain)
     gain.connect(ctx.destination)
+
+    osc.onended = () => {
+      try {
+        osc.disconnect()
+        gain.disconnect()
+      } catch {}
+    }
 
     osc.start(now)
     osc.stop(now + 0.04)

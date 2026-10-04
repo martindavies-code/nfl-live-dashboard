@@ -2,7 +2,7 @@ import React, { useState, memo } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, formatLocalizedKickoff, getWeekLabel } from '../utils/nflHelpers'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, formatLocalizedKickoff, getWeekLabel, sanitizePatriotsAbbreviation } from '../utils/nflHelpers'
 import { 
   Tv, 
   Flame, 
@@ -64,8 +64,8 @@ export const GameCard: React.FC<GameCardProps> = memo(({
 
   // Derive true regulation seconds remaining for accurate scorigami probability
   const secondsLeft = getGameSecondsRemaining(status, state)
-  const homeAbbr = homeComp?.team?.abbreviation || 'Home'
-  const awayAbbr = awayComp?.team?.abbreviation || 'Away'
+  const homeAbbr = sanitizePatriotsAbbreviation(homeComp?.team?.abbreviation) || 'Home'
+  const awayAbbr = sanitizePatriotsAbbreviation(awayComp?.team?.abbreviation) || 'Away'
   const scorigamiInfo = getScorigamiInfo(
     safeParseInt(homeComp?.score, 0),
     safeParseInt(awayComp?.score, 0),
@@ -98,21 +98,15 @@ export const GameCard: React.FC<GameCardProps> = memo(({
 
   return (
     <article
-      onClick={() => {
+      onClick={(e) => {
+        // Prevent card spotlight click if an interactive element was clicked
+        if ((e.target as HTMLElement).closest('button, [role="button"], a, input')) return
         if (onSpotlight && !isSpotlighted) {
           onSpotlight()
         }
       }}
-      role={onSpotlight ? 'button' : undefined}
-      tabIndex={onSpotlight ? 0 : undefined}
       aria-label={cardAriaLabel}
-      onKeyDown={(e) => {
-        if (onSpotlight && !isSpotlighted && (e.key === 'Enter' || e.key === ' ')) {
-          e.preventDefault()
-          onSpotlight()
-        }
-      }}
-      className={`group relative flex flex-col rounded-xl transition-all duration-200 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b14] ${
+      className={`group relative flex flex-col rounded-xl transition-all duration-200 overflow-hidden ${
         onSpotlight && !isSpotlighted ? 'cursor-pointer hover:-translate-y-0.5' : ''
       } ${
         isRedZone
@@ -201,14 +195,9 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           {isSpotlighted && (
             <span className="inline-flex items-center gap-1 rounded bg-sky-500/25 border border-sky-400/60 px-2 py-0.5 text-[10px] font-bold text-sky-200 shadow-sm shadow-sky-950">
               <Sparkles className="h-3 w-3 text-sky-300 fill-sky-300" />
-              SELECTED
+              SPOTLIGHTED
             </span>
           )}
-
-          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-sky-300 bg-sky-950/70 border border-sky-800/40 rounded px-1.5 py-0.5" title={`UK TV: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})`}>
-            <Tv className="h-3 w-3 text-sky-400" />
-            {broadcastDetails.ukTvShort}
-          </span>
 
           {/* Spotlight / Select Button */}
           {onSpotlight && !isSpotlighted && (
@@ -217,12 +206,12 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                 e.stopPropagation()
                 onSpotlight()
               }}
-              className="flex items-center gap-1 rounded bg-slate-800/90 hover:bg-sky-600 hover:text-white px-2 py-0.5 text-[10px] font-semibold text-slate-300 transition-colors focus:outline-none focus:ring-1 focus:ring-sky-400"
-              title="Pin this matchup to the Spotlight Radar at the top"
-              aria-label={`Select ${awayComp?.team?.name} at ${homeComp?.team?.name}`}
+              className="flex items-center gap-1 rounded-md bg-white/[0.06] hover:bg-sky-500 hover:text-white px-2 py-0.5 text-[10px] font-semibold text-slate-300 transition-colors border border-white/[0.08] focus:outline-none focus:ring-1 focus:ring-sky-400"
+              title="Spotlight this matchup at the top"
+              aria-label={`Spotlight ${awayComp?.team?.name} at ${homeComp?.team?.name}`}
             >
               <Maximize2 className="h-3 w-3" />
-              <span className="hidden md:inline">Select</span>
+              <span>Spotlight</span>
             </button>
           )}
         </div>
@@ -265,7 +254,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                   {awayComp?.team?.displayName || awayComp?.team?.name}
                 </span>
                 <span className="font-mono text-xs text-slate-400 font-semibold shrink-0">
-                  {awayComp?.team?.abbreviation}
+                  {awayComp?.team?.abbreviation === 'NE' ? 'FNE' : awayComp?.team?.abbreviation}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -326,7 +315,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                   {homeComp?.team?.displayName || homeComp?.team?.name}
                 </span>
                 <span className="font-mono text-xs text-slate-400 font-semibold shrink-0">
-                  {homeComp?.team?.abbreviation}
+                  {homeComp?.team?.abbreviation === 'NE' ? 'FNE' : homeComp?.team?.abbreviation}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -355,23 +344,27 @@ export const GameCard: React.FC<GameCardProps> = memo(({
 
       {/* Situational Callout Strip */}
       {isLive && downAndDistance && (
-        <div className="mx-4 mb-3 rounded-lg border border-white/[0.06] bg-[#070c16] px-3 py-2 text-xs flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-slate-300 shrink-0">
-            <Activity className="h-3 w-3 text-sky-400" />
-            <span className="font-mono font-bold text-amber-300">
+        <div className="mx-4 mb-2.5 rounded-lg border border-white/[0.06] bg-[#070c16]/80 px-3 py-1.5 text-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-slate-300 min-w-0">
+            <Activity className="h-3 w-3 text-sky-400 shrink-0" />
+            <span className="font-mono font-bold text-amber-300 truncate">
               {downAndDistance}
             </span>
           </div>
-          {situation?.possession && situation?.possessionText && (
+          {isRedZone ? (
+            <span className="text-[10px] font-bold text-rose-400 shrink-0 flex items-center gap-1">
+              <Flame className="h-3 w-3 fill-rose-400" /> Red Zone
+            </span>
+          ) : situation?.possession && situation?.possessionText && !downAndDistance.includes(situation.possessionText) ? (
             <span className="text-[11px] text-slate-400 truncate text-right">
               Ball on <strong className="text-white">{situation.possessionText}</strong>
             </span>
-          )}
+          ) : null}
         </div>
       )}
 
-      {/* In-place Win Probability Bar */}
-      <div className="px-4 pb-3">
+      {/* In-place Compact Win Probability Bar */}
+      <div className="px-4 pb-2.5">
         <WinProbabilityBar
           homeWinPercentage={situation?.lastPlay?.probability?.homeWinPercentage}
           awayWinPercentage={situation?.lastPlay?.probability?.awayWinPercentage}
@@ -381,26 +374,27 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           status={status}
           situation={situation}
           odds={competition.odds}
+          compact={true}
         />
       </div>
 
-      {/* Progressive Disclosure Action Toolbar (Kucharski Reason #4 & #6 Fix) */}
-      <div className="border-t border-white/[0.06] bg-[#070b14] px-3 py-2 mt-auto">
+      {/* Progressive Disclosure Action Toolbar */}
+      <div className="border-t border-white/[0.05] bg-[#070b14]/70 px-3 py-1.5 mt-auto">
         <div className="flex items-center justify-between gap-1 text-xs">
           {/* Radar Tab */}
           <button
             type="button"
             onClick={(e) => handleToggleTab('radar', e)}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[36px] ${
+            className={`flex items-center gap-1.5 rounded px-2 py-1 font-medium text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               isFieldExpanded
-                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
+                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
             aria-expanded={isFieldExpanded}
             aria-controls={fieldPanelId}
             aria-label={isFieldExpanded ? `Collapse field radar for ${awayAbbr} at ${homeAbbr}` : `View field radar for ${awayAbbr} at ${homeAbbr}`}
           >
-            <Compass className={`h-3.5 w-3.5 ${isFieldExpanded ? 'text-sky-400' : 'text-slate-400'}`} />
+            <Compass className={`h-3 w-3 ${isFieldExpanded ? 'text-sky-400' : 'text-slate-400'}`} />
             <span>Radar</span>
           </button>
 
@@ -408,15 +402,15 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           <button
             type="button"
             onClick={(e) => handleToggleTab('broadcast', e)}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[36px] ${
+            className={`flex items-center gap-1.5 rounded px-2 py-1 font-medium text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               activeTab === 'broadcast'
-                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
+                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
             aria-expanded={activeTab === 'broadcast'}
             aria-label="View UK television, UK radio, and live commentary booth"
           >
-            <Tv className={`h-3.5 w-3.5 ${activeTab === 'broadcast' ? 'text-sky-400' : 'text-slate-400'}`} />
+            <Tv className={`h-3 w-3 ${activeTab === 'broadcast' ? 'text-sky-400' : 'text-slate-400'}`} />
             <span>Broadcast</span>
           </button>
 
@@ -424,15 +418,15 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           <button
             type="button"
             onClick={(e) => handleToggleTab('scorigami', e)}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[36px] ${
+            className={`flex items-center gap-1.5 rounded px-2 py-1 font-medium text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               activeTab === 'scorigami'
-                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
             aria-expanded={activeTab === 'scorigami'}
             aria-label="View historical Scorigami probability and unique score metrics"
           >
-            <Sparkles className={`h-3.5 w-3.5 ${activeTab === 'scorigami' ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
+            <Sparkles className={`h-3 w-3 ${activeTab === 'scorigami' ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
             <span>Scorigami</span>
           </button>
         </div>

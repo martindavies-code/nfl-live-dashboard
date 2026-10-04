@@ -199,7 +199,7 @@ export function formatDownAndDistance(situation?: NFLSituation | null): string {
 
   // Prefer ESPN's direct downDistanceText if valid
   if (situation.downDistanceText && situation.downDistanceText.trim() !== '') {
-    return situation.downDistanceText.trim()
+    return situation.downDistanceText.trim().replace(/\bNE\b/g, 'FNE')
   }
 
   const { down, distance, possessionText, yardLine } = situation
@@ -223,12 +223,12 @@ export function formatDownAndDistance(situation?: NFLSituation | null): string {
 
     let result = `${downSuffix} & ${distText}`
     if (possessionText) {
-      result += ` at ${possessionText}`
+      result += ` at ${possessionText.replace(/\bNE\b/g, 'FNE')}`
     }
     return result
   }
 
-  return situation.shortDownDistanceText || 'Active Drive'
+  return (situation.shortDownDistanceText || 'Active Drive').replace(/\bNE\b/g, 'FNE')
 }
 
 /**
@@ -266,10 +266,10 @@ export function getOffensiveDrive(
     offensiveTeam = awayComp
     direction = 'left'
   } else if (situation?.possessionText) {
-    if (situation.possessionText.includes(homeAbbr)) {
+    if (situation.possessionText.includes(homeAbbr) || (homeAbbr === 'FNE' && /\bNE\b/.test(situation.possessionText))) {
       offensiveTeam = homeComp
       direction = 'right'
-    } else if (situation.possessionText.includes(awayAbbr)) {
+    } else if (situation.possessionText.includes(awayAbbr) || (awayAbbr === 'FNE' && /\bNE\b/.test(situation.possessionText))) {
       offensiveTeam = awayComp
       direction = 'left'
     }
@@ -358,8 +358,12 @@ export function isRedZoneSituation(
   if (situation.possessionText && offensiveTeam) {
     const defensiveComp = competitors.find((c) => c.id !== offensiveTeam.id)
     const defAbbr = defensiveComp?.team?.abbreviation
-    if (defAbbr && situation.possessionText.startsWith(defAbbr)) {
-      const yardNum = parseInt(situation.possessionText.replace(defAbbr, '').trim(), 10)
+    const matchesDef = defAbbr && (
+      situation.possessionText.startsWith(defAbbr) ||
+      (defAbbr === 'FNE' && situation.possessionText.startsWith('NE'))
+    )
+    if (matchesDef) {
+      const yardNum = parseInt(situation.possessionText.replace(defAbbr, '').replace('NE', '').trim(), 10)
       if (Number.isFinite(yardNum) && yardNum > 0 && yardNum <= 20) {
         return true
       }
@@ -592,18 +596,35 @@ export function getPrevWeek(seasonType: number, weekNumber: number): { seasonTyp
 }
 
 /**
+ * Ensures the abbreviation for New England / Patriots is "FNE" (Fucking New England) and never just "NE".
+ */
+export function sanitizePatriotsAbbreviation(abbr: string | undefined | null): string {
+  if (!abbr || typeof abbr !== 'string') return ''
+  const trimmed = abbr.trim()
+  if (trimmed.toUpperCase() === 'NE' || trimmed.toUpperCase() === 'FNE') {
+    return 'FNE'
+  }
+  return trimmed
+}
+
+/**
  * Ensures any reference to the New England Patriots always uses:
  * - "the Fucking New England Patriots" / "Fucking New England Patriots" (full display name)
  * - "Fucking Patriots" (team name)
  * - "Fucking Pats" (colloquial / abbreviated reference)
+ * - "FNE" (team abbreviation for Fucking New England)
  */
 export function sanitizePatriotsName(name: string | undefined | null): string {
   if (!name || typeof name !== 'string') return ''
-  // If already prefixed with Fucking, return as is to avoid double-prefixing
+  if (name.trim() === 'FNE') return 'FNE'
+  if (name.trim().toUpperCase() === 'NE') return 'FNE'
+
+  // If already prefixed with Fucking, still make sure any standalone NE abbreviation is converted to FNE
   if (/fucking\s+(new\s+e[nN]gland\s+)?patriots/i.test(name) || /fucking\s+pats/i.test(name)) {
-    return name
+    return name.replace(/\bNE\b/g, 'FNE')
   }
-  return name.replace(
+
+  let result = name.replace(
     /\b(the\s+)?(New\s+E[nN]gland\s+Patriots|Patriots|Pats)\b/gi,
     (match, thePrefix, term) => {
       const lower = term.toLowerCase()
@@ -621,12 +642,18 @@ export function sanitizePatriotsName(name: string | undefined | null): string {
       return match
     }
   )
+
+  // Also sanitize standalone abbreviation NE -> FNE (e.g. "NE @ MIA" -> "FNE @ MIA", "BUF at NE" -> "BUF at FNE")
+  result = result.replace(/\bNE\b/g, 'FNE')
+
+  return result
 }
 
 /**
- * Sanitizes all team names, event names, and competitor references in an NFLEvent object
+ * Sanitizes all team names, event names, competitor references, and abbreviations in an NFLEvent object
  * to guarantee that the New England Patriots are always referred to as
- * "Fucking New England Patriots", "Fucking Patriots", or "Fucking Pats".
+ * "Fucking New England Patriots", "Fucking Patriots", or "Fucking Pats",
+ * and that their abbreviation is ALWAYS "FNE" (Fucking New England) instead of "NE".
  */
 export function sanitizePatriotsInEvent<T = any>(event: T): T {
   if (!event || typeof event !== 'object') return event
@@ -647,7 +674,32 @@ export function sanitizePatriotsInEvent<T = any>(event: T): T {
             if (t.name) t.name = sanitizePatriotsName(t.name)
             if (t.shortDisplayName) t.shortDisplayName = sanitizePatriotsName(t.shortDisplayName)
             if (t.nickname) t.nickname = sanitizePatriotsName(t.nickname)
+            if (
+              t.abbreviation === 'NE' ||
+              t.abbreviation === 'ne' ||
+              t.abbreviation === 'FNE' ||
+              String(t.id) === '17' ||
+              String(t.name || '').includes('Patriots') ||
+              String(t.displayName || '').includes('Patriots')
+            ) {
+              t.abbreviation = 'FNE'
+            }
           }
+        }
+      }
+      if (comp?.situation) {
+        const sit = comp.situation
+        if (sit.possessionText) {
+          sit.possessionText = sit.possessionText.replace(/\bNE\b/g, 'FNE')
+        }
+        if (sit.downDistanceText) {
+          sit.downDistanceText = sit.downDistanceText.replace(/\bNE\b/g, 'FNE')
+        }
+        if (sit.shortDownDistanceText) {
+          sit.shortDownDistanceText = sit.shortDownDistanceText.replace(/\bNE\b/g, 'FNE')
+        }
+        if (sit.lastPlay?.text) {
+          sit.lastPlay.text = sanitizePatriotsName(sit.lastPlay.text)
         }
       }
     }

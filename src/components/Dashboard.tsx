@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import type { GameFilter, NFLScoreboardData, NFLEvent } from '../types/nfl'
 import { WeekSelector } from './WeekSelector'
 import {
@@ -255,10 +255,12 @@ export const Dashboard: React.FC = () => {
     }
   }, [loadData])
 
-  const events = (data?.events || []).map(sanitizePatriotsInEvent)
+  const events = useMemo(() => {
+    return (data?.events || []).map(sanitizePatriotsInEvent)
+  }, [data])
 
-  // Sanitized filtered and searched events
-  const filteredEvents = (() => {
+  // Sanitized filtered and searched events (memoized against events, filter, and searchQuery)
+  const filteredEvents = useMemo(() => {
     const cleanQuery = searchQuery.trim().toLowerCase()
 
     return events.filter((ev) => {
@@ -286,12 +288,12 @@ export const Dashboard: React.FC = () => {
           (home?.team?.displayName || '').toLowerCase().includes(cleanQuery) ||
           (home?.team?.name || '').toLowerCase().includes(cleanQuery) ||
           (home?.team?.abbreviation || '').toLowerCase().includes(cleanQuery) ||
-          (home?.team?.abbreviation === 'NE' && (cleanQuery.includes('pat') || cleanQuery.includes('fuck')))
+          ((home?.team?.abbreviation === 'FNE' || home?.team?.abbreviation === 'NE') && (cleanQuery.includes('pat') || cleanQuery.includes('fuck') || cleanQuery === 'ne' || cleanQuery === 'fne'))
         const matchesAway =
           (away?.team?.displayName || '').toLowerCase().includes(cleanQuery) ||
           (away?.team?.name || '').toLowerCase().includes(cleanQuery) ||
           (away?.team?.abbreviation || '').toLowerCase().includes(cleanQuery) ||
-          (away?.team?.abbreviation === 'NE' && (cleanQuery.includes('pat') || cleanQuery.includes('fuck')))
+          ((away?.team?.abbreviation === 'FNE' || away?.team?.abbreviation === 'NE') && (cleanQuery.includes('pat') || cleanQuery.includes('fuck') || cleanQuery === 'ne' || cleanQuery === 'fne'))
 
         if (!matchesName && !matchesShort && !matchesHome && !matchesAway) {
           return false
@@ -300,25 +302,31 @@ export const Dashboard: React.FC = () => {
 
       return true
     })
-  })()
+  }, [events, filter, searchQuery])
 
-  // Identify the premier game for the Hero Spotlight
-  const heroMatchup: NFLEvent | null = (() => {
-    if (events.length === 0) return null
+  // Identify all active Red Zone games
+  const redZoneThreats = useMemo(() => {
+    return events.filter((e) => {
+      const comp = e.competitions?.[0]
+      return isRedZoneSituation(comp?.situation, e.status || comp?.status, comp?.competitors || [])
+    })
+  }, [events])
 
-    // 1. If autoRedZoneSpotlight is active, dynamically follow any live Red Zone scoring threat!
-    if (autoRedZoneSpotlight) {
-      const rzGame = events.find((e) => {
-        const comp = e.competitions?.[0]
-        return isRedZoneSituation(comp?.situation, e.status || comp?.status, comp?.competitors || [])
-      })
-      if (rzGame) return rzGame
+  // Identify matchups for the Hero Spotlight
+  // If autoRedZoneSpotlight is active and multiple games are in the Red Zone, spotlight ALL of them simultaneously!
+  // Rather than flicking/jumping between different games.
+  const spotlightMatchups: NFLEvent[] = useMemo(() => {
+    if (events.length === 0) return []
+
+    // 1. If autoRedZoneSpotlight is active, spotlight all active Red Zone scoring threats simultaneously!
+    if (autoRedZoneSpotlight && redZoneThreats.length > 0) {
+      return redZoneThreats
     }
 
     // 2. User pinned matchup
     if (selectedHeroId) {
       const found = events.find((e) => e.id === selectedHeroId)
-      if (found) return found
+      if (found) return [found]
     }
 
     // 3. Fallback to any live game
@@ -326,21 +334,18 @@ export const Dashboard: React.FC = () => {
       const comp = e.competitions?.[0]
       return (e.status?.type?.state || comp?.status?.type?.state) === 'in'
     })
-    if (liveGame) return liveGame
+    if (liveGame) return [liveGame]
 
-    return events[0]
-  })()
+    return [events[0]]
+  }, [events, autoRedZoneSpotlight, redZoneThreats, selectedHeroId])
 
-  // Track if current hero is being spotlighted due to auto-redzone
-  const isAutoSelectedRedZone = Boolean(
-    autoRedZoneSpotlight &&
-    heroMatchup &&
-    isRedZoneSituation(
-      heroMatchup.competitions?.[0]?.situation,
-      heroMatchup.status || heroMatchup.competitions?.[0]?.status,
-      heroMatchup.competitions?.[0]?.competitors || []
-    )
-  )
+  const spotlightIds = useMemo(() => new Set(spotlightMatchups.map((m) => m.id)), [spotlightMatchups])
+
+  // Primary hero matchup for keyboard shortcuts / single reference
+  const heroMatchup = spotlightMatchups[0] || null
+
+  // Track if current hero(es) are being spotlighted due to auto-redzone
+  const isAutoSelectedRedZone = Boolean(autoRedZoneSpotlight && redZoneThreats.length > 0)
 
   // Audio cue and screen reader announcement triggers on live events
   useEffect(() => {
@@ -537,27 +542,31 @@ export const Dashboard: React.FC = () => {
     liveWeek,
   ])
 
-  const liveCount = events.filter(
-    (e) => (e.status?.type?.state || e.competitions?.[0]?.status?.type?.state) === 'in'
-  ).length
+  // Single-pass O(N) status badge counts memoized strictly on events array
+  const { liveCount, redZoneCount, halftimeCount, upcomingCount, finalCount } = useMemo(() => {
+    let live = 0
+    let rz = 0
+    let half = 0
+    let up = 0
+    let fin = 0
 
-  const redZoneCount = events.filter((e) => {
-    const comp = e.competitions?.[0]
-    return isRedZoneSituation(comp?.situation, e.status || comp?.status, comp?.competitors || [])
-  }).length
+    for (const e of events) {
+      const comp = e.competitions?.[0]
+      const state = e.status?.type?.state || comp?.status?.type?.state
+      if (state === 'in') live++
+      if (state === 'pre') up++
+      if (state === 'post') fin++
 
-  const halftimeCount = events.filter((e) => {
-    const comp = e.competitions?.[0]
-    return isHalftimeSituation(e.status || comp?.status, comp?.situation)
-  }).length
+      if (isRedZoneSituation(comp?.situation, e.status || comp?.status, comp?.competitors || [])) {
+        rz++
+      }
+      if (isHalftimeSituation(e.status || comp?.status, comp?.situation)) {
+        half++
+      }
+    }
 
-  const upcomingCount = events.filter(
-    (e) => (e.status?.type?.state || e.competitions?.[0]?.status?.type?.state) === 'pre'
-  ).length
-
-  const finalCount = events.filter(
-    (e) => (e.status?.type?.state || e.competitions?.[0]?.status?.type?.state) === 'post'
-  ).length
+    return { liveCount: live, redZoneCount: rz, halftimeCount: half, upcomingCount: up, finalCount: fin }
+  }, [events])
 
   const seasonYear = data?.season?.year || 2026
 
@@ -803,14 +812,70 @@ export const Dashboard: React.FC = () => {
           />
         )}
 
-        {/* SECTION 1: HERO SPOTLIGHT */}
-        {!isLoading && heroMatchup && (
-          <HeroMatchup
-            event={heroMatchup}
-            autoRedZone={autoRedZoneSpotlight}
-            onToggleAutoRedZone={() => setAutoRedZoneSpotlight((prev) => !prev)}
-            isAutoSelectedRedZone={isAutoSelectedRedZone}
-          />
+        {/* SECTION 1: HERO SPOTLIGHT (Supports Multi-Threat Red Zone Spotlights) */}
+        {!isLoading && spotlightMatchups.length > 0 && (
+          spotlightMatchups.length === 1 ? (
+            <HeroMatchup
+              event={spotlightMatchups[0]}
+              autoRedZone={autoRedZoneSpotlight}
+              onToggleAutoRedZone={() => setAutoRedZoneSpotlight((prev) => !prev)}
+              isAutoSelectedRedZone={isAutoSelectedRedZone}
+            />
+          ) : (
+            <section className="space-y-4" aria-label="Simultaneous Red Zone Spotlights">
+              {/* Multi-Threat Red Zone Header Banner */}
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-500/30 bg-gradient-to-r from-rose-950/70 via-red-950/40 to-[#0e1626] p-4 shadow-xl shadow-rose-950/30">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-600/30 border border-rose-500/50 text-rose-300 shadow-md">
+                    <Flame className="h-6 w-6 text-rose-400 fill-rose-400 animate-pulse" />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h2 className="font-['Oswald'] text-lg sm:text-xl font-bold uppercase tracking-wide text-white">
+                        Multi-Threat Red Zone Spotlight
+                      </h2>
+                      <span className="rounded-full bg-rose-500/30 border border-rose-500/60 px-2.5 py-0.5 text-xs font-black text-rose-200 animate-pulse">
+                        {spotlightMatchups.length} ACTIVE THREATS
+                      </span>
+                    </div>
+                    <p className="text-xs text-rose-200/80 mt-0.5">
+                      Multiple games threatening to score simultaneously • Showing all active Red Zone drives side-by-side without flicking
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setAutoRedZoneSpotlight((prev) => !prev)}
+                    className="flex items-center gap-1.5 rounded-lg bg-rose-600 text-white border border-rose-400 px-3 py-1.5 text-xs font-bold shadow-md shadow-rose-950 hover:bg-rose-500 transition-all cursor-pointer"
+                    title="Toggle Auto Red Zone Tracking"
+                  >
+                    <Flame className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />
+                    <span>Auto Red Zone Active</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Multi-Hero Grid */}
+              <div className={`grid gap-5 ${
+                spotlightMatchups.length === 2
+                  ? 'grid-cols-1 lg:grid-cols-2'
+                  : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'
+              }`}>
+                {spotlightMatchups.map((ev, index) => (
+                  <HeroMatchup
+                    key={`multi-spotlight-${ev.id}`}
+                    event={ev}
+                    autoRedZone={autoRedZoneSpotlight}
+                    onToggleAutoRedZone={() => setAutoRedZoneSpotlight((prev) => !prev)}
+                    isAutoSelectedRedZone={true}
+                    threatIndex={index + 1}
+                    totalThreats={spotlightMatchups.length}
+                  />
+                ))}
+              </div>
+            </section>
+          )
         )}
 
         {/* SECTION 2: SLATE DIRECTORY TOOLBAR */}
@@ -1026,7 +1091,7 @@ export const Dashboard: React.FC = () => {
                 <GameCard
                   key={event.id}
                   event={event}
-                  isSpotlighted={heroMatchup?.id === event.id}
+                  isSpotlighted={spotlightIds.has(event.id)}
                   onSpotlight={() => {
                     setSelectedHeroId(event.id)
                     setAutoRedZoneSpotlight(false)

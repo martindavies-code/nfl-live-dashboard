@@ -9,9 +9,37 @@ import puppeteer from 'puppeteer-core'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { spawn } from 'node:child_process'
+import http from 'node:http'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT_DIR = path.resolve(__dirname, '..')
+
+async function isServerUp(url) {
+  return new Promise((resolve) => {
+    try {
+      const u = new URL(url)
+      const req = http.get(
+        {
+          hostname: u.hostname,
+          port: u.port || 80,
+          path: u.pathname,
+          timeout: 1000,
+        },
+        (res) => {
+          resolve(Boolean(res.statusCode && res.statusCode >= 200 && res.statusCode < 500))
+        }
+      )
+      req.on('error', () => resolve(false))
+      req.on('timeout', () => {
+        req.destroy()
+        resolve(false)
+      })
+    } catch {
+      resolve(false)
+    }
+  })
+}
 
 // Common browser locations across platforms
 const KNOWN_BROWSER_PATHS = [
@@ -75,8 +103,26 @@ async function runAudit(options = {}) {
   const outDir = path.join(ROOT_DIR, 'screenshots')
   ensureDir(outDir)
 
-  // Optional artifacts directory
-  const artifactDir = 'C:\\Users\\Martin\\.gemini\\antigravity-ide\\brain\\d374d40d-86f1-486e-8cb7-a59f722440d9'
+  // Current artifact directory
+  const artifactDir = 'C:\\Users\\Martin\\.gemini\\antigravity-ide\\brain\\8aaad804-1ee1-413e-9ee1-fa57c62f56f4'
+
+  let spawnedServer = null
+  if (!(await isServerUp(targetUrl))) {
+    console.log('⚡ Target server not detected. Auto-launching Vite preview server...')
+    const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm'
+    spawnedServer = spawn(`${npmCmd} run preview -- --port 5173`, {
+      cwd: ROOT_DIR,
+      stdio: 'ignore',
+      shell: true,
+    })
+    for (let i = 0; i < 20; i++) {
+      await new Promise((r) => setTimeout(r, 500))
+      if (await isServerUp(targetUrl)) {
+        console.log('  ✔ Vite preview server is ready!')
+        break
+      }
+    }
+  }
 
   const browser = await puppeteer.launch({
     executablePath: browserPath,
@@ -275,7 +321,14 @@ async function runAudit(options = {}) {
     console.log(`Screenshots saved to: ${outDir}`)
     console.log(`======================================================\n`)
   } finally {
-    await browser.close()
+    try {
+      await browser.close()
+    } catch {}
+    if (spawnedServer) {
+      try {
+        spawnedServer.kill('SIGTERM')
+      } catch {}
+    }
   }
 }
 

@@ -161,28 +161,33 @@ const DRIVE_OUTCOMES = [
 /**
  * 1D Dynamic Programming: Compute the probability distribution of additional points
  * scored over a given number of remaining offensive drives.
+ * Uses ping-pong buffers to achieve zero GC pressure inside simulation loops.
  * Runs in under 0.05ms (constant state space).
  */
 function getDrivePointsDistribution(drives: number): Float64Array {
-  let dist = new Float64Array(100)
-  dist[0] = 1.0
+  let current = new Float64Array(100)
+  let next = new Float64Array(100)
+  current[0] = 1.0
   const numDrives = Math.max(1, Math.min(16, Math.round(drives)))
 
   for (let d = 0; d < numDrives; d++) {
-    const next = new Float64Array(100)
+    next.fill(0)
     for (let s = 0; s < 70; s++) {
-      const ps = dist[s]
+      const ps = current[s]
       if (ps <= 1e-7) continue
       for (const outcome of DRIVE_OUTCOMES) {
-        if (s + outcome.pts < 100) {
-          next[s + outcome.pts] += ps * outcome.p
+        const target = s + outcome.pts
+        if (target < 100) {
+          next[target] += ps * outcome.p
         }
       }
     }
-    dist = next
+    const temp = current
+    current = next
+    next = temp
   }
 
-  return dist
+  return current
 }
 
 /**
@@ -205,6 +210,7 @@ export function getScorigamiInfo(
 ): ScorigamiInfo {
   const safeH = Math.max(0, Number.isFinite(homeScore) ? Math.round(homeScore) : 0)
   const safeA = Math.max(0, Number.isFinite(awayScore) ? Math.round(awayScore) : 0)
+  const safeSeconds = Number.isFinite(secondsLeft) ? Math.max(0, secondsLeft) : (gameState === 'pre' ? 3600 : 0)
 
   const key = makeScoreKey(safeH, safeA)
   const histRecord = HISTORICAL_OCCURRED[key]
@@ -247,7 +253,7 @@ export function getScorigamiInfo(
   // An average NFL game has ~11.5 drives per team across 3,600 regulation seconds
   const drivesLeft = gameState === 'pre'
     ? 11.5
-    : Math.max(0.5, (Math.max(0, secondsLeft) / 3600) * 11.5)
+    : Math.max(0.5, (safeSeconds / 3600) * 11.5)
 
   const distH = getDrivePointsDistribution(drivesLeft)
   const distA = getDrivePointsDistribution(drivesLeft)

@@ -18,6 +18,7 @@ import {
   PLAYOFF_ROUNDS,
   REGULAR_SEASON_WEEKS,
   sanitizePatriotsName,
+  sanitizePatriotsAbbreviation,
   sanitizePatriotsInEvent,
   sanitizePatriotsInScoreboardData,
 } from './nflHelpers.ts'
@@ -520,9 +521,25 @@ test('sanitizePatriotsName always refers to New England Patriots as Fucking New 
   assert.equal(sanitizePatriotsName('Fucking Patriots'), 'Fucking Patriots')
   assert.equal(sanitizePatriotsName('Fucking Pats'), 'Fucking Pats')
 
+  // Standalone abbreviation and matchup short codes
+  assert.equal(sanitizePatriotsName('NE'), 'FNE')
+  assert.equal(sanitizePatriotsName('NE @ MIA'), 'FNE @ MIA')
+  assert.equal(sanitizePatriotsName('BUF at NE'), 'BUF at FNE')
+  assert.equal(sanitizePatriotsName('FNE'), 'FNE')
+
   // Unrelated teams remain untouched
   assert.equal(sanitizePatriotsName('Kansas City Chiefs'), 'Kansas City Chiefs')
   assert.equal(sanitizePatriotsName('Philadelphia Eagles'), 'Philadelphia Eagles')
+})
+
+test('sanitizePatriotsAbbreviation converts NE to FNE for Fucking New England and leaves others untouched', () => {
+  assert.equal(sanitizePatriotsAbbreviation('NE'), 'FNE')
+  assert.equal(sanitizePatriotsAbbreviation('ne'), 'FNE')
+  assert.equal(sanitizePatriotsAbbreviation('Ne'), 'FNE')
+  assert.equal(sanitizePatriotsAbbreviation('FNE'), 'FNE')
+  assert.equal(sanitizePatriotsAbbreviation('fne'), 'FNE')
+  assert.equal(sanitizePatriotsAbbreviation('BUF'), 'BUF')
+  assert.equal(sanitizePatriotsAbbreviation('KC'), 'KC')
 })
 
 test('sanitizePatriotsInEvent and sanitizePatriotsInScoreboardData sanitize all competitor team fields', () => {
@@ -560,17 +577,20 @@ test('sanitizePatriotsInEvent and sanitizePatriotsInScoreboardData sanitize all 
 
   const sanitized = sanitizePatriotsInEvent(rawEvent)
   assert.equal(sanitized.name, 'Fucking New England Patriots at Miami Dolphins')
+  assert.equal(sanitized.shortName, 'FNE @ MIA')
   const pats = sanitized.competitions[0].competitors[1].team
   assert.equal(pats.displayName, 'Fucking New England Patriots')
   assert.equal(pats.name, 'Fucking Patriots')
   assert.equal(pats.shortDisplayName, 'Fucking Pats')
   assert.equal(pats.nickname, 'Fucking Patriots')
+  assert.equal(pats.abbreviation, 'FNE')
 
   const scoreboardData = {
     events: [rawEvent],
   }
   const cleanScoreboard = sanitizePatriotsInScoreboardData(scoreboardData)
   assert.equal(cleanScoreboard.events[0].competitions[0].competitors[1].team.displayName, 'Fucking New England Patriots')
+  assert.equal(cleanScoreboard.events[0].competitions[0].competitors[1].team.abbreviation, 'FNE')
 })
 
 

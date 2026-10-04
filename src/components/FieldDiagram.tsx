@@ -9,6 +9,7 @@ interface FieldDiagramProps {
   gameStatusDetail?: string
   isHero?: boolean
   status?: NFLStatus
+  compact?: boolean
 }
 
 export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
@@ -18,7 +19,9 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   gameStatusDetail = 'In Progress',
   isHero = false,
   status,
+  compact = false,
 }) => {
+  const isCompact = compact || !isHero
   const uniqueId = useId().replace(/:/g, '')
 
   const homeComp = competitors.find((c) => c.homeAway === 'home')
@@ -26,8 +29,10 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
 
   const homeColor = sanitizeHexColor(homeComp?.team?.color, '#1e3a8a')
   const awayColor = sanitizeHexColor(awayComp?.team?.color, '#b91c1c')
-  const homeAbbr = homeComp?.team?.abbreviation || 'HOME'
-  const awayAbbr = awayComp?.team?.abbreviation || 'AWAY'
+  const rawHomeAbbr = homeComp?.team?.abbreviation || 'HOME'
+  const rawAwayAbbr = awayComp?.team?.abbreviation || 'AWAY'
+  const homeAbbr = rawHomeAbbr === 'NE' ? 'FNE' : rawHomeAbbr
+  const awayAbbr = rawAwayAbbr === 'NE' ? 'FNE' : rawAwayAbbr
 
   // Handling missing/null situation
   const hasSituation = Boolean(
@@ -55,13 +60,14 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
 
   // First down calculations (Only valid on active scrimmage downs during live play)
   const isRegularPlay = hasSituation && situation!.down > 0 && !isHalftime && gameState === 'in'
-  const distance = hasSituation && typeof situation!.distance === 'number' && Number.isFinite(situation!.distance) && situation!.distance > 0 ? situation!.distance : 10
+  const rawDistance = hasSituation && typeof situation!.distance === 'number' && Number.isFinite(situation!.distance) ? situation!.distance : 10
+  const distance = Math.max(0, rawDistance)
 
   let firstDownYardLine = yardLineClamped
   if (direction === 'right') {
-    firstDownYardLine = Math.min(100, yardLineClamped + distance)
+    firstDownYardLine = Math.min(100, yardLineClamped + (distance === 0 ? 0.5 : distance))
   } else {
-    firstDownYardLine = Math.max(0, yardLineClamped - distance)
+    firstDownYardLine = Math.max(0, yardLineClamped - (distance === 0 ? 0.5 : distance))
   }
   const firstDownX = 100 + (Number.isFinite(firstDownYardLine) ? firstDownYardLine : 50) * 10
 
@@ -72,7 +78,11 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
 
   // Direct label text
   const losLabel = situation?.possessionText || `${yardLineClamped} YD`
-  const firstDownLabel = isGoalToGo ? 'GOAL LINE' : `${distance} YDS TO GAIN`
+  const firstDownLabel = isGoalToGo
+    ? 'GOAL LINE'
+    : distance === 0
+    ? 'INCHES TO GAIN'
+    : `${distance} YDS TO GAIN`
 
   const gainZoneLeft = Math.min(scrimmageX, firstDownX)
   const gainZoneWidth = Math.abs(firstDownX - scrimmageX)
@@ -117,15 +127,20 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   const awayPatternId = `hatch-away-${uniqueId}`
   const redZonePatternId = `hatch-redzone-${uniqueId}`
 
-  const offensiveAbbr = offensiveTeam?.team?.abbreviation || 'Offense'
+  const rawOffensiveAbbr = offensiveTeam?.team?.abbreviation || 'Offense'
+  const offensiveAbbr = rawOffensiveAbbr === 'NE' ? 'FNE' : rawOffensiveAbbr
   const accessibilityDesc = hasSituation
     ? `Football field diagram: Ball at ${losLabel}, ${situation?.downDistanceText || 'Active play'}, ${offensiveAbbr} driving towards ${direction === 'right' ? awayAbbr : homeAbbr}.`
     : `Football field view: ${gameState === 'pre' ? 'Pregame' : gameState === 'post' ? 'Game Over' : 'Field preview'}`
 
   return (
     <div
-      className={`w-full overflow-hidden rounded-xl border border-white/[0.08] bg-[#0c121e] ${
-        isHero ? 'shadow-lg ring-1 ring-white/[0.04]' : ''
+      className={`w-full overflow-hidden ${
+        isCompact
+          ? 'rounded-lg border border-white/[0.08] bg-[#070b14]'
+          : 'rounded-xl border border-white/[0.08] bg-[#0c121e]'
+      } ${
+        isHero ? 'shadow-lg ring-1 ring-white/[0.04]' : 'shadow-inner'
       }`}
       role="region"
       aria-label={accessibilityDesc}
@@ -148,47 +163,79 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
       </div>
 
       {/* Context Strip */}
-      <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#080d16] px-3.5 py-2.5">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
-            Field Position Radar
-          </span>
-          {inRedZone && (
-            <span className="rounded bg-rose-500/25 px-2 py-0.5 text-[10px] font-black text-rose-300 border border-rose-500/40 animate-pulse">
-              🔥 RED ZONE
+      {isCompact ? (
+        <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#060a12] px-3 py-1.5 text-xs">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {isHalftime ? (
+              <span className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30">
+                HALFTIME
+              </span>
+            ) : hasSituation ? (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-bold text-amber-200 truncate">
+                <span className="text-white font-extrabold">{offensiveAbbr}</span>
+                <span>DRIVING</span>
+                <span className="text-amber-400 font-black">{direction === 'right' ? '➔' : '◀'}</span>
+              </div>
+            ) : (
+              <span className="text-[11px] text-slate-400 italic">
+                {gameState === 'pre' ? 'Pregame' : gameState === 'post' ? 'Final' : gameStatusDetail}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] font-mono shrink-0">
+            {isHalftime ? (
+              <span className="text-amber-300 font-semibold">2nd Half Kickoff Upcoming</span>
+            ) : hasSituation ? (
+              <span className="text-slate-400">
+                Ball on <strong className="text-white font-bold">{losLabel}</strong>
+              </span>
+            ) : null}
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#080d16] px-3.5 py-2.5">
+          <div className="flex items-center gap-2 min-w-0 shrink-0">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 whitespace-nowrap">
+              Field Position Radar
             </span>
-          )}
-          {isHalftime && (
-            <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30">
-              HALFTIME
+            {inRedZone && (
+              <span className="rounded bg-rose-500/25 px-2 py-0.5 text-[10px] font-black text-rose-300 border border-rose-500/40 animate-pulse whitespace-nowrap">
+                🔥 RED ZONE
+              </span>
+            )}
+            {isHalftime && (
+              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30 whitespace-nowrap">
+                HALFTIME
+              </span>
+            )}
+          </div>
+
+          {isHalftime ? (
+            <div className="flex items-center gap-2 text-xs font-semibold shrink-0">
+              <span className="text-amber-300 font-mono whitespace-nowrap">AT HALFTIME</span>
+              <span className="text-slate-500">•</span>
+              <span className="text-slate-300 whitespace-nowrap">2nd Half Kickoff Upcoming</span>
+            </div>
+          ) : hasSituation ? (
+            <div className="flex items-center gap-2 text-xs font-semibold min-w-0">
+              <span className="text-amber-300 font-mono font-bold bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded whitespace-nowrap shrink-0">
+                {situation?.downDistanceText || `${situation?.shortDownDistanceText || 'Current Drive'}`}
+              </span>
+              <span className="text-slate-500 shrink-0">•</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-black text-amber-200 border border-amber-500/40 shadow-sm shrink-0 whitespace-nowrap">
+                <strong className="text-white">{offensiveAbbr}</strong>
+                <span>DRIVING</span>
+                <span className="text-base font-extrabold text-amber-400">{direction === 'right' ? '➔' : '◀'}</span>
+              </span>
+            </div>
+          ) : (
+            <span className="text-xs text-slate-400 italic shrink-0">
+              {gameState === 'pre' ? 'Pregame' : gameState === 'post' ? 'Final' : gameStatusDetail}
             </span>
           )}
         </div>
-
-        {isHalftime ? (
-          <div className="flex items-center gap-2 text-xs font-semibold">
-            <span className="text-amber-300 font-mono">AT HALFTIME</span>
-            <span className="text-slate-500">•</span>
-            <span className="text-slate-300">2nd Half Kickoff Upcoming</span>
-          </div>
-        ) : hasSituation ? (
-          <div className="flex items-center gap-2 text-xs font-semibold">
-            <span className="text-amber-300 font-mono font-bold bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded">
-              {situation?.downDistanceText || `${situation?.shortDownDistanceText || 'Current Drive'}`}
-            </span>
-            <span className="text-slate-500">•</span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-black text-amber-200 border border-amber-500/40 shadow-sm">
-              <strong className="text-white">{offensiveAbbr}</strong>
-              <span>DRIVING</span>
-              <span className="text-base font-extrabold text-amber-400">{direction === 'right' ? '➔' : '◀'}</span>
-            </span>
-          </div>
-        ) : (
-          <span className="text-xs text-slate-400 italic">
-            {gameState === 'pre' ? 'Pregame' : gameState === 'post' ? 'Final' : gameStatusDetail}
-          </span>
-        )}
-      </div>
+      )}
 
       {/* SVG American Football Pitch with Full WCAG 2.2 AAA Semantic Tree */}
       <div className="relative w-full aspect-[1200/340]">
@@ -432,19 +479,26 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                   />
 
                   {/* Direct 1st Down Label Tag (offset to bottom on short-yardage plays to eliminate collision with LOS badge) */}
-                  <g transform={`translate(${firstDownBadgeX}, ${Math.abs(firstDownX - scrimmageX) < 55 ? 322 : 18})`}>
-                    <rect x="-24" y="-12" width="48" height="20" rx="4" fill="#eab308" />
+                  <g transform={`translate(${firstDownBadgeX}, ${Math.abs(firstDownX - scrimmageX) < (isCompact ? 45 : 55) ? 322 : 18})`}>
+                    <rect
+                      x={isCompact ? -18 : -24}
+                      y={isCompact ? -10 : -12}
+                      width={isCompact ? 36 : 48}
+                      height={isCompact ? 16 : 20}
+                      rx={isCompact ? 3 : 4}
+                      fill="#eab308"
+                    />
                     <text
                       x="0"
-                      y="2"
+                      y={isCompact ? 1 : 2}
                       fill="#0f172a"
-                      fontSize="10"
+                      fontSize={isCompact ? "9" : "10"}
                       fontWeight="800"
                       fontFamily="var(--font-mono)"
                       textAnchor="middle"
                       dominantBaseline="middle"
                     >
-                      {isGoalToGo ? 'GOAL' : '1ST DOWN'}
+                      {isGoalToGo ? 'GOAL' : isCompact ? '1ST' : '1ST DOWN'}
                     </text>
                   </g>
                 </>
@@ -460,21 +514,28 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 strokeWidth="3.5"
               />
 
-              {/* Direct Line of Scrimmage Label (Spelled out to avoid obscure acronyms - Kucharski #5 & #6) */}
+              {/* Direct Line of Scrimmage Label (Spelled out in hero, sleek compact tag in cards) */}
               <g transform={`translate(${losBadgeX}, 18)`}>
-                <rect x="-38" y="-12" width="76" height="20" rx="4" fill="#0284c7" />
+                <rect
+                  x={isCompact ? -18 : -38}
+                  y={isCompact ? -10 : -12}
+                  width={isCompact ? 36 : 76}
+                  height={isCompact ? 16 : 20}
+                  rx={isCompact ? 3 : 4}
+                  fill="#0284c7"
+                />
                 <text
                   x="0"
-                  y="2"
+                  y={isCompact ? 1 : 2}
                   fill="#ffffff"
-                  fontSize="9.5"
+                  fontSize={isCompact ? "9" : "9.5"}
                   fontWeight="800"
                   fontFamily="var(--font-mono)"
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  letterSpacing="0.5"
+                  letterSpacing={isCompact ? "0" : "0.5"}
                 >
-                  SCRIMMAGE
+                  {isCompact ? 'LOS' : 'SCRIMMAGE'}
                 </text>
               </g>
 
@@ -506,33 +567,35 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                     </text>
                   </g>
 
-                  {/* Prominent Drive Direction Pill Tag above Line of Scrimmage (boundary-clamped) */}
-                  <g transform={`translate(${pillX}, 82)`}>
-                    <rect
-                      x="-75"
-                      y="-15"
-                      width="150"
-                      height="30"
-                      rx="7"
-                      fill="#080e18"
-                      stroke="#f59e0b"
-                      strokeWidth="2.5"
-                      filter="drop-shadow(0 4px 10px rgba(0,0,0,0.8))"
-                    />
-                    <text
-                      x="0"
-                      y="2"
-                      fill="#fbbf24"
-                      fontSize="12"
-                      fontWeight="900"
-                      fontFamily="var(--font-mono)"
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      letterSpacing="1"
-                    >
-                      {direction === 'right' ? `${offensiveAbbr} DRIVING ➔` : `◀ DRIVING ${offensiveAbbr}`}
-                    </text>
-                  </g>
+                  {/* Prominent Drive Direction Pill Tag above Line of Scrimmage (rendered in hero mode for full-screen impact) */}
+                  {!isCompact && (
+                    <g transform={`translate(${pillX}, 82)`}>
+                      <rect
+                        x="-75"
+                        y="-15"
+                        width="150"
+                        height="30"
+                        rx="7"
+                        fill="#080e18"
+                        stroke="#f59e0b"
+                        strokeWidth="2.5"
+                        filter="drop-shadow(0 4px 10px rgba(0,0,0,0.8))"
+                      />
+                      <text
+                        x="0"
+                        y="2"
+                        fill="#fbbf24"
+                        fontSize="12"
+                        fontWeight="900"
+                        fontFamily="var(--font-mono)"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        letterSpacing="1"
+                      >
+                        {direction === 'right' ? `${offensiveAbbr} DRIVING ➔` : `◀ DRIVING ${offensiveAbbr}`}
+                      </text>
+                    </g>
+                  )}
                 </g>
               )}
 
@@ -605,32 +668,34 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 <line x1="6" y1="-3" x2="6" y2="3" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" />
               </g>
 
-              {/* Direct Yard Line Callout under Ball */}
-              <g transform={`translate(${scrimmageX}, 216)`}>
-                <rect
-                  x="-44"
-                  y="-11"
-                  width="88"
-                  height="22"
-                  rx="5"
-                  fill="#090d16"
-                  stroke="#38bdf8"
-                  strokeWidth="1.5"
-                  filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))"
-                />
-                <text
-                  x="0"
-                  y="2"
-                  fill="#f1f5f9"
-                  fontSize="10"
-                  fontWeight="800"
-                  fontFamily="var(--font-mono)"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                >
-                  BALL AT {losLabel}
-                </text>
-              </g>
+              {/* Direct Yard Line Callout under Ball (rendered in hero mode for extra callout) */}
+              {!isCompact && (
+                <g transform={`translate(${scrimmageX}, 216)`}>
+                  <rect
+                    x="-44"
+                    y="-11"
+                    width="88"
+                    height="22"
+                    rx="5"
+                    fill="#090d16"
+                    stroke="#38bdf8"
+                    strokeWidth="1.5"
+                    filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))"
+                  />
+                  <text
+                    x="0"
+                    y="2"
+                    fill="#f1f5f9"
+                    fontSize="10"
+                    fontWeight="800"
+                    fontFamily="var(--font-mono)"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                  >
+                    BALL AT {losLabel}
+                  </text>
+                </g>
+              )}
             </>
           )}
 
@@ -679,23 +744,45 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
       </div>
 
       {/* Direct In-place Context Strip */}
-      <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#080d16] px-3 py-1.5 text-xs text-slate-400">
-        <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-sm bg-sky-400" />
-            <strong className="text-slate-300">Scrimmage:</strong> {isHalftime ? 'At Halftime' : hasSituation ? losLabel : '50 YD'}
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-sm bg-yellow-400" />
-            <strong className="text-slate-300">Target:</strong>{' '}
-            {isHalftime ? '2nd Half Kickoff' : isRegularPlay ? firstDownLabel : hasSituation ? 'Kickoff / PAT' : '10 Yds'}
+      {isCompact ? (
+        <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#060a12] px-3 py-1.5 text-[11px] font-mono text-slate-400">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-400 shrink-0" />
+              <span className="text-slate-400">LOS:</span>
+              <strong className="text-slate-200">{isHalftime ? 'Halftime' : hasSituation ? losLabel : '50 YD'}</strong>
+            </span>
+            {isRegularPlay && (
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
+                <span className="text-slate-400">To Gain:</span>
+                <strong className="text-amber-300">{isGoalToGo ? 'Goal Line' : `${distance} Yds`}</strong>
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-slate-400 font-semibold tracking-wide">
+            {direction === 'right' ? `➔ ${awayAbbr}` : `◀ ${homeAbbr}`}
           </span>
         </div>
+      ) : (
+        <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#080d16] px-3 py-1.5 text-xs text-slate-400">
+          <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-sm bg-sky-400" />
+              <strong className="text-slate-300">Scrimmage:</strong> {isHalftime ? 'At Halftime' : hasSituation ? losLabel : '50 YD'}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-sm bg-yellow-400" />
+              <strong className="text-slate-300">Target:</strong>{' '}
+              {isHalftime ? '2nd Half Kickoff' : isRegularPlay ? firstDownLabel : hasSituation ? 'Kickoff / PAT' : '10 Yds'}
+            </span>
+          </div>
 
-        <span className="font-mono text-xs text-slate-500 hidden xl:inline">
-          100-Yd Field
-        </span>
-      </div>
+          <span className="font-mono text-xs text-slate-500 hidden xl:inline">
+            100-Yd Field
+          </span>
+        </div>
+      )}
     </div>
   )
 })

@@ -1,6 +1,6 @@
 import React, { memo } from 'react'
 import type { NFLCompetitor, NFLSituation, NFLStatus, NFLOdds } from '../types/nfl'
-import { resolveContrastingTeamColors } from '../utils/nflHelpers'
+import { resolveContrastingTeamColors, sanitizePatriotsAbbreviation } from '../utils/nflHelpers'
 import { calculateWinProbability } from '../utils/winProbability'
 import { Activity, TrendingUp } from 'lucide-react'
 
@@ -13,6 +13,7 @@ interface WinProbabilityBarProps {
   status?: NFLStatus
   situation?: NFLSituation | null
   odds?: NFLOdds[]
+  compact?: boolean
 }
 
 const DEFAULT_HOME_COMP: NFLCompetitor = {
@@ -38,6 +39,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
   status,
   situation,
   odds,
+  compact = false,
 }) => {
   const safeHomeComp = homeCompetitor || DEFAULT_HOME_COMP
   const safeAwayComp = awayCompetitor || DEFAULT_AWAY_COMP
@@ -45,8 +47,8 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
   // Intelligently resolve team colors so both sides ALWAYS have sharp contrast
   const { homeColor, awayColor } = resolveContrastingTeamColors(safeHomeComp, safeAwayComp)
 
-  const homeAbbr = safeHomeComp?.team?.abbreviation || 'HOME'
-  const awayAbbr = safeAwayComp?.team?.abbreviation || 'AWAY'
+  const homeAbbr = sanitizePatriotsAbbreviation(safeHomeComp?.team?.abbreviation) || 'HOME'
+  const awayAbbr = sanitizePatriotsAbbreviation(safeAwayComp?.team?.abbreviation) || 'AWAY'
 
   const {
     homePct,
@@ -66,6 +68,64 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
     situation,
     odds,
   })
+
+  if (compact) {
+    return (
+      <div
+        className="w-full rounded-lg bg-black/30 border border-white/[0.05] px-3 py-1.5 select-none"
+        role="region"
+        aria-label={`Win probability: ${homeAbbr} ${homePct.toFixed(1)}%, ${awayAbbr} ${awayPct.toFixed(1)}%`}
+      >
+        <div className="flex items-center justify-between text-[11px] font-mono font-bold mb-1">
+          <div className="flex items-center gap-1.5">
+            <span
+              className="h-2 w-2 rounded-full shrink-0 ring-1 ring-white/20"
+              style={{ backgroundColor: homeColor }}
+            />
+            <span className="text-white">{homeAbbr}</span>
+            <span
+              className="tabular-nums"
+              style={{ color: isHomeFavored ? '#38bdf8' : '#94a3b8' }}
+            >
+              {homePct.toFixed(1)}%
+            </span>
+          </div>
+
+          <span className="text-[10px] font-sans font-semibold text-slate-400 uppercase tracking-wider">
+            Win Prob
+          </span>
+
+          <div className="flex items-center gap-1.5">
+            <span
+              className="tabular-nums"
+              style={{ color: isAwayFavored ? '#38bdf8' : '#94a3b8' }}
+            >
+              {awayPct.toFixed(1)}%
+            </span>
+            <span className="text-white">{awayAbbr}</span>
+            <span
+              className="h-2 w-2 rounded-full shrink-0 ring-1 ring-white/20"
+              style={{ backgroundColor: awayColor }}
+            />
+          </div>
+        </div>
+
+        {/* Crisp dual-segment progress track */}
+        <div className="relative h-1.5 w-full rounded-full bg-slate-800/90 overflow-hidden flex">
+          <div
+            className="h-full transition-all duration-500 ease-out"
+            style={{ width: `${homePct}%`, backgroundColor: homeColor }}
+          />
+          <div
+            className="h-full transition-all duration-500 ease-out"
+            style={{ width: `${awayPct}%`, backgroundColor: awayColor }}
+          />
+          {/* 50% baseline center tick */}
+          <div className="absolute top-0 bottom-0 left-1/2 w-0.5 -translate-x-1/2 bg-white/40 pointer-events-none" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div

@@ -78,8 +78,10 @@ export function calculateWinProbability({
 }: CalculateOptions): CalculatedWinProbability {
   const homeScore = safeParseInt(homeCompetitor?.score, 0)
   const awayScore = safeParseInt(awayCompetitor?.score, 0)
-  const homeAbbr = homeCompetitor?.team?.abbreviation || 'HOME'
-  const awayAbbr = awayCompetitor?.team?.abbreviation || 'AWAY'
+  const rawHomeAbbr = homeCompetitor?.team?.abbreviation || 'HOME'
+  const rawAwayAbbr = awayCompetitor?.team?.abbreviation || 'AWAY'
+  const homeAbbr = rawHomeAbbr === 'NE' ? 'FNE' : rawHomeAbbr
+  const awayAbbr = rawAwayAbbr === 'NE' ? 'FNE' : rawAwayAbbr
   const homeName = homeCompetitor?.team?.displayName || homeAbbr
   const awayName = awayCompetitor?.team?.displayName || awayAbbr
 

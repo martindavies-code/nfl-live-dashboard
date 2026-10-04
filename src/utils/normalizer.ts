@@ -1,5 +1,5 @@
 import type { NFLSituation } from '../types/nfl'
-import { safeParseInt, sanitizeHexColor, getContrastYIQ, formatLocalizedKickoff, sanitizePatriotsName } from './nflHelpers.ts'
+import { safeParseInt, sanitizeHexColor, getContrastYIQ, formatLocalizedKickoff, sanitizePatriotsName, sanitizePatriotsAbbreviation } from './nflHelpers.ts'
 
 export const FALLBACK_LOGO = 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nfl.png'
 
@@ -58,14 +58,46 @@ export interface NormalizedEvent {
 }
 
 /**
- * Sanitize URLs to prevent XSS (blocks javascript:, vbscript:, data: if not SVG/image)
+ * Sanitize URLs to prevent XSS, prototype injection, and malicious protocol schemes.
+ * - Blocks control characters / non-printable ASCII
+ * - Blocks dangerous pseudo-protocols (javascript:, vbscript:, file:)
+ * - Validates HTTP and HTTPS schemes via RFC URL parser
+ * - Blocks active script injection vectors in data:image/ (e.g. malicious SVG scripts)
  */
 export function sanitizeUrl(url?: string | null, fallback = FALLBACK_LOGO): string {
   if (!url || typeof url !== 'string') return fallback
   const trimmed = url.trim()
-  if (/^https?:\/\//i.test(trimmed) || /^data:image\//i.test(trimmed)) {
+  if (!trimmed) return fallback
+
+  // Block control characters and null bytes
+  for (let i = 0; i < trimmed.length; i++) {
+    const code = trimmed.charCodeAt(i)
+    if ((code >= 0 && code <= 31) || code === 127) {
+      return fallback
+    }
+  }
+
+  // Explicitly disallow dangerous pseudo-protocols
+  if (/^(?:javascript|vbscript|file):/i.test(trimmed)) return fallback
+
+  // Parse HTTP/HTTPS URLs strictly
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return parsed.href
+    }
+  } catch {
+    // Fall through to data URI check
+  }
+
+  // Safe data:image URIs (strictly reject script tags and event handlers in SVGs)
+  if (/^data:image\//i.test(trimmed)) {
+    if (/<script|onload|onerror|onclick|javascript:/i.test(trimmed)) {
+      return fallback
+    }
     return trimmed
   }
+
   return fallback
 }
 
@@ -74,8 +106,8 @@ export function sanitizeUrl(url?: string | null, fallback = FALLBACK_LOGO): stri
  * regardless of missing fields, malformed types, or partial ESPN network responses.
  */
 export function normalizeNFLEvent(raw: any, index = 0): NormalizedEvent {
-  const safeObj = raw && typeof raw === 'object' ? raw : {}
-  const comp = safeObj.competitions && Array.isArray(safeObj.competitions) && safeObj.competitions[0]
+  const safeObj = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}
+  const comp = safeObj.competitions && Array.isArray(safeObj.competitions) && safeObj.competitions[0] && typeof safeObj.competitions[0] === 'object'
     ? safeObj.competitions[0]
     : {}
 
@@ -119,8 +151,11 @@ export function normalizeNFLEvent(raw: any, index = 0): NormalizedEvent {
   function normalizeTeam(rawC: any, defaultAbbr: string, defaultName: string): NormalizedCompetitor {
     const t = (rawC.team && typeof rawC.team === 'object') ? rawC.team : {}
     const teamId = String(t.id || rawC.id || defaultAbbr)
-    const abbr = String(t.abbreviation || defaultAbbr).toUpperCase()
     const rawTeamName = String(t.displayName || t.name || defaultName)
+    const rawAbbr = String(t.abbreviation || defaultAbbr).toUpperCase()
+    const isPatriots = rawAbbr === 'NE' || rawAbbr === 'FNE' || teamId === '17' ||
+      rawTeamName.includes('Patriots') || rawTeamName.includes('New England')
+    const abbr = isPatriots ? 'FNE' : sanitizePatriotsAbbreviation(rawAbbr)
     const teamName = sanitizePatriotsName(rawTeamName)
     const color = sanitizeHexColor(t.color, defaultAbbr === 'HOME' ? '#00338d' : '#b91c1c')
     const textColor = getContrastYIQ(color)
@@ -189,10 +224,10 @@ export function normalizeNFLEvent(raw: any, index = 0): NormalizedEvent {
       possessionAbbr = away.team.abbreviation
     } else if (rawSituation.possessionText) {
       const pText = String(rawSituation.possessionText).toUpperCase()
-      if (pText.includes(home.team.abbreviation)) {
+      if (pText.includes(home.team.abbreviation) || (home.team.abbreviation === 'FNE' && /\bNE\b/.test(pText))) {
         direction = 'right'
         possessionAbbr = home.team.abbreviation
-      } else if (pText.includes(away.team.abbreviation)) {
+      } else if (pText.includes(away.team.abbreviation) || (away.team.abbreviation === 'FNE' && /\bNE\b/.test(pText))) {
         direction = 'left'
         possessionAbbr = away.team.abbreviation
       }
@@ -219,13 +254,14 @@ export function normalizeNFLEvent(raw: any, index = 0): NormalizedEvent {
     )
 
     // Formatted Down & Distance
-    let formattedText = rawSituation.downDistanceText ? String(rawSituation.downDistanceText) : ''
+    const rawPosText = rawSituation.possessionText ? String(rawSituation.possessionText).replace(/\bNE\b/g, 'FNE') : ''
+    let formattedText = rawSituation.downDistanceText ? String(rawSituation.downDistanceText).replace(/\bNE\b/g, 'FNE') : ''
     if (!formattedText || formattedText.trim() === '') {
       if (down > 0) {
         const sfx = down === 1 ? '1st' : down === 2 ? '2nd' : down === 3 ? '3rd' : '4th'
         formattedText = `${sfx} & ${isGoalToGo ? 'Goal' : distance}`
-        if (rawSituation.possessionText) {
-          formattedText += ` at ${rawSituation.possessionText}`
+        if (rawPosText) {
+          formattedText += ` at ${rawPosText}`
         }
       } else {
         formattedText = 'Kickoff / PAT'

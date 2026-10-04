@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff } from '../utils/nflHelpers'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation, sanitizePatriotsName } from '../utils/nflHelpers'
 import { Radio, Flame, Tv, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check, Clock, Mic } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
@@ -12,6 +12,8 @@ interface HeroMatchupProps {
   autoRedZone?: boolean
   onToggleAutoRedZone?: () => void
   isAutoSelectedRedZone?: boolean
+  threatIndex?: number
+  totalThreats?: number
 }
 
 const DEFAULT_NFL_LOGO = 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nfl.png'
@@ -21,6 +23,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   autoRedZone = true,
   onToggleAutoRedZone,
   isAutoSelectedRedZone = false,
+  threatIndex,
+  totalThreats,
 }) => {
   const [isCopied, setIsCopied] = useState(false)
   const [showScorigamiDetails, setShowScorigamiDetails] = useState(false)
@@ -62,8 +66,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
 
   // Derive true regulation seconds remaining for accurate scorigami probability
   const secondsLeft = getGameSecondsRemaining(status, state)
-  const homeAbbr = homeComp?.team?.abbreviation || 'Home'
-  const awayAbbr = awayComp?.team?.abbreviation || 'Away'
+  const homeAbbr = sanitizePatriotsAbbreviation(homeComp?.team?.abbreviation) || 'Home'
+  const awayAbbr = sanitizePatriotsAbbreviation(awayComp?.team?.abbreviation) || 'Away'
   const scorigamiInfo = getScorigamiInfo(
     safeParseInt(homeComp?.score, 0),
     safeParseInt(awayComp?.score, 0),
@@ -74,8 +78,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   )
 
   const handleCopySnapshot = async () => {
-    const awayName = awayComp?.team?.displayName || awayAbbr
-    const homeName = homeComp?.team?.displayName || homeAbbr
+    const awayName = sanitizePatriotsName(awayComp?.team?.displayName || awayAbbr)
+    const homeName = sanitizePatriotsName(homeComp?.team?.displayName || homeAbbr)
     const awayScore = awayComp?.score ?? '-'
     const homeScore = homeComp?.score ?? '-'
     const statusText = isHalftime
@@ -88,7 +92,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
     const playText = isLive && situation?.downDistanceText ? ` • ${situation.downDistanceText} at ${situation.possessionText || ''}` : ''
     const rzText = isRedZone ? ' 🔥 RED ZONE' : ''
 
-    const shareText = `🏈 NFL Score: ${awayName} (${awayScore}) @ ${homeName} (${homeScore}) [${statusText}${playText}${rzText}]\n📺 UK TV: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})\n📻 UK Radio: ${broadcastDetails.ukRadio}\n🎙️ Announcers: ${broadcastDetails.announcers.fullCrew}\nLive Command: https://martindavies-code.github.io/nfl-live-dashboard/`
+    const shareText = `🏈 NFL Score: ${awayName} (${awayScore}) @ ${homeName} (${homeScore}) [${statusText}${playText}${rzText}]\n📺 UK TV: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})\n📻 UK Radio: ${broadcastDetails.ukRadio}\n🎙️ Announcers: ${broadcastDetails.announcers.fullCrew}\nLive Command: https://martindavies-code.github.io/nfl-live-dashboard/`.replace(/\bNE\b/g, 'FNE')
 
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -101,6 +105,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
     }
   }
 
+  const headingId = `hero-matchup-heading-${event.id}`
+
   return (
     <section
       className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
@@ -108,10 +114,10 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
           ? 'card-tier-hero-redzone'
           : 'card-tier-hero'
       }`}
-      aria-labelledby="hero-matchup-heading"
+      aria-labelledby={headingId}
     >
       {/* Accessible Heading for Screen Readers */}
-      <h2 id="hero-matchup-heading" className="sr-only">
+      <h2 id={headingId} className="sr-only">
         {`Spotlight Matchup: ${awayComp?.team?.displayName || awayAbbr} at ${homeComp?.team?.displayName || homeAbbr}. ${
           isLive
             ? `Live in Quarter ${status.period} with ${status.displayClock} remaining`
@@ -148,7 +154,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
           {isRedZone && (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-600/30 border border-rose-500/60 px-2.5 py-1 text-xs font-bold tracking-wide text-rose-200 animate-pulse">
               <Flame className="h-3.5 w-3.5 text-rose-400 fill-rose-400" />
-              {isAutoSelectedRedZone ? 'AUTO-TRACKED RED ZONE' : 'RED ZONE THREAT'}
+              {totalThreats && totalThreats > 1
+                ? `RED ZONE THREAT #${threatIndex} OF ${totalThreats}`
+                : isAutoSelectedRedZone
+                ? 'AUTO-TRACKED RED ZONE'
+                : 'RED ZONE THREAT'}
             </span>
           )}
 
@@ -290,11 +300,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span id="hero-matchup-heading" className="text-xl font-black text-white tracking-tight">
+                    <span className="text-xl font-black text-white tracking-tight">
                       {awayComp?.team?.displayName || awayComp?.team?.name}
                     </span>
                     <span className="font-mono text-xs text-slate-400 font-bold">
-                      {awayComp?.team?.abbreviation}
+                      {sanitizePatriotsAbbreviation(awayComp?.team?.abbreviation)}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
@@ -355,7 +365,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                       {homeComp?.team?.displayName || homeComp?.team?.name}
                     </span>
                     <span className="font-mono text-xs text-slate-400 font-bold">
-                      {homeComp?.team?.abbreviation}
+                      {sanitizePatriotsAbbreviation(homeComp?.team?.abbreviation)}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">

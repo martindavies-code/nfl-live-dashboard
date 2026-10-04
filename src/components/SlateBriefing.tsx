@@ -1,6 +1,6 @@
 import React, { memo } from 'react'
 import type { NFLEvent, GameFilter } from '../types/nfl'
-import { isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff } from '../utils/nflHelpers'
+import { isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation } from '../utils/nflHelpers'
 import { Radio, Flame, Pause, Compass, ArrowRight, Zap } from 'lucide-react'
 
 interface SlateBriefingProps {
@@ -100,7 +100,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
             <p className="text-xs text-slate-300 flex items-center gap-1.5 flex-wrap">
               <span className="font-semibold text-slate-400">Featured Action:</span>
               <span className="text-white font-medium">
-                {primeAway?.team?.abbreviation || 'Away'} ({primeAway?.score ?? '-'}) @ {primeHome?.team?.abbreviation || 'Home'} ({primeHome?.score ?? '-'})
+                {sanitizePatriotsAbbreviation(primeAway?.team?.abbreviation) || 'Away'} ({primeAway?.score ?? '-'}) @ {sanitizePatriotsAbbreviation(primeHome?.team?.abbreviation) || 'Home'} ({primeHome?.score ?? '-'})
               </span>
               {redZoneEvents.includes(primeAlertEvent) ? (
                 <span className="text-rose-400 font-semibold">• Active Red Zone Threat inside the 20</span>
