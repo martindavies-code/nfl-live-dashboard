@@ -25,7 +25,6 @@ import {
   Pause,
   Volume2,
   VolumeX,
-  Eye,
   Keyboard,
   Compass,
   Server,
@@ -84,13 +83,6 @@ export const Dashboard: React.FC = () => {
   const [isMuted, setIsMuted] = useState<boolean>(() => {
     try {
       return localStorage.getItem('nfl_muted') === 'true'
-    } catch {
-      return false
-    }
-  })
-  const [isHighContrast, setIsHighContrast] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('nfl_high_contrast') === 'true'
     } catch {
       return false
     }
@@ -511,28 +503,6 @@ export const Dashboard: React.FC = () => {
     })
   }, [])
 
-  // High contrast pro mode toggle handler
-  const toggleHighContrast = useCallback(() => {
-    setIsHighContrast((prev) => {
-      const next = !prev
-      try {
-        localStorage.setItem('nfl_high_contrast', String(next))
-      } catch {}
-      playTactileClick(isMuted)
-      setSrAnnouncement(next ? 'High Contrast Pro mode enabled' : 'High Contrast Pro mode disabled')
-      return next
-    })
-  }, [isMuted])
-
-  // Sync high-contrast-pro class to root element
-  useEffect(() => {
-    if (isHighContrast) {
-      document.documentElement.classList.add('high-contrast-pro')
-    } else {
-      document.documentElement.classList.remove('high-contrast-pro')
-    }
-  }, [isHighContrast])
-
   // Global Keyboard Shortcuts (WCAG 2.1.1 Keyboard Navigation & Power User Ergonomics)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -585,9 +555,6 @@ export const Dashboard: React.FC = () => {
       } else if (e.key.toLowerCase() === 'm') {
         e.preventDefault()
         toggleMute()
-      } else if (e.key.toLowerCase() === 'h') {
-        e.preventDefault()
-        toggleHighContrast()
       } else if (e.key === '/') {
         e.preventDefault()
         searchInputRef.current?.focus()
@@ -655,7 +622,6 @@ export const Dashboard: React.FC = () => {
     heroMatchup,
     isMuted,
     loadData,
-    toggleHighContrast,
     toggleMute,
     handleSelectWeek,
     selectedSeasonType,
@@ -694,7 +660,7 @@ export const Dashboard: React.FC = () => {
   const seasonYear = data?.season?.year || 2026
 
   return (
-    <div className={`min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] ${isHighContrast ? 'high-contrast-pro' : ''}`}>
+    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] high-contrast-pro">
       {/* Screen Reader Live Announcer */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {srAnnouncement}
@@ -778,23 +744,6 @@ export const Dashboard: React.FC = () => {
 
             {/* Context & Polling Status */}
             <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-              {/* High Contrast Pro Toggle */}
-              <button
-                onClick={toggleHighContrast}
-                className={`flex min-h-[38px] min-w-[38px] sm:min-h-[44px] sm:min-w-[44px] items-center justify-center rounded-lg p-2 sm:px-2.5 sm:py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
-                  isHighContrast
-                    ? 'bg-amber-400 text-black border border-amber-300'
-                    : 'bg-[#111927] text-slate-400 border border-white/[0.08] hover:text-white'
-                }`}
-                title="Toggle High-Contrast Pro Mode (Shortcut: H)"
-                aria-pressed={isHighContrast}
-                aria-label={isHighContrast ? "High Contrast Mode Active. Click to disable." : "Enable High Contrast Mode"}
-              >
-                <Eye className="h-4 w-4" />
-                <span className="sr-only sm:not-sr-only sm:ml-1 hidden xl:inline">
-                  {isHighContrast ? 'Contrast ON' : 'Contrast'}
-                </span>
-              </button>
 
               {/* Sound Cues Toggle */}
               <button

@@ -224,11 +224,8 @@ async function runAudit(options = {}) {
     await page.keyboard.press('Escape')
     await new Promise((r) => setTimeout(r, 300))
 
-    // 3. Test High-Contrast Pro Mode (Press 'H')
-    console.log(`[4/6] Testing High-Contrast Pro Mode: 'H'...`)
-    await page.keyboard.press('h')
-    await new Promise((r) => setTimeout(r, 400))
-
+    // 3. Test High-Contrast Pro Mode (Active permanently by default)
+    console.log(`[4/6] Verifying High-Contrast Pro Mode active by default...`)
     const isHighContrast = await page.evaluate(() =>
       document.documentElement.classList.contains('high-contrast-pro')
     )
@@ -240,10 +237,6 @@ async function runAudit(options = {}) {
     if (fs.existsSync(artifactDir)) {
       fs.copyFileSync(contrastPath, path.join(artifactDir, '03-high-contrast-mode.png'))
     }
-
-    // Toggle high-contrast back off
-    await page.keyboard.press('h')
-    await new Promise((r) => setTimeout(r, 300))
 
     // 4. Test Data Redundancy Modal (Press 'S')
     console.log(`[5/7] Testing Data Redundancy Modal: 'S'...`)

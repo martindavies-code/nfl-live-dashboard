@@ -27,7 +27,6 @@ const SHORTCUTS: ShortcutItem[] = [
   { keyLabel: 'B', action: 'Toggle all US broadcast announcing crews (Expand / Collapse All)', category: 'Controls' },
   { keyLabel: 'C', action: 'Toggle all Scorigami metrics (Expand / Collapse All)', category: 'Controls' },
   { keyLabel: 'M', action: 'Toggle broadcast audio effects', category: 'Controls' },
-  { keyLabel: 'H', action: 'Toggle High Contrast Pro mode', category: 'Controls' },
   { keyLabel: '?', action: 'Open this keyboard shortcuts legend', category: 'General' },
   { keyLabel: 'Esc', action: 'Close dialogs or clear search query', category: 'General' },
 ]
