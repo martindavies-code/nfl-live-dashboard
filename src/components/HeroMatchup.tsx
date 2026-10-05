@@ -535,29 +535,37 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                 <span className="text-slate-300 truncate max-w-[130px]">{broadcastDetails.ukRadio}</span>
               </span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-white/[0.04] pt-1">
-              <span className="flex items-center gap-1.5 truncate">
-                <Mic className="h-3 w-3 text-rose-400 shrink-0" />
-                <span className={broadcastDetails.announcers.verified ? 'text-slate-200 font-medium truncate' : 'text-amber-300/90 italic truncate'}>
-                  {broadcastDetails.announcers.leadDuo}
+            <div className="flex flex-col gap-1 text-[11px] text-slate-400 border-t border-white/[0.04] pt-1">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 truncate">
+                  <Mic className="h-3 w-3 text-rose-400 shrink-0" />
+                  <span className={broadcastDetails.announcers.verified ? 'text-slate-200 font-medium truncate' : 'text-amber-300/90 italic truncate'}>
+                    {broadcastDetails.announcers.leadDuo}
+                  </span>
+                  {broadcastDetails.announcers.verified ? (
+                    <span
+                      className="inline-flex shrink-0 text-emerald-400"
+                      title={`Fact-checked ${broadcastDetails.announcers.verifiedOn ?? ''}`}
+                    >
+                      <Check className="h-3 w-3" aria-hidden="true" />
+                    </span>
+                  ) : (
+                    <span
+                      className="inline-flex shrink-0 text-amber-400"
+                      title="Announce team not yet confirmed"
+                    >
+                      <Clock className="h-3 w-3" aria-hidden="true" />
+                    </span>
+                  )}
                 </span>
-                {broadcastDetails.announcers.verified ? (
-                  <span
-                    className="inline-flex shrink-0 text-emerald-400"
-                    title={`Fact-checked ${broadcastDetails.announcers.verifiedOn ?? ''}`}
-                  >
-                    <Check className="h-3 w-3" aria-hidden="true" />
-                  </span>
-                ) : (
-                  <span
-                    className="inline-flex shrink-0 text-amber-400"
-                    title="Announce team not yet confirmed"
-                  >
-                    <Clock className="h-3 w-3" aria-hidden="true" />
-                  </span>
-                )}
-              </span>
-              <span className="text-slate-500 font-mono text-[10px] shrink-0">({broadcastDetails.usTv})</span>
+                <span className="text-slate-500 font-mono text-[10px] shrink-0">({broadcastDetails.usTv})</span>
+              </div>
+              {broadcastDetails.announcers.sideline && (
+                <div className="text-[10px] text-slate-400 pl-4.5 flex items-center gap-1">
+                  <span className="text-slate-400 uppercase text-[8px] font-semibold tracking-wider px-1 py-0.2 rounded bg-white/[0.05]">Sideline</span>
+                  <span className="text-slate-300">{broadcastDetails.announcers.sideline}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -565,44 +573,46 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
         <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-3.5 py-3 sm:px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
             {/* UK TV Channel */}
-            <div className="flex items-center gap-2.5 rounded-lg bg-sky-500/10 border border-sky-500/25 px-3 py-2 text-sky-200 shadow-sm">
-              <div className="p-1.5 rounded-md bg-sky-500/20 text-sky-300 flex-shrink-0">
+            <div className="flex items-start gap-2.5 rounded-lg bg-sky-500/10 border border-sky-500/25 px-3 py-2 text-sky-200 shadow-sm">
+              <div className="p-1.5 rounded-md bg-sky-500/20 text-sky-300 flex-shrink-0 mt-0.5">
                 <Tv className="h-4 w-4" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-sky-400 block">UK Television</span>
-                <span className="font-bold text-white text-xs sm:text-sm truncate block">{broadcastDetails.ukTv}</span>
-                <span className="text-[11px] text-sky-300/80 font-mono">({broadcastDetails.ukTvChannelNumber})</span>
+                <span className="font-bold text-white text-xs sm:text-sm block">{broadcastDetails.ukTv}</span>
+                <span className="text-[11px] text-sky-300/80 font-mono block mt-0.5">({broadcastDetails.ukTvChannelNumber})</span>
               </div>
             </div>
 
             {/* UK Radio Broadcast */}
-            <div className="flex items-center gap-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 px-3 py-2 text-amber-200 shadow-sm">
-              <div className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 flex-shrink-0">
+            <div className="flex items-start gap-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 px-3 py-2 text-amber-200 shadow-sm">
+              <div className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 flex-shrink-0 mt-0.5">
                 <Radio className="h-4 w-4" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 block">UK Radio Broadcast</span>
-                <span className="font-bold text-white text-xs sm:text-sm truncate block">{broadcastDetails.ukRadio}</span>
-                <span className="text-[11px] text-amber-300/80 font-mono">({broadcastDetails.ukRadioFrequency})</span>
+                <span className="font-bold text-white text-xs sm:text-sm block">{broadcastDetails.ukRadio}</span>
+                <span className="text-[11px] text-amber-300/80 font-mono block mt-0.5">({broadcastDetails.ukRadioFrequency})</span>
               </div>
             </div>
 
             {/* Announcers Calling the Game */}
-            <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2">
-              <div className="p-1.5 rounded-md bg-rose-500/20 text-rose-300 flex-shrink-0">
+            <div className="flex items-start gap-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2">
+              <div className="p-1.5 rounded-md bg-rose-500/20 text-rose-300 flex-shrink-0 mt-0.5">
                 <Mic className="h-4 w-4 text-rose-400" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] uppercase font-bold tracking-wider text-rose-400">Live Commentary Booth</span>
                   <span className="text-[10px] text-slate-400 font-mono">({broadcastDetails.usTv})</span>
                 </div>
-                <div className="text-slate-200 font-medium text-xs sm:text-sm truncate">
-                  <strong className={broadcastDetails.announcers.verified ? 'text-white font-bold' : 'text-amber-300 font-bold italic'}>{broadcastDetails.announcers.leadDuo}</strong>
+                <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-xs sm:text-sm mt-0.5">
+                  <strong className={broadcastDetails.announcers.verified ? 'text-white font-bold' : 'text-amber-300 font-bold italic'}>
+                    {broadcastDetails.announcers.leadDuo}
+                  </strong>
                   {broadcastDetails.announcers.verified ? (
                     <span
-                      className="inline-flex items-center gap-0.5 ml-1.5 align-middle text-[10px] font-semibold text-emerald-400"
+                      className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-400 shrink-0"
                       title={`Fact-checked ${broadcastDetails.announcers.verifiedOn ?? ''} — ${broadcastDetails.announcers.sources.map((s) => s.label).join('; ')}`}
                     >
                       <Check className="h-3 w-3" aria-hidden="true" />
@@ -610,17 +620,20 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                     </span>
                   ) : (
                     <span
-                      className="inline-flex items-center gap-0.5 ml-1.5 align-middle text-[10px] font-semibold text-amber-400"
+                      className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-400 shrink-0"
                       title="Announce team not yet confirmed by the network — names are never guessed"
                     >
                       <Clock className="h-3 w-3" aria-hidden="true" />
                       <span>Awaiting confirmation</span>
                     </span>
                   )}
-                  {broadcastDetails.announcers.sideline && (
-                    <span className="text-slate-400 text-xs font-normal"> • Sideline: {broadcastDetails.announcers.sideline}</span>
-                  )}
                 </div>
+                {broadcastDetails.announcers.sideline && (
+                  <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-slate-400 font-semibold uppercase text-[9px] tracking-wider px-1 py-0.5 rounded bg-white/[0.05] border border-white/[0.08]">Sideline</span>
+                    <span className="text-slate-200 font-medium">{broadcastDetails.announcers.sideline}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
