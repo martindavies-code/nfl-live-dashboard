@@ -63,6 +63,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const isFinal = state === 'post'
 
   const situation = competition.situation
+  const drivePlays = event.drivePlays || competition.drives?.current?.plays
 
   // Derive true regulation seconds remaining for accurate scorigami probability
   const secondsLeft = getGameSecondsRemaining(status, state)
@@ -356,6 +357,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             gameStatusDetail={isHalftime ? 'At Halftime' : status?.type?.detail}
             status={status}
             compact={true}
+            drivePlays={drivePlays}
           />
         </div>
       ) : (

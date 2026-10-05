@@ -1,5 +1,6 @@
-import type { NFLScoreboardData, NFLEvent } from '../types/nfl'
+import type { NFLScoreboardData, NFLEvent, NFLDrivePlay } from '../types/nfl'
 import { sanitizePatriotsInScoreboardData, sanitizePatriotsInEvent } from '../utils/nflHelpers.ts'
+import { parseRawESPNPlays, generateMockDrivePlays } from '../utils/drivePlays.ts'
 
 export interface ScoreboardQueryParams {
   seasonType?: number // 1 = Preseason, 2 = Regular Season, 3 = Postseason (Playoffs)
@@ -265,6 +266,53 @@ export async function fetchNFLScoreboard(
 }
 
 /**
+ * Fetches real-time play-by-play sequence for the current drive from ESPN summary endpoint.
+ * Delivers exact start yard, end yard, stat yardage, and play descriptions.
+ */
+export async function fetchEventDrivePlays(
+  eventId: string,
+  externalSignal?: AbortSignal
+): Promise<NFLDrivePlay[]> {
+  if (!eventId) return []
+
+  const isLocalDev =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+
+  const urlsToTry: string[] = []
+  if (isLocalDev) {
+    urlsToTry.push(`/api/espn/apis/site/v2/sports/football/nfl/summary?event=${eventId}`)
+  }
+  urlsToTry.push(
+    `https://site.web.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${eventId}`,
+    `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${eventId}`
+  )
+
+  for (const url of urlsToTry) {
+    try {
+      const res = await fetch(url, { signal: externalSignal })
+      if (!res.ok) continue
+      const json = await res.json()
+      const currentPlays = json?.drives?.current?.plays
+      if (Array.isArray(currentPlays) && currentPlays.length > 0) {
+        return parseRawESPNPlays(currentPlays)
+      }
+      const prevDrives = json?.drives?.previous
+      if (Array.isArray(prevDrives) && prevDrives.length > 0) {
+        const lastPrev = prevDrives[prevDrives.length - 1]
+        if (Array.isArray(lastPrev?.plays) && lastPrev.plays.length > 0) {
+          return parseRawESPNPlays(lastPrev.plays)
+        }
+      }
+    } catch {
+      // Try next mirror
+    }
+  }
+
+  return []
+}
+
+/**
  * Stateful dynamic simulation sequence for Demo Mode.
  * Seamlessly advances downs, yardages, win probabilities, and clock on each 10-second poll.
  *
@@ -448,16 +496,15 @@ function _getRawMockLiveGames(seasonType: number = 2, week: number = 4): NFLEven
               fullName: 'SoFi Stadium',
               address: { city: 'Inglewood', state: 'CA' },
             },
-            odds: [
-              {
-                provider: { id: 'draftkings', name: 'DraftKings', displayName: 'DraftKings' },
-                details: 'KC -1.5',
-                overUnder: 51.5,
-                spread: -1.5,
+            drives: {
+              current: {
+                description: '5 plays, 32 yards',
+                plays: generateMockDrivePlays(currentScenario.yardLine, 'right', 'KC'),
               },
-            ],
+            },
           },
         ],
+        drivePlays: generateMockDrivePlays(currentScenario.yardLine, 'right', 'KC'),
         status: {
           clock: currentScenario.clockSeconds,
           displayClock: currentScenario.clock,

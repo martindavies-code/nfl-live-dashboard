@@ -53,6 +53,32 @@ export interface NFLLastPlay {
   }
 }
 
+export type PlayCategory = 'pass' | 'run' | 'penalty' | 'sack' | 'kick' | 'other'
+
+export interface NFLDrivePlay {
+  id: string
+  sequence?: number
+  type: string
+  category: PlayCategory
+  text: string
+  statYardage: number
+  startYardLine: number // 0-100 (ESPN coords where 0 = Home endzone, 100 = Away endzone)
+  endYardLine: number   // 0-100
+  down?: number
+  distance?: number
+  clock?: string
+  scoringPlay?: boolean
+}
+
+export interface NFLDriveInfo {
+  description?: string
+  playsCount?: number
+  yards?: number
+  timeOfPossession?: string
+  result?: string
+  plays: NFLDrivePlay[]
+}
+
 export interface NFLSituation {
   lastPlay?: NFLLastPlay
   down: number // 1, 2, 3, 4, or -1 (kickoff/extra point)
@@ -138,6 +164,10 @@ export interface NFLCompetition {
       state: string
     }
   }
+  drives?: {
+    current?: NFLDriveInfo
+    previous?: NFLDriveInfo[]
+  }
 }
 
 export interface NFLEvent {
@@ -146,6 +176,7 @@ export interface NFLEvent {
   date: string
   name: string
   shortName: string
+  drivePlays?: NFLDrivePlay[]
   season?: {
     year: number
     type: number

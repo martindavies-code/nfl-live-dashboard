@@ -165,6 +165,39 @@ async function runAudit(options = {}) {
       fs.copyFileSync(desktopPath, path.join(artifactDir, '01-desktop-live.png'))
     }
 
+    // Capture Hero Field Position Radar with Drive Plays
+    const radarEl = await page.$('div[role="region"][aria-label*="Football field"]')
+    if (radarEl) {
+      await page.evaluate((el) => {
+        el.scrollIntoView({ block: 'center' })
+      }, radarEl)
+      await new Promise((r) => setTimeout(r, 300))
+
+      const radarPath = path.join(outDir, '10-hero-field-radar.png')
+      await radarEl.screenshot({ path: radarPath })
+      console.log(`  ✔ Saved: ${radarPath}`)
+      if (fs.existsSync(artifactDir)) {
+        fs.copyFileSync(radarPath, path.join(artifactDir, '10-hero-field-radar.png'))
+      }
+
+      // Click on a drive play arrow to pin interactive play callout banner
+      const playArrow = await page.$('g[id^="drive-plays-"] g.cursor-pointer')
+      if (playArrow) {
+        await playArrow.click()
+        await new Promise((r) => setTimeout(r, 400))
+        await page.evaluate((el) => {
+          el.scrollIntoView({ block: 'center' })
+        }, radarEl)
+        await new Promise((r) => setTimeout(r, 200))
+        const hoverPath = path.join(outDir, '11-radar-play-hover.png')
+        await radarEl.screenshot({ path: hoverPath })
+        console.log(`  ✔ Saved: ${hoverPath}`)
+        if (fs.existsSync(artifactDir)) {
+          fs.copyFileSync(hoverPath, path.join(artifactDir, '11-radar-play-hover.png'))
+        }
+      }
+    }
+
     // 2. Test Keyboard Shortcuts Modal (Press '?')
     console.log(`[3/6] Testing Keyboard Shortcut: '?' (Open Help Dialog)...`)
     await page.keyboard.press('?')

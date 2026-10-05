@@ -42,6 +42,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   const isFinal = state === 'post'
 
   const situation = competition.situation
+  const drivePlays = event.drivePlays || competition.drives?.current?.plays
 
   // Check possession with helper (only active during live games)
   const { isHomePossession, isAwayPossession } = getOffensiveDrive(
@@ -419,6 +420,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             isHero={true}
             compact={Boolean(totalThreats && totalThreats > 1)}
             status={status}
+            drivePlays={drivePlays}
           />
         </div>
 

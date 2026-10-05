@@ -1,6 +1,7 @@
-import React, { useId, memo } from 'react'
-import type { NFLSituation, NFLCompetitor, NFLStatus } from '../types/nfl'
+import React, { useId, useState, useMemo, memo } from 'react'
+import type { NFLSituation, NFLCompetitor, NFLStatus, NFLDrivePlay } from '../types/nfl'
 import { sanitizeHexColor, getOffensiveDrive, isRedZoneSituation, isHalftimeSituation, formatDownAndDistance } from '../utils/nflHelpers'
+import { getPlayColor, getPlayLaneY, getPlayCategoryLabel, generateMockDrivePlays } from '../utils/drivePlays'
 
 interface FieldDiagramProps {
   situation?: NFLSituation | null
@@ -10,6 +11,7 @@ interface FieldDiagramProps {
   isHero?: boolean
   status?: NFLStatus
   compact?: boolean
+  drivePlays?: NFLDrivePlay[]
 }
 
 export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
@@ -20,9 +22,12 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   isHero = false,
   status,
   compact = false,
+  drivePlays,
 }) => {
   const isCompact = compact || !isHero
   const uniqueId = useId().replace(/:/g, '')
+  const [pinnedPlayId, setPinnedPlayId] = useState<string | null>(null)
+  const [hoveredPlay, setHoveredPlay] = useState<NFLDrivePlay | null>(null)
 
   const homeComp = competitors.find((c) => c.homeAway === 'home')
   const awayComp = competitors.find((c) => c.homeAway === 'away')
@@ -130,6 +135,20 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
 
   const rawOffensiveAbbr = offensiveTeam?.team?.abbreviation || 'Offense'
   const offensiveAbbr = rawOffensiveAbbr === 'NE' ? 'FNE' : rawOffensiveAbbr
+
+  // Effective drive plays: use supplied plays from API/mock or generate realistic drive trail when in live action
+  const effectiveDrivePlays = useMemo(() => {
+    if (drivePlays && drivePlays.length > 0) {
+      return drivePlays
+    }
+    if (hasSituation && gameState === 'in' && yardLineClamped > 0 && yardLineClamped < 100) {
+      return generateMockDrivePlays(yardLineClamped, direction, offensiveAbbr)
+    }
+    return []
+  }, [drivePlays, hasSituation, gameState, yardLineClamped, direction, offensiveAbbr])
+
+  const activePlay = hoveredPlay || (pinnedPlayId ? effectiveDrivePlays.find((p) => (p.id || String(p.sequence)) === pinnedPlayId) : null) || null
+
   const accessibilityDesc = hasSituation
     ? `Football field diagram: Ball at ${losLabel}, ${situation?.downDistanceText || 'Active play'}, ${offensiveAbbr} driving towards ${direction === 'right' ? awayAbbr : homeAbbr}.`
     : `Football field view: ${gameState === 'pre' ? 'Pregame' : gameState === 'post' ? 'Game Over' : 'Field preview'}`
@@ -447,6 +466,183 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 />
               )}
 
+              {/* CURRENT DRIVE PLAYS TRAIL OVERLAY (Pass & Run color-coded trajectory) */}
+              {effectiveDrivePlays && effectiveDrivePlays.length > 0 && (
+                <g id={`drive-plays-${uniqueId}`} aria-label="Plays of the current drive so far">
+                  {effectiveDrivePlays.map((play, idx) => {
+                    const laneY = getPlayLaneY(idx, effectiveDrivePlays.length)
+                    const startX = 100 + Math.max(0, Math.min(100, play.startYardLine)) * 10
+                    const rawEnd = play.endYardLine !== undefined ? play.endYardLine : play.startYardLine + (play.statYardage || 0)
+                    const endX = 100 + Math.max(0, Math.min(100, rawEnd)) * 10
+                    const color = getPlayColor(play.category)
+                    const deltaX = endX - startX
+                    const isNoGain = Math.abs(deltaX) < 4
+                    const isPass = play.category === 'pass'
+                    const isSack = play.category === 'sack'
+                    const isPenalty = play.category === 'penalty'
+                    const isSelected = activePlay?.id === play.id
+
+                    return (
+                      <g
+                        key={`drive-play-${play.id || idx}`}
+                        className="cursor-pointer transition-opacity"
+                        opacity={activePlay ? (isSelected ? 1 : 0.35) : 0.92}
+                        onClick={() => {
+                          const id = play.id || String(play.sequence || idx + 1)
+                          setPinnedPlayId((prev) => (prev === id ? null : id))
+                        }}
+                        onMouseEnter={() => setHoveredPlay(play)}
+                        onMouseLeave={() => setHoveredPlay(null)}
+                      >
+                        <title>{`Play #${play.sequence || idx + 1}: ${play.text || `${play.category.toUpperCase()} (${play.statYardage >= 0 ? `+${play.statYardage}` : play.statYardage} yds)`}`}</title>
+
+                        {/* Generous touch & hover hitbox */}
+                        <rect
+                          x={Math.min(startX, endX) - 10}
+                          y={laneY - 14}
+                          width={Math.max(28, Math.abs(deltaX) + 20)}
+                          height={28}
+                          fill="rgba(0,0,0,0.001)"
+                          pointerEvents="all"
+                        />
+
+                        {/* Play Start Sequence Marker Circle */}
+                        <circle
+                          cx={startX}
+                          cy={laneY}
+                          r={isCompact ? 7 : 9}
+                          fill="#090d16"
+                          stroke={color}
+                          strokeWidth={isSelected ? 2.5 : 1.8}
+                          filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))"
+                        />
+                        <text
+                          x={startX}
+                          y={laneY + 0.5}
+                          fill="#ffffff"
+                          fontSize={isCompact ? 7.5 : 9.5}
+                          fontWeight="900"
+                          fontFamily="var(--font-mono)"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                        >
+                          {play.sequence || idx + 1}
+                        </text>
+
+                        {/* Play Trajectory Arrow */}
+                        {!isNoGain ? (
+                          <>
+                            {/* Ambient glow halo */}
+                            <line
+                              x1={startX + (deltaX > 0 ? (isCompact ? 7 : 9) : (isCompact ? -7 : -9))}
+                              y1={laneY}
+                              x2={endX}
+                              y2={laneY}
+                              stroke={color}
+                              strokeWidth={isCompact ? 5 : 7}
+                              opacity={isSelected ? 0.5 : 0.25}
+                              strokeLinecap="round"
+                            />
+                            {/* Core arrow stroke */}
+                            <line
+                              x1={startX + (deltaX > 0 ? (isCompact ? 7 : 9) : (isCompact ? -7 : -9))}
+                              y1={laneY}
+                              x2={deltaX > 0 ? endX - 8 : endX + 8}
+                              y2={laneY}
+                              stroke={color}
+                              strokeWidth={isCompact ? (isSelected ? 3.5 : 2.5) : (isSelected ? 4.5 : 3.2)}
+                              strokeDasharray={isSack || isPenalty ? '6,3' : undefined}
+                              strokeLinecap="round"
+                            />
+                            {/* Arrowhead polygon pointing in play direction */}
+                            {deltaX > 0 ? (
+                              <polygon
+                                points={`${endX},${laneY} ${endX - 11},${laneY - 4.5} ${endX - 11},${laneY + 4.5}`}
+                                fill={color}
+                                filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))"
+                              />
+                            ) : (
+                              <polygon
+                                points={`${endX},${laneY} ${endX + 11},${laneY - 4.5} ${endX + 11},${laneY + 4.5}`}
+                                fill={color}
+                                filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))"
+                              />
+                            )}
+
+                            {/* Yardage Badge Pill */}
+                            <g transform={`translate(${(startX + endX) / 2}, ${laneY - 10})`}>
+                              <rect
+                                x={isCompact ? -12 : -15}
+                                y={isCompact ? -6 : -7.5}
+                                width={isCompact ? 24 : 30}
+                                height={isCompact ? 12 : 15}
+                                rx={3}
+                                fill="#090d16"
+                                stroke={color}
+                                strokeWidth={1}
+                                opacity={0.95}
+                              />
+                              <text
+                                x={0}
+                                y={0.5}
+                                fill={color}
+                                fontSize={isCompact ? 7 : 8.5}
+                                fontWeight="bold"
+                                fontFamily="var(--font-mono)"
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                              >
+                                {play.statYardage > 0 ? `+${play.statYardage}y` : `${play.statYardage}y`}
+                              </text>
+                            </g>
+                          </>
+                        ) : (
+                          /* Incomplete pass or zero-gain play */
+                          <>
+                            {isPass ? (
+                              <>
+                                <line
+                                  x1={startX + (direction === 'right' ? 8 : -8)}
+                                  y1={laneY}
+                                  x2={startX + (direction === 'right' ? 45 : -45)}
+                                  y2={laneY}
+                                  stroke={color}
+                                  strokeWidth={isCompact ? 2 : 2.5}
+                                  strokeDasharray="4,3"
+                                  opacity={0.7}
+                                />
+                                <text
+                                  x={startX + (direction === 'right' ? 53 : -53)}
+                                  y={laneY + 1}
+                                  fill={color}
+                                  fontSize={isCompact ? 9 : 11}
+                                  fontWeight="bold"
+                                  fontFamily="var(--font-mono)"
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
+                                >
+                                  ✕
+                                </text>
+                              </>
+                            ) : (
+                              <line
+                                x1={startX}
+                                y1={laneY - 7}
+                                x2={startX}
+                                y2={laneY + 7}
+                                stroke={color}
+                                strokeWidth={3}
+                                strokeLinecap="round"
+                              />
+                            )}
+                          </>
+                        )}
+                      </g>
+                    )
+                  })}
+                </g>
+              )}
+
               {/* 1st Down Marker (Yellow Broadcast Line - Only when down > 0) */}
               {isRegularPlay && (
                 <>
@@ -655,6 +851,41 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
         </svg>
       </div>
 
+      {/* Interactive Active Play Detail Banner */}
+      {activePlay && (
+        <div className="flex items-center justify-between gap-2 border-t border-white/[0.08] bg-[#050914] px-3.5 py-1.5 text-xs text-slate-300">
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider shrink-0"
+              style={{
+                backgroundColor: `${getPlayColor(activePlay.category)}25`,
+                color: getPlayColor(activePlay.category),
+                border: `1px solid ${getPlayColor(activePlay.category)}60`,
+              }}
+            >
+              Play #{activePlay.sequence || '•'} {getPlayCategoryLabel(activePlay.category)}
+            </span>
+            <span className="font-mono font-bold text-white shrink-0">
+              {activePlay.statYardage > 0 ? `+${activePlay.statYardage} yds` : `${activePlay.statYardage} yds`}
+            </span>
+            <span className="text-slate-300 truncate text-[11px]">
+              {activePlay.text || (activePlay.down && activePlay.distance ? `${activePlay.down}&${activePlay.distance}` : '')}
+            </span>
+          </div>
+          <button
+            onClick={() => {
+              setPinnedPlayId(null)
+              setHoveredPlay(null)
+            }}
+            className="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-white/[0.04] hover:bg-white/[0.08] shrink-0 cursor-pointer"
+            aria-label="Dismiss play detail"
+            title="Close play detail"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Direct In-place Context Strip */}
       {isCompact ? (
         <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#060a12] px-3 py-1.5 text-[11px] font-mono text-slate-400">
@@ -675,7 +906,20 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               <span className="text-slate-400">{gameStatusDetail || 'Pregame'}</span>
             )}
           </div>
+
           <div className="flex items-center gap-2 shrink-0 ml-auto">
+            {effectiveDrivePlays.length > 0 && (
+              <div className="flex items-center gap-1.5 text-[10px] mr-1">
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#38bdf8] shrink-0" />
+                  <span className="text-sky-300 font-semibold">Pass</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#f43f5e] shrink-0" />
+                  <span className="text-rose-300 font-semibold">Run</span>
+                </span>
+              </div>
+            )}
             {isRegularPlay && (
               <span className="text-slate-400 text-[10px] hidden sm:inline">
                 {isGoalToGo ? 'Goal to Go' : `Target: +${distance}y`}
@@ -687,7 +931,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#080d16] px-3.5 py-2 text-xs text-slate-400">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-white/[0.06] bg-[#080d16] px-3.5 py-2 text-xs text-slate-400">
           <div className="flex items-center gap-2.5 sm:gap-4 flex-wrap">
             <span className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-sm bg-sky-400 shrink-0" />
@@ -699,6 +943,35 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               {isHalftime ? '2nd Half Kickoff' : isRegularPlay ? firstDownLabel : hasSituation ? 'Kickoff / PAT' : '10 Yds'}
             </span>
           </div>
+
+          {/* Color-Coded Play Trail Legend matching user doodle */}
+          {effectiveDrivePlays.length > 0 && (
+            <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap ml-auto">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 hidden sm:inline">
+                Drive Trail ({effectiveDrivePlays.length} Plays):
+              </span>
+              <span className="flex items-center gap-1 text-[11px]">
+                <span className="h-2 w-2 rounded-full bg-[#38bdf8] shrink-0 shadow-[0_0_6px_rgba(56,189,248,0.6)]" />
+                <span className="text-sky-300 font-semibold">Pass</span>
+              </span>
+              <span className="flex items-center gap-1 text-[11px]">
+                <span className="h-2 w-2 rounded-full bg-[#f43f5e] shrink-0 shadow-[0_0_6px_rgba(244,63,94,0.6)]" />
+                <span className="text-rose-300 font-semibold">Run</span>
+              </span>
+              {effectiveDrivePlays.some((p) => p.category === 'sack') && (
+                <span className="flex items-center gap-1 text-[11px]">
+                  <span className="h-2 w-2 rounded-full bg-[#a855f7] shrink-0 shadow-[0_0_6px_rgba(168,85,247,0.6)]" />
+                  <span className="text-purple-300 font-semibold">Sack</span>
+                </span>
+              )}
+              {effectiveDrivePlays.some((p) => p.category === 'penalty') && (
+                <span className="flex items-center gap-1 text-[11px]">
+                  <span className="h-2 w-2 rounded-full bg-[#f59e0b] shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.6)]" />
+                  <span className="text-amber-300 font-semibold">Penalty</span>
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

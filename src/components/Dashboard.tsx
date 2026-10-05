@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import type { GameFilter, NFLScoreboardData, NFLEvent } from '../types/nfl'
+import type { GameFilter, NFLScoreboardData, NFLEvent, NFLDrivePlay } from '../types/nfl'
 import { WeekSelector } from './WeekSelector'
 import {
   isRedZoneSituation,
@@ -10,7 +10,7 @@ import {
   getPrevWeek,
   sanitizePatriotsInEvent,
 } from '../utils/nflHelpers'
-import { fetchNFLScoreboard, type ScoreboardQueryParams } from '../services/espnApi'
+import { fetchNFLScoreboard, fetchEventDrivePlays, type ScoreboardQueryParams } from '../services/espnApi'
 import { HeroMatchup } from './HeroMatchup'
 import { GameCard } from './GameCard'
 import { SlateBriefing } from './SlateBriefing'
@@ -47,6 +47,7 @@ export const Dashboard: React.FC = () => {
   const [autoRedZoneSpotlight, setAutoRedZoneSpotlight] = useState<boolean>(true)
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true)
   const [showAllFieldRadars, setShowAllFieldRadars] = useState<boolean>(false)
+  const [drivePlaysMap, setDrivePlaysMap] = useState<Record<string, NFLDrivePlay[]>>({})
 
   // NFL Season & Week Navigation States (Regular Season W1-18 & Postseason/Playoffs)
   const [selectedSeasonType, setSelectedSeasonType] = useState<number>(2)
@@ -346,6 +347,42 @@ export const Dashboard: React.FC = () => {
 
   // Track if current hero(es) are being spotlighted due to auto-redzone
   const isAutoSelectedRedZone = Boolean(autoRedZoneSpotlight && redZoneThreats.length > 0)
+
+  // Fetch real-time play-by-play sequence for spotlighted game(s) from ESPN API
+  const heroId = heroMatchup?.id
+  const heroState = heroMatchup?.status?.type?.state || heroMatchup?.competitions?.[0]?.status?.type?.state
+  const heroYardLine = heroMatchup?.competitions?.[0]?.situation?.yardLine
+  const heroDown = heroMatchup?.competitions?.[0]?.situation?.down
+
+  useEffect(() => {
+    if (!heroId || heroState !== 'in') return
+
+    let isMounted = true
+    fetchEventDrivePlays(heroId).then((plays) => {
+      if (isMounted && plays.length > 0) {
+        setDrivePlaysMap((prev) => ({ ...prev, [heroId]: plays }))
+      }
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [heroId, heroState, heroYardLine, heroDown])
+
+  // Decorate events with active drive plays map
+  const decoratedSpotlightMatchups = useMemo(() => {
+    return spotlightMatchups.map((ev) => {
+      const plays = drivePlaysMap[ev.id] || ev.drivePlays
+      return plays ? { ...ev, drivePlays: plays } : ev
+    })
+  }, [spotlightMatchups, drivePlaysMap])
+
+  const decoratedFilteredEvents = useMemo(() => {
+    return filteredEvents.map((ev) => {
+      const plays = drivePlaysMap[ev.id] || ev.drivePlays
+      return plays ? { ...ev, drivePlays: plays } : ev
+    })
+  }, [filteredEvents, drivePlaysMap])
 
   // Audio cue and screen reader announcement triggers on live events
   useEffect(() => {
@@ -814,10 +851,10 @@ export const Dashboard: React.FC = () => {
         )}
 
         {/* SECTION 1: HERO SPOTLIGHT (Supports Multi-Threat Red Zone Spotlights) */}
-        {!isLoading && spotlightMatchups.length > 0 && (
-          spotlightMatchups.length === 1 ? (
+        {!isLoading && decoratedSpotlightMatchups.length > 0 && (
+          decoratedSpotlightMatchups.length === 1 ? (
             <HeroMatchup
-              event={spotlightMatchups[0]}
+              event={decoratedSpotlightMatchups[0]}
               autoRedZone={autoRedZoneSpotlight}
               onToggleAutoRedZone={() => setAutoRedZoneSpotlight((prev) => !prev)}
               isAutoSelectedRedZone={isAutoSelectedRedZone}
@@ -835,7 +872,7 @@ export const Dashboard: React.FC = () => {
                       Multi-Threat Red Zone Spotlight
                     </h2>
                     <span className="rounded-full bg-rose-500/30 border border-rose-500/60 px-2.5 py-0.5 text-xs font-black text-rose-200 animate-pulse">
-                      {spotlightMatchups.length} ACTIVE THREATS
+                      {decoratedSpotlightMatchups.length} ACTIVE THREATS
                     </span>
                   </div>
                 </div>
@@ -854,11 +891,11 @@ export const Dashboard: React.FC = () => {
 
               {/* Multi-Hero Grid */}
               <div className={`grid gap-5 ${
-                spotlightMatchups.length === 2
+                decoratedSpotlightMatchups.length === 2
                   ? 'grid-cols-1 lg:grid-cols-2'
                   : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'
               }`}>
-                {spotlightMatchups.map((ev, index) => (
+                {decoratedSpotlightMatchups.map((ev, index) => (
                   <HeroMatchup
                     key={`multi-spotlight-${ev.id}`}
                     event={ev}
@@ -866,7 +903,7 @@ export const Dashboard: React.FC = () => {
                     onToggleAutoRedZone={() => setAutoRedZoneSpotlight((prev) => !prev)}
                     isAutoSelectedRedZone={true}
                     threatIndex={index + 1}
-                    totalThreats={spotlightMatchups.length}
+                    totalThreats={decoratedSpotlightMatchups.length}
                   />
                 ))}
               </div>
@@ -1086,7 +1123,7 @@ export const Dashboard: React.FC = () => {
               aria-labelledby={`tab-${filter}`}
               className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch"
             >
-              {filteredEvents.map((event) => (
+              {decoratedFilteredEvents.map((event) => (
                 <GameCard
                   key={event.id}
                   event={event}
