@@ -7,6 +7,7 @@ import {
   parseRawESPNPlays,
   getPlayLaneY,
   generateMockDrivePlays,
+  isKickoffPlay,
 } from './drivePlays.ts'
 
 test('Drive Plays: categorizePlay and getPlayCategoryLabel classify and format accurately', () => {
@@ -116,3 +117,100 @@ test('Drive Plays: generateMockDrivePlays generates valid sequential plays', () 
   assert.ok(playsLeft.length >= 3)
   assert.equal(playsLeft[playsLeft.length - 1].endYardLine, 45)
 })
+
+test('Drive Plays: isKickoffPlay accurately detects kickoff events and avoids false positives', () => {
+  // Explicit kickoff types
+  assert.equal(isKickoffPlay({ type: { text: 'Kickoff' } }), true)
+  assert.equal(isKickoffPlay({ type: { text: 'Kickoff Return' } }), true)
+  assert.equal(isKickoffPlay({ type: { text: 'Onside Kickoff' } }), true)
+  assert.equal(isKickoffPlay({ type: { abbreviation: 'KO' } }), true)
+  assert.equal(isKickoffPlay({ type: { id: 53 } }), true)
+  assert.equal(isKickoffPlay({ type: { id: '52' } }), true)
+
+  // Kickoff play text phrasing
+  assert.equal(
+    isKickoffPlay({ text: 'H.Butker kicks 65 yards from KC 35 to the End Zone. Touchback.' }),
+    true
+  )
+  assert.equal(
+    isKickoffPlay({ text: 'J.Moody kicks 65 yards from SF 35 to MIA 0. M.Washington to MIA 28 for 28 yards.' }),
+    true
+  )
+  assert.equal(
+    isKickoffPlay({ text: 'C.Santos kicks off 65 yards to GB End Zone' }),
+    true
+  )
+  assert.equal(
+    isKickoffPlay({ text: 'Onside kick by PIT recovered by CLE' }),
+    true
+  )
+
+  // False positive checks: Punts, Field Goals, PATs, and regular plays must NEVER be flagged as kickoffs
+  assert.equal(
+    isKickoffPlay({ type: { text: 'Punt' }, text: 'T.Townsend punts 52 yards to KC 18', start: { down: 4 } }),
+    false
+  )
+  assert.equal(
+    isKickoffPlay({ type: { text: 'Field Goal Good' }, text: 'H.Butker 48 yard field goal is GOOD', start: { down: 4 } }),
+    false
+  )
+  assert.equal(
+    isKickoffPlay({ type: { text: 'Extra Point Good' }, text: 'H.Butker extra point is GOOD', start: { down: -1 } }),
+    false
+  )
+  assert.equal(
+    isKickoffPlay({ type: { text: 'Rush' }, text: 'I.Pacheco up the middle for 5 yards', start: { down: 1 } }),
+    false
+  )
+  assert.equal(
+    isKickoffPlay({ type: { text: 'Pass Reception' }, text: 'P.Mahomes pass to T.Kelce for 12 yards', start: { down: 2 } }),
+    false
+  )
+})
+
+test('Drive Plays: parseRawESPNPlays strictly EXCLUDES kickoff as the first play of a drive', () => {
+  const rawDrivePlaysWithKickoff = [
+    // Play 0: Kickoff that initiated the drive in ESPN's feed
+    {
+      id: 'kickoff-0',
+      type: { text: 'Kickoff', abbreviation: 'KO' },
+      text: 'H.Butker kicks 65 yards from KC 35 to the end zone. Touchback.',
+      statYardage: 0,
+      start: { yardLine: 35, down: -1 },
+      end: { yardLine: 70 },
+    },
+    // Play 1: The actual first play from scrimmage of the offensive drive
+    {
+      id: 'scrimmage-1',
+      type: { text: 'Pass Reception' },
+      text: 'P.Mahomes pass short right to R.Rice to KC 34 for 9 yards.',
+      statYardage: 9,
+      start: { yardLine: 25, down: 1, distance: 10 },
+      end: { yardLine: 34 },
+    },
+    // Play 2: Second play from scrimmage
+    {
+      id: 'scrimmage-2',
+      type: { text: 'Rush' },
+      text: 'I.Pacheco up the middle for 6 yards. 1ST DOWN!',
+      statYardage: 6,
+      start: { yardLine: 34, down: 2, distance: 1 },
+      end: { yardLine: 40 },
+    },
+  ]
+
+  const parsed = parseRawESPNPlays(rawDrivePlaysWithKickoff)
+
+  // Kickoff must NOT be included as the first play!
+  assert.equal(parsed.length, 2, 'Must have exactly 2 offensive plays, omitting the kickoff')
+  assert.equal(parsed[0].id, 'scrimmage-1')
+  assert.equal(parsed[0].sequence, 1, 'First offensive play must be sequenced as play #1')
+  assert.equal(parsed[0].category, 'pass')
+  assert.equal(parsed[0].startYardLine, 25)
+  assert.equal(parsed[0].endYardLine, 34)
+
+  assert.equal(parsed[1].id, 'scrimmage-2')
+  assert.equal(parsed[1].sequence, 2, 'Second offensive play must be sequenced as play #2')
+  assert.equal(parsed[1].category, 'run')
+})
+

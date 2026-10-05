@@ -1,7 +1,7 @@
 import React, { useId, useState, useMemo, memo } from 'react'
 import type { NFLSituation, NFLCompetitor, NFLStatus, NFLDrivePlay } from '../types/nfl'
 import { sanitizeHexColor, getOffensiveDrive, isRedZoneSituation, isHalftimeSituation, formatDownAndDistance } from '../utils/nflHelpers'
-import { getPlayColor, getPlayLaneY, getPlayCategoryLabel, generateMockDrivePlays } from '../utils/drivePlays'
+import { getPlayColor, getPlayLaneY, getPlayCategoryLabel, generateMockDrivePlays, isKickoffPlay } from '../utils/drivePlays'
 
 interface FieldDiagramProps {
   situation?: NFLSituation | null
@@ -122,11 +122,16 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
 
   // Effective drive plays: use supplied plays from API/mock or generate realistic drive trail when in live action
   const effectiveDrivePlays = useMemo(() => {
+    const sanitizePlays = (plays: NFLDrivePlay[]): NFLDrivePlay[] => {
+      const nonKickoff = plays.filter((p) => !isKickoffPlay(p))
+      return nonKickoff.map((p, idx) => ({ ...p, sequence: idx + 1 }))
+    }
+
     if (drivePlays && drivePlays.length > 0) {
-      return drivePlays
+      return sanitizePlays(drivePlays)
     }
     if (cachedDrivePlays.length > 0) {
-      return cachedDrivePlays
+      return sanitizePlays(cachedDrivePlays)
     }
     if (hasSituation && gameState === 'in' && yardLineClamped > 0 && yardLineClamped < 100) {
       return generateMockDrivePlays(yardLineClamped, direction, offensiveAbbr)

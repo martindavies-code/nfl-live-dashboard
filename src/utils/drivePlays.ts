@@ -90,23 +90,89 @@ export function getPlayCategoryLabel(category: PlayCategory): string {
 }
 
 /**
+ * Detects whether a play is a kickoff or kickoff return.
+ * Kickoffs initiate possession changes / halves and are never considered offensive plays of a drive.
+ */
+export function isKickoffPlay(play: any): boolean {
+  if (!play) return false
+  const typeText = typeof play.type?.text === 'string'
+    ? play.type.text.toLowerCase()
+    : typeof play.type === 'string'
+    ? play.type.toLowerCase()
+    : ''
+  const playText = typeof play.text === 'string' ? play.text.toLowerCase() : ''
+  const typeAbbr = typeof play.type?.abbreviation === 'string' ? play.type.abbreviation.toUpperCase() : ''
+  const typeId = play.type?.id !== undefined && play.type?.id !== null ? String(play.type.id) : ''
+
+  // Explicit kickoff type labels
+  if (typeText.includes('kickoff') || typeText.includes('kick off') || typeText.includes('kick-off')) {
+    return true
+  }
+
+  // Standard ESPN play type abbreviations & IDs for Kickoffs
+  if (typeAbbr === 'KO' || typeAbbr === 'KR' || typeId === '52' || typeId === '53') {
+    return true
+  }
+
+  // Kickoff play text phrasing
+  if (/\b(kickoff|kick-off|kicks off|onside kick)\b/i.test(playText)) {
+    return true
+  }
+
+  // e.g. "H.Butker kicks 65 yards from KC 35 to the end zone" or "kicks 65 yards from SF 35"
+  if (/\bkicks?\s+\d+\s+yards?\s+from\b/i.test(playText)) {
+    return true
+  }
+
+  // Non-offensive down with kicking action (excluding field goals, PATs, and punts)
+  const down = play.start?.down ?? play.down
+  const isSpecialTeamsDown = down === undefined || down === null || down <= 0
+  if (
+    isSpecialTeamsDown &&
+    !typeText.includes('punt') &&
+    !typeText.includes('field goal') &&
+    !typeText.includes('extra point') &&
+    !playText.includes('punts') &&
+    !playText.includes('field goal') &&
+    !playText.includes('extra point') &&
+    (typeText.includes('kick') || /\bkicks?\b/i.test(playText))
+  ) {
+    return true
+  }
+
+  return false
+}
+
+/**
  * Parses raw play objects from ESPN summary API into strongly-typed NFLDrivePlay items.
+ * Strictly excludes kickoffs from being included as the first play (or any play) of an offensive drive.
  */
 export function parseRawESPNPlays(rawPlays: any[]): NFLDrivePlay[] {
   if (!Array.isArray(rawPlays)) return []
 
-  const result: NFLDrivePlay[] = []
-
-  rawPlays.forEach((p, idx) => {
-    if (!p) return
+  // Filter out any timeouts, nulls, and kickoffs (kickoffs are not offensive drive plays)
+  const offensivePlays = rawPlays.filter((p) => {
+    if (!p) return false
 
     // Skip official timeouts or commercial breaks with zero spatial delta
     const typeText = p.type?.text || ''
-    const playText = p.text || ''
     if (typeText.toLowerCase().includes('timeout') && !p.statYardage) {
-      return
+      return false
     }
 
+    // Never include kickoffs as a play in an offensive drive
+    if (isKickoffPlay(p)) {
+      return false
+    }
+
+    return true
+  })
+
+  const result: NFLDrivePlay[] = []
+
+  offensivePlays.forEach((p, idx) => {
+    const typeText = p.type?.text || ''
+    const playText = p.text || ''
     const category = categorizePlay(typeText, playText)
 
     // ESPN provides start.yardLine and end.yardLine (0..100)
