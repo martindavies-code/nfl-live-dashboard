@@ -222,11 +222,11 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
         </div>
       )}
 
-      {/* SVG American Football Pitch: Scaled to 1200x400 for High-Impact Visibility on Big Displays */}
+      {/* SVG American Football Pitch: Sleek, Panoramic Aspect Ratio without Wasted Space (Kucharski Reason #3) */}
       <div className={
         isCompact
-          ? "relative w-full aspect-[1200/400] min-h-[140px]"
-          : "relative w-full aspect-[1200/400] min-h-[220px] sm:min-h-[270px] lg:min-h-[320px]"
+          ? "relative w-full aspect-[1200/400] min-h-[120px] max-h-[160px]"
+          : "relative w-full aspect-[1200/400] min-h-[160px] max-h-[230px] mx-auto"
       }>
         <svg
           viewBox="0 0 1200 400"

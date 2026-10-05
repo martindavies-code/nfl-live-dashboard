@@ -949,21 +949,18 @@ export const Dashboard: React.FC = () => {
         {/* SECTION 2: SLATE DIRECTORY TOOLBAR */}
         <section className="space-y-5" aria-labelledby="all-matchups-title">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2.5">
-                <span className="h-5 w-1.5 rounded-full bg-sky-400 shrink-0" aria-hidden="true" />
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-1 rounded-full bg-sky-400 shrink-0" aria-hidden="true" />
                 <h2
                   id="all-matchups-title"
-                  className="font-['Oswald'] text-xl font-bold uppercase tracking-wider text-white"
+                  className="font-['Oswald'] text-lg sm:text-xl font-bold uppercase tracking-wider text-white"
                 >
-                  All Matchups
+                  Matchup Directory
                 </h2>
-                <span className="rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-0.5 text-[11px] font-mono font-semibold text-slate-300">
-                  {events.length} {events.length === 1 ? 'Game' : 'Games'}
-                </span>
               </div>
-              <p className="text-xs text-slate-400 pl-4">
-                Click any matchup to spotlight • Live Red Zone threats highlighted in red
+              <p className="text-xs text-slate-400 pl-3">
+                Click any matchup to promote to live radar command above
               </p>
             </div>
 
@@ -1021,7 +1018,7 @@ export const Dashboard: React.FC = () => {
                           btns[targetIdx]?.focus()
                         }
                       }}
-                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all shrink-0 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[34px] ${
+                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all shrink-0 whitespace-nowrap cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[34px] ${
                         isSelected
                           ? tab.id === 'live'
                             ? 'bg-rose-600 text-white shadow-sm ring-1 ring-white/20'
@@ -1064,7 +1061,7 @@ export const Dashboard: React.FC = () => {
                       return next
                     })
                   }}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] ${
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] cursor-pointer ${
                     globalExpandedTab === 'radar'
                       ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1088,7 +1085,7 @@ export const Dashboard: React.FC = () => {
                       return next
                     })
                   }}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] ${
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] cursor-pointer ${
                     globalExpandedTab === 'broadcast'
                       ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1112,7 +1109,7 @@ export const Dashboard: React.FC = () => {
                       return next
                     })
                   }}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] ${
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] cursor-pointer ${
                     globalExpandedTab === 'scorigami'
                       ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/50 shadow-sm'
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1138,13 +1135,13 @@ export const Dashboard: React.FC = () => {
                   }}
                   placeholder="Filter team..."
                   aria-label="Filter teams by name or city"
-                  className="w-full rounded-lg border border-white/[0.08] bg-[#111927] pl-8 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none min-h-[36px]"
+                  className="w-full rounded-md border border-white/[0.08] bg-[#111927] pl-8 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none min-h-[34px]"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
                     aria-label="Clear search query"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>

@@ -424,100 +424,97 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
           />
         </div>
 
-        {/* Block 3: Key Situation, Win Probability Bar & Scorigami (Top-Right on Desktop, 6 columns) */}
-        <div className={isMultiThreat ? "flex flex-col space-y-3.5" : "order-3 lg:order-2 col-span-12 lg:col-span-6 flex flex-col space-y-4"}>
-          {/* Key Situation Box */}
-          {isLive && (
-            <div className="rounded-xl border border-white/[0.08] bg-[#090e18] p-3.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold uppercase tracking-wider text-slate-400">
-                  {isHalftime ? 'Game State' : 'Active Play Situation'}
-                </span>
-                <span className={`font-mono font-bold text-sm ${isHalftime ? 'text-amber-400' : 'text-amber-300'}`}>
-                  {isHalftime ? 'Halftime Intermission' : downAndDistance}
-                </span>
-              </div>
-              {situation?.lastPlay?.text && (
-                <p className="mt-2 text-xs text-slate-300 italic border-t border-white/[0.06] pt-2">
-                  <span className="font-semibold text-slate-400 not-italic mr-1">Last Play:</span>
-                  {situation.lastPlay.text}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Win Probability Bar Component */}
-          <WinProbabilityBar
-            homeWinPercentage={situation?.lastPlay?.probability?.homeWinPercentage}
-            awayWinPercentage={situation?.lastPlay?.probability?.awayWinPercentage}
-            homeCompetitor={homeComp}
-            awayCompetitor={awayComp}
-            gameState={state}
-            status={status}
-            situation={situation}
-            odds={competition.odds}
-          />
-
-          {/* Spotlight Scorigami Historical Milestone Section */}
-          <div
-            className={`rounded-xl border p-3 text-xs transition-colors ${
-              scorigamiInfo.isCurrentScorigami
-                ? 'border-indigo-500/50 bg-gradient-to-r from-indigo-950/60 to-slate-900/80 text-indigo-200 shadow-md shadow-indigo-950/40'
-                : 'border-white/[0.08] bg-[#090e18] text-slate-300'
-            }`}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className={`h-3.5 w-3.5 ${scorigamiInfo.isCurrentScorigami ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
-                <span className="font-bold text-slate-300">
-                  {scorigamiInfo.isCurrentScorigami ? '✨ Live Scorigami in Progress' : 'Historical Scorigami Chance'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`font-mono font-bold text-xs tabular-nums px-2 py-0.5 rounded-md ${
-                    scorigamiInfo.isCurrentScorigami
-                      ? 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/40'
-                      : 'bg-white/[0.06] text-slate-200 border border-white/[0.08]'
-                  }`}
-                >
-                  {scorigamiInfo.chanceLabel}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowScorigamiDetails((prev) => !prev)}
-                  className="text-xs font-semibold text-sky-400 hover:text-sky-300 underline underline-offset-2 focus:outline-none"
-                  aria-expanded={showScorigamiDetails}
-                  aria-label={showScorigamiDetails ? "Collapse Scorigami details" : "Expand Scorigami details"}
-                >
-                  {showScorigamiDetails ? 'Less' : 'Details'}
-                </button>
-              </div>
-            </div>
-
-            {showScorigamiDetails && (
-              <div className="mt-2.5 pt-2 border-t border-white/[0.06] space-y-1.5 text-xs text-slate-400">
-                {scorigamiInfo.mostLikelyNovel && (
-                  <div className="flex items-center justify-between">
-                    <span>Most Likely Scorigami:</span>
-                    <strong className="font-mono font-bold text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-700/40">
-                      {scorigamiInfo.mostLikelyLabel}
-                    </strong>
-                  </div>
-                )}
-                <div>
-                  <span className="font-semibold text-slate-300">When: </span>
-                  {scorigamiInfo.whenScenario}
+        {/* Block 3: Matchup Intelligence Panel (Key Situation, Win Probability & Scorigami) - Kucharski Reason #4 & #2 Fix */}
+        <div className={isMultiThreat ? "flex flex-col space-y-3" : "order-3 lg:order-2 col-span-12 lg:col-span-6 flex flex-col justify-between"}>
+          <div className="rounded-xl border border-white/[0.08] bg-[#070c16]/90 p-4 space-y-3.5 shadow-sm">
+            {/* Active Play Situation (Only shown during live games) */}
+            {isLive && (
+              <div className="border-b border-white/[0.06] pb-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold uppercase tracking-wider text-slate-400">
+                    {isHalftime ? 'Game State' : 'Active Play Situation'}
+                  </span>
+                  <span className={`font-mono font-bold text-sm ${isHalftime ? 'text-amber-400' : 'text-amber-300'}`}>
+                    {isHalftime ? 'Halftime Intermission' : downAndDistance}
+                  </span>
                 </div>
-                {scorigamiInfo.lastGameSummary && (
-                  <div className="border-t border-white/[0.06] pt-1.5 text-slate-400">
-                    <span className="font-semibold text-slate-300">Last Occurred: </span>
-                    <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
-                    <span className="text-slate-500 ml-1 font-mono text-[11px]">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
-                  </div>
+                {situation?.lastPlay?.text && (
+                  <p className="mt-2 text-xs text-slate-300 italic border-t border-white/[0.04] pt-1.5">
+                    <span className="font-semibold text-slate-400 not-italic mr-1">Last Play:</span>
+                    {situation.lastPlay.text}
+                  </p>
                 )}
               </div>
             )}
+
+            {/* Win Probability Bar Component (bare mode: seamlessly integrated without redundant nested borders) */}
+            <WinProbabilityBar
+              homeWinPercentage={situation?.lastPlay?.probability?.homeWinPercentage}
+              awayWinPercentage={situation?.lastPlay?.probability?.awayWinPercentage}
+              homeCompetitor={homeComp}
+              awayCompetitor={awayComp}
+              gameState={state}
+              status={status}
+              situation={situation}
+              odds={competition.odds}
+              bare={true}
+            />
+
+            {/* Spotlight Scorigami Historical Milestone Section */}
+            <div className="border-t border-white/[0.06] pt-2.5 text-xs text-slate-300">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className={`h-3.5 w-3.5 ${scorigamiInfo.isCurrentScorigami ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
+                  <span className="font-bold text-slate-300">
+                    {scorigamiInfo.isCurrentScorigami ? '✨ Live Scorigami in Progress' : 'Historical Scorigami Chance'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`font-mono font-bold text-xs tabular-nums px-2 py-0.5 rounded-md ${
+                      scorigamiInfo.isCurrentScorigami
+                        ? 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/40'
+                        : 'bg-white/[0.06] text-slate-200 border border-white/[0.08]'
+                    }`}
+                  >
+                    {scorigamiInfo.chanceLabel}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowScorigamiDetails((prev) => !prev)}
+                    className="text-xs font-semibold text-sky-400 hover:text-sky-300 underline underline-offset-2 focus:outline-none cursor-pointer"
+                    aria-expanded={showScorigamiDetails}
+                    aria-label={showScorigamiDetails ? "Collapse Scorigami details" : "Expand Scorigami details"}
+                  >
+                    {showScorigamiDetails ? 'Less' : 'Details'}
+                  </button>
+                </div>
+              </div>
+
+              {showScorigamiDetails && (
+                <div className="mt-2.5 pt-2 border-t border-white/[0.06] space-y-1.5 text-xs text-slate-400">
+                  {scorigamiInfo.mostLikelyNovel && (
+                    <div className="flex items-center justify-between">
+                      <span>Most Likely Scorigami:</span>
+                      <strong className="font-mono font-bold text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-700/40">
+                        {scorigamiInfo.mostLikelyLabel}
+                      </strong>
+                    </div>
+                  )}
+                  <div>
+                    <span className="font-semibold text-slate-300">When: </span>
+                    {scorigamiInfo.whenScenario}
+                  </div>
+                  {scorigamiInfo.lastGameSummary && (
+                    <div className="border-t border-white/[0.06] pt-1.5 text-slate-400">
+                      <span className="font-semibold text-slate-300">Last Occurred: </span>
+                      <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
+                      <span className="text-slate-500 ml-1 font-mono text-[11px]">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

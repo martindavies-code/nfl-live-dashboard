@@ -14,6 +14,7 @@ interface WinProbabilityBarProps {
   situation?: NFLSituation | null
   odds?: NFLOdds[]
   compact?: boolean
+  bare?: boolean
 }
 
 const DEFAULT_HOME_COMP: NFLCompetitor = {
@@ -40,6 +41,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
   situation,
   odds,
   compact = false,
+  bare = false,
 }) => {
   const safeHomeComp = homeCompetitor || DEFAULT_HOME_COMP
   const safeAwayComp = awayCompetitor || DEFAULT_AWAY_COMP
@@ -128,7 +130,9 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
 
   return (
     <div
-      className="w-full rounded-xl border border-white/[0.08] bg-[#090e18] p-3.5 select-none shadow-sm"
+      className={`w-full select-none ${
+        bare ? 'p-0' : 'rounded-xl border border-white/[0.08] bg-[#090e18] p-3.5 shadow-sm'
+      }`}
       aria-label={`Win probability: ${homeAbbr} ${homePct.toFixed(1)}%, ${awayAbbr} ${awayPct.toFixed(1)}% (${modelSource})`}
     >
       {/* High-Impact Broadcast Dual Header */}
