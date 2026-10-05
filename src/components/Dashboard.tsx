@@ -29,7 +29,6 @@ import {
   Compass,
   Server,
   Database,
-  Film,
 } from 'lucide-react'
 import { playRedZoneSound, playScoreChime, playTactileClick } from '../utils/audioFeedback'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
@@ -56,7 +55,7 @@ export const Dashboard: React.FC = () => {
   const [liveWeek, setLiveWeek] = useState<number>(4)
   const [hasUserSelectedWeek, setHasUserSelectedWeek] = useState<boolean>(false)
 
-  // 2026 Premier Accessibility, Cinematic & Audio States
+  // 2026 Premier Accessibility & Audio States
   const [isMuted, setIsMuted] = useState<boolean>(() => {
     try {
       return localStorage.getItem('nfl_muted') === 'true'
@@ -69,14 +68,6 @@ export const Dashboard: React.FC = () => {
       return localStorage.getItem('nfl_high_contrast') === 'true'
     } catch {
       return false
-    }
-  })
-  const [isFilmMode, setIsFilmMode] = useState<boolean>(() => {
-    try {
-      const stored = localStorage.getItem('nfl_film_mode')
-      return stored !== null ? stored === 'true' : true
-    } catch {
-      return true
     }
   })
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false)
@@ -427,19 +418,6 @@ export const Dashboard: React.FC = () => {
     })
   }, [isMuted])
 
-  // NFL Films 35mm Celluloid presentation mode toggle handler
-  const toggleFilmMode = useCallback(() => {
-    setIsFilmMode((prev) => {
-      const next = !prev
-      try {
-        localStorage.setItem('nfl_film_mode', String(next))
-      } catch {}
-      playTactileClick(isMuted)
-      setSrAnnouncement(next ? 'NFL Films 35mm Celluloid presentation enabled' : 'NFL Films 35mm Celluloid presentation disabled')
-      return next
-    })
-  }, [isMuted])
-
   // Sync high-contrast-pro class to root element
   useEffect(() => {
     if (isHighContrast) {
@@ -593,7 +571,7 @@ export const Dashboard: React.FC = () => {
   const seasonYear = data?.season?.year || 2026
 
   return (
-    <div className={`min-h-screen bg-[#07080b] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] ${isFilmMode ? 'film-grain-active' : ''} ${isHighContrast ? 'high-contrast-pro' : ''}`}>
+    <div className={`min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] ${isHighContrast ? 'high-contrast-pro' : ''}`}>
       {/* Screen Reader Live Announcer */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {srAnnouncement}
@@ -602,7 +580,7 @@ export const Dashboard: React.FC = () => {
       {/* Skip to Main Content Link for Keyboard and Screen Reader Accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-[#d4af37] focus:px-4 focus:py-2.5 focus:text-sm focus:font-bold focus:text-slate-950 focus:shadow-2xl focus:ring-2 focus:ring-white focus:outline-none"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-sky-500 focus:px-4 focus:py-2.5 focus:text-sm focus:font-bold focus:text-white focus:shadow-2xl focus:ring-2 focus:ring-white focus:outline-none"
       >
         Skip to main content
       </a>
@@ -624,7 +602,7 @@ export const Dashboard: React.FC = () => {
           <button
             onClick={() => loadData(true)}
             disabled={isRefreshing}
-            className="px-2.5 py-1 bg-[#d4af37] hover:bg-amber-400 text-slate-950 font-bold rounded text-[11px] transition-colors shrink-0 disabled:opacity-50"
+            className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[11px] transition-colors shrink-0 disabled:opacity-50"
           >
             {isRefreshing ? 'Reconnecting...' : 'Retry Live Feeds'}
           </button>
@@ -642,23 +620,23 @@ export const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* HEADER: NFL Films Marquee Hall of Fame Presentation */}
-      <header className="sticky top-0 z-50 border-b border-[#d4af37]/25 bg-[#07080d]/94 backdrop-blur-xl shadow-lg">
+      {/* HEADER: Sleek, Purposeful, Zero Redundant Clutter */}
+      <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#090d16]/90 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
           <div className="flex min-h-[56px] py-2 sm:py-0 sm:h-16 items-center justify-between gap-2 sm:gap-4">
             {/* Logo & Season Context */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <div
-                className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#7c5b16] via-[#c59b27] to-[#d4af37] shadow-lg ring-1 ring-[#f6e082]/30 select-none"
+                className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-800 shadow-md ring-1 ring-white/20 select-none"
                 aria-hidden="true"
               >
-                <span className="text-base sm:text-xl filter drop-shadow">🏈</span>
+                <span className="text-base sm:text-xl">🏈</span>
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <h1 className="font-['Cinzel',serif] font-bold text-sm sm:text-xl tracking-[0.12em] text-white uppercase truncate shrink-0">
-                    <span className="sm:hidden text-gold-gradient">NFL</span>
-                    <span className="hidden sm:inline text-gold-gradient">NFL Films Live</span>
+                  <h1 className="font-['Oswald'] font-bold text-sm sm:text-xl tracking-wide text-white uppercase truncate shrink-0">
+                    <span className="sm:hidden">NFL</span>
+                    <span className="hidden sm:inline">NFL Live Command</span>
                   </h1>
                   <WeekSelector
                     currentSeasonType={selectedSeasonType}
@@ -669,36 +647,18 @@ export const Dashboard: React.FC = () => {
                     onSelectWeek={handleSelectWeek}
                   />
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-amber-200/70 truncate hidden md:block font-mono tracking-wider">
-                  NFL FILMS ARCHIVE • {getSeasonPhaseDescription(selectedSeasonType, seasonYear, selectedWeek).toUpperCase()}
+                <p className="text-[10px] sm:text-[11px] text-slate-400 truncate hidden xs:block">
+                  <span className="hidden md:inline">{getSeasonPhaseDescription(selectedSeasonType, seasonYear, selectedWeek)} • </span>Real-Time Field Tracker
                 </p>
               </div>
             </div>
 
             {/* Context & Polling Status */}
             <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-              {/* NFL Films 35mm Celluloid Reel Toggle */}
-              <button
-                onClick={toggleFilmMode}
-                className={`flex min-h-[38px] min-w-[38px] sm:min-h-[44px] sm:min-w-[44px] items-center justify-center rounded-lg p-2 sm:px-2.5 sm:py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-[#d4af37] ${
-                  isFilmMode
-                    ? 'bg-[#d4af37]/20 text-[#f6e082] border border-[#d4af37]/50 shadow-sm'
-                    : 'bg-[#11131a] text-slate-400 border border-white/[0.08] hover:text-white'
-                }`}
-                title="Toggle NFL Films 35mm Celluloid Grain & Vignette"
-                aria-pressed={isFilmMode}
-                aria-label={isFilmMode ? "NFL Films Celluloid Reel Active. Click to toggle." : "Enable NFL Films Reel Mode"}
-              >
-                <Film className="h-4 w-4 text-[#d4af37]" />
-                <span className="sr-only sm:not-sr-only sm:ml-1 hidden xl:inline">
-                  {isFilmMode ? 'Reel ON' : 'Reel'}
-                </span>
-              </button>
-
               {/* High Contrast Pro Toggle */}
               <button
                 onClick={toggleHighContrast}
-                className={`flex min-h-[38px] min-w-[38px] sm:min-h-[44px] sm:min-w-[44px] items-center justify-center rounded-lg p-2 sm:px-2.5 sm:py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-[#d4af37] ${
+                className={`flex min-h-[38px] min-w-[38px] sm:min-h-[44px] sm:min-w-[44px] items-center justify-center rounded-lg p-2 sm:px-2.5 sm:py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
                   isHighContrast
                     ? 'bg-amber-400 text-black border border-amber-300'
                     : 'bg-[#111927] text-slate-400 border border-white/[0.08] hover:text-white'
@@ -716,16 +676,16 @@ export const Dashboard: React.FC = () => {
               {/* Sound Cues Toggle */}
               <button
                 onClick={toggleMute}
-                className={`flex min-h-[38px] min-w-[38px] sm:min-h-[44px] sm:min-w-[44px] items-center justify-center rounded-lg p-2 sm:px-2.5 sm:py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-[#d4af37] ${
+                className={`flex min-h-[38px] min-w-[38px] sm:min-h-[44px] sm:min-w-[44px] items-center justify-center rounded-lg p-2 sm:px-2.5 sm:py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
                   !isMuted
-                    ? 'bg-[#d4af37]/20 text-[#f6e082] border border-[#d4af37]/45'
+                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
                     : 'bg-[#111927] text-slate-400 border border-white/[0.08] hover:text-white'
                 }`}
                 title="Toggle Audio Feedback Cues (Shortcut: M)"
                 aria-pressed={!isMuted}
                 aria-label={isMuted ? "Sound Cues Muted. Click to unmute." : "Sound Cues Active. Click to mute."}
               >
-                {isMuted ? <VolumeX className="h-4 w-4 text-slate-400" /> : <Volume2 className="h-4 w-4 text-[#d4af37]" />}
+                {isMuted ? <VolumeX className="h-4 w-4 text-slate-400" /> : <Volume2 className="h-4 w-4 text-sky-400" />}
                 <span className="sr-only sm:not-sr-only sm:ml-1 hidden xl:inline">
                   {isMuted ? 'Muted' : 'Audio On'}
                 </span>

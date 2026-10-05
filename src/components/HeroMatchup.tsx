@@ -128,21 +128,21 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
         }`}
       </h2>
 
-      {/* Top Celluloid Accent Bar */}
+      {/* Top Accent Bar */}
       {isRedZone ? (
-        <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-rose-500 to-[#d4af37] animate-pulse" />
+        <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 animate-pulse" />
       ) : (
-        <div className="h-1.5 w-full bg-gradient-to-r from-[#967417] via-[#d4af37] to-[#f6e082]" />
+        <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500" />
       )}
 
       {/* Editorial Spotlight Banner */}
       <div className={`flex items-center justify-between gap-2 border-b px-3.5 sm:px-5 py-2.5 sm:py-3 transition-colors ${
-        isRedZone ? 'border-rose-500/30 bg-[#140a0e]' : 'border-[#d4af37]/20 bg-[#0a0b12]'
+        isRedZone ? 'border-rose-500/20 bg-[#12080d]' : 'border-white/[0.08] bg-[#090e18]'
       }`}>
         <div className="flex items-center gap-2 min-w-0">
-          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-[#d4af37]/15 px-2.5 py-1 text-xs font-bold text-[#f6e082] border border-[#d4af37]/35 shrink-0 font-['Cinzel',serif] tracking-wider">
-            <Compass className="h-3.5 w-3.5 text-[#d4af37]" />
-            MARQUEE SPOTLIGHT
+          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-sky-500/20 px-2.5 py-1 text-xs font-bold text-sky-300 border border-sky-500/40 shrink-0">
+            <Compass className="h-3.5 w-3.5" />
+            SPOTLIGHT RADAR
           </span>
 
           {event.season?.type === 3 && (
@@ -570,41 +570,41 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
           </div>
         </div>
       ) : (
-        <div className="border-t border-[#d4af37]/20 bg-[#07080d]/98 px-3.5 py-3 sm:px-6">
+        <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-3.5 py-3 sm:px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
             {/* UK TV Channel */}
-            <div className="flex items-start gap-2.5 rounded-lg bg-gradient-to-br from-[#0c1424] to-[#080a12] border border-sky-500/30 px-3 py-2 text-sky-200 shadow-md">
+            <div className="flex items-start gap-2.5 rounded-lg bg-sky-500/10 border border-sky-500/25 px-3 py-2 text-sky-200 shadow-sm">
               <div className="p-1.5 rounded-md bg-sky-500/20 text-sky-300 flex-shrink-0 mt-0.5">
                 <Tv className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-sky-400 block font-['Cinzel',serif]">UK Television</span>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-sky-400 block">UK Television</span>
                 <span className="font-bold text-white text-xs sm:text-sm block">{broadcastDetails.ukTv}</span>
                 <span className="text-[11px] text-sky-300/80 font-mono block mt-0.5">({broadcastDetails.ukTvChannelNumber})</span>
               </div>
             </div>
 
             {/* UK Radio Broadcast */}
-            <div className="flex items-start gap-2.5 rounded-lg bg-gradient-to-br from-[#1a140a] to-[#0a0b10] border border-[#d4af37]/35 px-3 py-2 text-amber-200 shadow-md">
-              <div className="p-1.5 rounded-md bg-[#d4af37]/20 text-[#f6e082] flex-shrink-0 mt-0.5">
-                <Radio className="h-4 w-4 text-[#d4af37]" />
+            <div className="flex items-start gap-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 px-3 py-2 text-amber-200 shadow-sm">
+              <div className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 flex-shrink-0 mt-0.5">
+                <Radio className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-[#d4af37] block font-['Cinzel',serif]">UK Radio Broadcast</span>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 block">UK Radio Broadcast</span>
                 <span className="font-bold text-white text-xs sm:text-sm block">{broadcastDetails.ukRadio}</span>
-                <span className="text-[11px] text-amber-200/80 font-mono block mt-0.5">({broadcastDetails.ukRadioFrequency})</span>
+                <span className="text-[11px] text-amber-300/80 font-mono block mt-0.5">({broadcastDetails.ukRadioFrequency})</span>
               </div>
             </div>
 
-            {/* Announcers Calling the Game — Vintage Press Box Plaque */}
-            <div className="flex items-start gap-2.5 rounded-lg bg-gradient-to-br from-[#1c1216] to-[#0c0d12] border border-rose-500/30 px-3 py-2 shadow-md">
+            {/* Announcers Calling the Game */}
+            <div className="flex items-start gap-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2">
               <div className="p-1.5 rounded-md bg-rose-500/20 text-rose-300 flex-shrink-0 mt-0.5">
                 <Mic className="h-4 w-4 text-rose-400" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-rose-400 font-['Cinzel',serif]">Live Commentary Booth</span>
-                  <span className="text-[10px] text-amber-200/70 font-mono">({broadcastDetails.usTv})</span>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-rose-400">Live Commentary Booth</span>
+                  <span className="text-[10px] text-slate-400 font-mono">({broadcastDetails.usTv})</span>
                 </div>
                 <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-xs sm:text-sm mt-0.5">
                   <strong className={broadcastDetails.announcers.verified ? 'text-white font-bold' : 'text-amber-300 font-bold italic'}>
@@ -630,7 +630,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                 </div>
                 {broadcastDetails.announcers.sideline && (
                   <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[#d4af37] font-semibold uppercase text-[9px] tracking-wider px-1.5 py-0.5 rounded bg-[#d4af37]/10 border border-[#d4af37]/25">Sideline</span>
+                    <span className="text-slate-400 font-semibold uppercase text-[9px] tracking-wider px-1 py-0.5 rounded bg-white/[0.05] border border-white/[0.08]">Sideline</span>
                     <span className="text-slate-200 font-medium">{broadcastDetails.announcers.sideline}</span>
                   </div>
                 )}

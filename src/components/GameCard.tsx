@@ -138,8 +138,8 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           : isRedZone
           ? 'border-rose-500/30 bg-[#12080c]'
           : isSpotlighted
-          ? 'border-[#d4af37]/40 bg-[#14120a]'
-          : 'border-white/[0.06] bg-[#07080d]'
+          ? 'border-sky-500/30 bg-[#07111e]'
+          : 'border-white/[0.06] bg-[#070b14]'
       }`}>
         <div className="flex items-center gap-2">
           {event.season?.type === 3 && (
@@ -155,7 +155,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               LIVE
             </span>
           ) : isFinal ? (
-            <span className="rounded bg-[#171922] px-2 py-0.5 text-[11px] font-semibold text-amber-200/80 border border-white/[0.05] font-mono">
+            <span className="rounded bg-slate-800 px-2 py-0.5 text-[11px] font-semibold text-slate-300">
               FINAL
             </span>
           ) : (
@@ -197,8 +197,8 @@ export const GameCard: React.FC<GameCardProps> = memo(({
 
           {/* SELECTED BADGE */}
           {isSpotlighted && (
-            <span className="inline-flex items-center gap-1 rounded bg-[#d4af37]/20 border border-[#d4af37]/60 px-2 py-0.5 text-[10px] font-bold text-[#f6e082] shadow-sm font-['Cinzel',serif] tracking-wider">
-              <Sparkles className="h-3 w-3 text-[#d4af37] fill-[#d4af37]" />
+            <span className="inline-flex items-center gap-1 rounded bg-sky-500/25 border border-sky-400/60 px-2 py-0.5 text-[10px] font-bold text-sky-200 shadow-sm shadow-sky-950">
+              <Sparkles className="h-3 w-3 text-sky-300 fill-sky-300" />
               SPOTLIGHTED
             </span>
           )}
@@ -455,22 +455,22 @@ export const GameCard: React.FC<GameCardProps> = memo(({
       </div>
 
       {/* Progressive Disclosure Action Toolbar (Anchored at Bottom Edge) */}
-      <div className="border-t border-[#d4af37]/15 bg-[#06070a]/90 px-3 py-1.5 mt-auto">
+      <div className="border-t border-white/[0.05] bg-[#070b14]/70 px-3 py-1.5 mt-auto">
         <div className="flex items-center justify-between gap-1 text-xs">
           {/* Radar Tab */}
           <button
             type="button"
             onClick={(e) => handleToggleTab('radar', e)}
-            className={`flex items-center gap-1.5 rounded px-2 py-1 font-medium text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#d4af37] ${
+            className={`flex items-center gap-1.5 rounded px-2 py-1 font-medium text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               isRadarActive
-                ? 'bg-[#d4af37]/20 text-[#f6e082] border border-[#d4af37]/50 font-semibold'
+                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
             aria-expanded={isRadarActive}
             aria-controls={fieldPanelId}
             aria-label={isRadarActive ? `Collapse field radar for ${awayAbbr} at ${homeAbbr}` : `View field radar for ${awayAbbr} at ${homeAbbr}`}
           >
-            <Compass className={`h-3 w-3 ${isRadarActive ? 'text-[#d4af37]' : 'text-slate-400'}`} />
+            <Compass className={`h-3 w-3 ${isRadarActive ? 'text-sky-400' : 'text-slate-400'}`} />
             <span>Radar</span>
           </button>
 
@@ -478,16 +478,16 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           <button
             type="button"
             onClick={(e) => handleToggleTab('broadcast', e)}
-            className={`flex items-center gap-1.5 rounded px-2 py-1 font-medium text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#d4af37] ${
+            className={`flex items-center gap-1.5 rounded px-2 py-1 font-medium text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               isBroadcastActive
-                ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 font-semibold'
+                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
             aria-expanded={isBroadcastActive}
             aria-controls={broadcastPanelId}
             aria-label="View UK television, UK radio, and live commentary booth"
           >
-            <Tv className={`h-3 w-3 ${isBroadcastActive ? 'text-amber-400' : 'text-slate-400'}`} />
+            <Tv className={`h-3 w-3 ${isBroadcastActive ? 'text-sky-400' : 'text-slate-400'}`} />
             <span>Broadcast</span>
           </button>
 
@@ -495,16 +495,16 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           <button
             type="button"
             onClick={(e) => handleToggleTab('scorigami', e)}
-            className={`flex items-center gap-1.5 rounded px-2 py-1 font-medium text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#d4af37] ${
+            className={`flex items-center gap-1.5 rounded px-2 py-1 font-medium text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               isScorigamiActive
-                ? 'bg-purple-500/20 text-purple-200 border border-purple-500/40 font-semibold'
+                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
             aria-expanded={isScorigamiActive}
             aria-controls={scorigamiPanelId}
             aria-label="View historical Scorigami probability and unique score metrics"
           >
-            <Sparkles className={`h-3 w-3 ${isScorigamiActive ? 'text-purple-400 animate-pulse' : 'text-slate-400'}`} />
+            <Sparkles className={`h-3 w-3 ${isScorigamiActive ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
             <span>Scorigami</span>
           </button>
         </div>

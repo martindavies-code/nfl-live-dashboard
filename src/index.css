@@ -3,35 +3,24 @@
 @theme {
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-display: 'Oswald', system-ui, sans-serif;
-  --font-cinematic: 'Cinzel', Georgia, serif;
-  --font-doc: 'Bebas Neue', 'Oswald', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --breakpoint-xs: 480px;
-
-  --color-nfl-gold: #d4af37;
-  --color-nfl-gold-light: #f6e082;
-  --color-nfl-gold-dark: #967417;
-  --color-nfl-brass: #c59b27;
-  --color-nfl-bronze: #845d19;
-  --color-nfl-noir: #07080b;
 }
 
-/* Custom scrollbars with warm vintage charcoal & brass styling */
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #06070a;
+  background: #070b14;
 }
 ::-webkit-scrollbar-thumb {
-  background: #252420;
-  border: 1px solid rgba(212, 175, 55, 0.15);
+  background: #1e293b;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3d3a2e;
-  border-color: rgba(212, 175, 55, 0.4);
+  background: #334155;
 }
 
 /* Tabular numerals for non-jittery live clocks and scores */
@@ -45,129 +34,53 @@
   box-sizing: border-box;
 }
 
-/* ==========================================================================
-   NFL FILMS CINEMATIC SIGNATURE AESTHETIC SYSTEM
-   ========================================================================== */
-
-/* 35mm Celluloid Film Grain Texture Overlay (Non-blocking, GPU Accelerated) */
-.film-grain-active::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.038;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='filmNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23filmNoise)'/%3E%3C/svg%3E");
-}
-
-/* Widescreen Panavision Lens Vignette */
-.film-grain-active::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 9998;
-  background: radial-gradient(ellipse at 50% 35%, transparent 55%, rgba(3, 4, 7, 0.72) 100%);
-}
-
-/* NFL Films Title & Typographic Utility Classes */
-.font-cinematic {
-  font-family: 'Cinzel', Georgia, serif;
-  letter-spacing: 0.14em;
-}
-
-.font-doc {
-  font-family: 'Bebas Neue', 'Oswald', sans-serif;
-  letter-spacing: 0.06em;
-}
-
-/* Metallic Antique Gold & Brass Text Gradients */
-.text-gold-gradient {
-  background: linear-gradient(135deg, #fff5d6 0%, #e8c566 40%, #c99738 75%, #91681a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-brass-gradient {
-  background: linear-gradient(135deg, #fef3c7 0%, #d97706 70%, #92400e 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Hollywood Film Production Clapboard Chevron Stripes */
-.film-slate-chevron {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    #0f1118,
-    #0f1118 12px,
-    #c99738 12px,
-    #c99738 24px
-  );
-}
-
-/* Celluloid Film Sprocket Accent */
-.film-sprocket-edge {
-  background-image: radial-gradient(circle, rgba(212, 175, 55, 0.25) 2px, transparent 2.5px);
-  background-size: 14px 14px;
-}
-
-/* ==========================================================================
-   4-Tier Visual Hierarchy System — NFL Films Edition
-   ========================================================================== */
-
-/* Tier 1: Hero Command Spotlight (Marquee Presentation) */
+/* 4-Tier Visual Hierarchy System (Kucharski Reason #2 Fix) */
+/* Tier 1: Hero Command Spotlight */
 .card-tier-hero {
-  border: 1px solid rgba(212, 175, 55, 0.45);
-  background: radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.09) 0%, rgba(10, 11, 17, 0.98) 100%);
-  box-shadow: 0 16px 45px -10px rgba(0, 0, 0, 0.95), 0 0 32px rgba(212, 175, 55, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: linear-gradient(180deg, #0f172a 0%, #0c1322 100%);
+  box-shadow: 0 10px 30px -5px rgba(2, 6, 23, 0.8), 0 0 25px rgba(56, 189, 248, 0.15);
 }
 
 .card-tier-hero-redzone {
-  border: 1px solid rgba(239, 68, 68, 0.7);
-  background: radial-gradient(ellipse at 50% 0%, rgba(239, 68, 68, 0.16) 0%, rgba(15, 9, 13, 0.98) 100%);
-  box-shadow: 0 16px 45px -10px rgba(0, 0, 0, 0.95), 0 0 45px rgba(239, 68, 68, 0.28);
+  border: 1px solid rgba(244, 63, 94, 0.7);
+  background: linear-gradient(180deg, #180d16 0%, #0c1322 100%);
+  box-shadow: 0 10px 30px -5px rgba(2, 6, 23, 0.8), 0 0 35px rgba(244, 63, 94, 0.25);
 }
 
 /* Tier 2: Live In-Progress / Urgent Red Zone Cards */
 .card-tier-live {
-  border: 1px solid rgba(212, 175, 55, 0.22);
-  background: linear-gradient(180deg, #0d0f17 0%, #08090f 100%);
-  box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #0e1524;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
 }
 .card-tier-live:hover {
-  border-color: rgba(212, 175, 55, 0.48);
-  background: linear-gradient(180deg, #131622 0%, #0b0d15 100%);
-  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.85), 0 0 20px rgba(212, 175, 55, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
+  background: #111a2d;
 }
 
 .card-tier-redzone {
-  border: 1px solid rgba(244, 63, 94, 0.85);
-  background: linear-gradient(180deg, rgba(244, 63, 94, 0.14) 0%, #0d0912 100%);
-  box-shadow: 0 0 28px rgba(244, 63, 94, 0.35);
+  border: 1px solid rgba(244, 63, 94, 0.8);
+  background: linear-gradient(180deg, rgba(244, 63, 94, 0.12) 0%, #0c1322 100%);
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
 }
 
 /* Tier 3: Halftime Intermission */
 .card-tier-halftime {
-  border: 1px solid rgba(245, 158, 11, 0.45);
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.1) 0%, #0b0c13 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, #0c1322 100%);
 }
 
 /* Tier 4: Dormant (Upcoming Scheduled & Final Recap Cards) */
 .card-tier-dormant {
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(8, 9, 14, 0.8);
-  opacity: 0.92;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(10, 15, 27, 0.75);
+  opacity: 0.88;
 }
 .card-tier-dormant:hover {
   opacity: 1;
-  border-color: rgba(212, 175, 55, 0.25);
-  background: rgba(14, 16, 24, 0.95);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(14, 21, 36, 0.9);
 }
 
 /* Accessibility: Respect Reduced Motion Preferences */
@@ -178,20 +91,17 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .film-grain-active::before {
-    display: none !important;
-  }
 }
 
 /* High-Contrast Pro Mode for Low Vision & High Glare */
 .high-contrast-pro {
-  filter: contrast(1.18);
+  filter: contrast(1.15);
 }
 .high-contrast-pro article,
 .high-contrast-pro section,
 .high-contrast-pro [role="region"] {
   border-width: 2px !important;
-  border-color: rgba(255, 255, 255, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
 }
 .high-contrast-pro text {
   font-weight: 800 !important;
@@ -199,8 +109,7 @@
 
 /* Focus Visibility Ergonomics */
 :focus-visible {
-  outline: 2px solid #d4af37 !important;
+  outline: 2px solid #38bdf8 !important;
   outline-offset: 2px !important;
 }
-
 
