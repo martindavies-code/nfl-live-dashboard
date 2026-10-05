@@ -4,27 +4,46 @@ import type { NFLSituation, NFLCompetitor, NFLStatus } from '../types/nfl'
  * Safely parse score or number strings, handling "-", empty strings, or nulls without returning NaN.
  */
 export function safeParseInt(val: string | number | undefined | null, fallback = 0): number {
-  if (val === undefined || val === null) return fallback
-  if (typeof val === 'number') return Number.isFinite(val) ? val : fallback
-  const clean = String(val).trim()
-  if (clean === '' || clean === '-') return fallback
+  const safeDefault = typeof fallback === 'number' && Number.isFinite(fallback) ? fallback : 0
+  if (val === undefined || val === null) return safeDefault
+  if (typeof val === 'number') return Number.isFinite(val) ? val : safeDefault
+  if (typeof val !== 'string') return safeDefault
+  const clean = val.trim()
+  if (clean === '' || clean === '-') return safeDefault
   const parsed = parseInt(clean, 10)
-  return Number.isFinite(parsed) ? parsed : fallback
+  return Number.isFinite(parsed) ? parsed : safeDefault
 }
 
 /**
  * Normalize and sanitize team hex color strings (handles missing '#', 3-char hex, invalid chars).
+ * Strictly validates fallback colors to prevent injection via untrusted fallback arguments.
  */
 export function sanitizeHexColor(hex?: string, fallback = '#1e3a8a'): string {
-  if (!hex || typeof hex !== 'string') return fallback
+  const cleanFallback = typeof fallback === 'string' ? fallback.replace('#', '').trim() : ''
+  const safeFallback = /^[0-9A-Fa-f]{6}$/.test(cleanFallback)
+    ? `#${cleanFallback.toLowerCase()}`
+    : /^[0-9A-Fa-f]{3}$/.test(cleanFallback)
+    ? `#${cleanFallback[0]}${cleanFallback[0]}${cleanFallback[1]}${cleanFallback[1]}${cleanFallback[2]}${cleanFallback[2]}`.toLowerCase()
+    : '#1e3a8a'
+
+  if (!hex || typeof hex !== 'string') return safeFallback
+
+  // Reject strings with dangerous CSS delimiters, semicolons, brackets, or control characters
+  if (/[\s;{}()/*"'\\]/.test(hex)) {
+    const trimmed = hex.trim()
+    if (!/^#?[0-9A-Fa-f]{3,6}$/.test(trimmed)) {
+      return safeFallback
+    }
+  }
+
   const clean = hex.replace('#', '').trim()
   if (/^[0-9A-Fa-f]{6}$/.test(clean)) {
-    return `#${clean}`
+    return `#${clean.toLowerCase()}`
   }
   if (/^[0-9A-Fa-f]{3}$/.test(clean)) {
-    return `#${clean[0]}${clean[0]}${clean[1]}${clean[1]}${clean[2]}${clean[2]}`
+    return `#${clean[0]}${clean[0]}${clean[1]}${clean[1]}${clean[2]}${clean[2]}`.toLowerCase()
   }
-  return fallback
+  return safeFallback
 }
 
 /**
@@ -650,30 +669,75 @@ export function sanitizePatriotsName(name: string | undefined | null): string {
 }
 
 /**
+ * Safely deep-clones an object while blocking prototype pollution keys (__proto__, constructor, prototype)
+ * and handling circular references gracefully.
+ */
+function safeImmutableClone<T>(obj: T, seen = new WeakMap<object, any>()): T {
+  if (obj === null || typeof obj !== 'object') {
+    return obj
+  }
+
+  if (obj instanceof Date) {
+    return new Date(obj.getTime()) as unknown as T
+  }
+  if (obj instanceof RegExp) {
+    return new RegExp(obj.source, obj.flags) as unknown as T
+  }
+
+  if (seen.has(obj as object)) {
+    return seen.get(obj as object)
+  }
+
+  if (Array.isArray(obj)) {
+    const arrCopy: any[] = []
+    seen.set(obj, arrCopy)
+    for (let i = 0; i < obj.length; i++) {
+      arrCopy[i] = safeImmutableClone(obj[i], seen)
+    }
+    return arrCopy as unknown as T
+  }
+
+  const copy: Record<string, any> = {}
+  seen.set(obj as object, copy)
+
+  for (const key of Object.keys(obj as Record<string, any>)) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      continue
+    }
+    copy[key] = safeImmutableClone((obj as Record<string, any>)[key], seen)
+  }
+
+  return copy as unknown as T
+}
+
+/**
  * Sanitizes all team names, event names, competitor references, and abbreviations in an NFLEvent object
  * to guarantee that the New England Patriots are always referred to as
  * "Fucking New England Patriots", "Fucking Patriots", or "Fucking Pats",
  * and that their abbreviation is ALWAYS "FNE" (Fucking New England) instead of "NE".
+ *
+ * PURE & IMMUTABLE: Returns a freshly cloned object without mutating input arguments.
+ * Immune to Object.freeze exceptions and prototype pollution.
  */
 export function sanitizePatriotsInEvent<T = any>(event: T): T {
   if (!event || typeof event !== 'object') return event
-  const ev = event as any
-  if (ev.name) {
+  const ev = safeImmutableClone(event) as any
+  if (typeof ev.name === 'string') {
     ev.name = sanitizePatriotsName(ev.name)
   }
-  if (ev.shortName) {
+  if (typeof ev.shortName === 'string') {
     ev.shortName = sanitizePatriotsName(ev.shortName)
   }
   if (Array.isArray(ev.competitions)) {
     for (const comp of ev.competitions) {
       if (Array.isArray(comp?.competitors)) {
         for (const competitor of comp.competitors) {
-          if (competitor?.team) {
+          if (competitor?.team && typeof competitor.team === 'object') {
             const t = competitor.team
-            if (t.displayName) t.displayName = sanitizePatriotsName(t.displayName)
-            if (t.name) t.name = sanitizePatriotsName(t.name)
-            if (t.shortDisplayName) t.shortDisplayName = sanitizePatriotsName(t.shortDisplayName)
-            if (t.nickname) t.nickname = sanitizePatriotsName(t.nickname)
+            if (typeof t.displayName === 'string') t.displayName = sanitizePatriotsName(t.displayName)
+            if (typeof t.name === 'string') t.name = sanitizePatriotsName(t.name)
+            if (typeof t.shortDisplayName === 'string') t.shortDisplayName = sanitizePatriotsName(t.shortDisplayName)
+            if (typeof t.nickname === 'string') t.nickname = sanitizePatriotsName(t.nickname)
             if (
               t.abbreviation === 'NE' ||
               t.abbreviation === 'ne' ||
@@ -687,18 +751,18 @@ export function sanitizePatriotsInEvent<T = any>(event: T): T {
           }
         }
       }
-      if (comp?.situation) {
+      if (comp?.situation && typeof comp.situation === 'object') {
         const sit = comp.situation
-        if (sit.possessionText) {
+        if (typeof sit.possessionText === 'string') {
           sit.possessionText = sit.possessionText.replace(/\bNE\b/g, 'FNE')
         }
-        if (sit.downDistanceText) {
+        if (typeof sit.downDistanceText === 'string') {
           sit.downDistanceText = sit.downDistanceText.replace(/\bNE\b/g, 'FNE')
         }
-        if (sit.shortDownDistanceText) {
+        if (typeof sit.shortDownDistanceText === 'string') {
           sit.shortDownDistanceText = sit.shortDownDistanceText.replace(/\bNE\b/g, 'FNE')
         }
-        if (sit.lastPlay?.text) {
+        if (typeof sit.lastPlay?.text === 'string') {
           sit.lastPlay.text = sanitizePatriotsName(sit.lastPlay.text)
         }
       }
@@ -709,16 +773,15 @@ export function sanitizePatriotsInEvent<T = any>(event: T): T {
 
 /**
  * Sanitizes an entire NFLScoreboardData payload.
+ * PURE & IMMUTABLE: Returns a freshly cloned object without mutating input arguments.
  */
 export function sanitizePatriotsInScoreboardData<T = any>(data: T): T {
   if (!data || typeof data !== 'object') return data
-  const d = data as any
-  if (Array.isArray(d.events)) {
-    for (const event of d.events) {
-      sanitizePatriotsInEvent(event)
-    }
+  const cloned = safeImmutableClone(data) as any
+  if (Array.isArray(cloned.events)) {
+    cloned.events = cloned.events.map((event: any) => sanitizePatriotsInEvent(event))
   }
-  return data
+  return cloned as unknown as T
 }
 
 

@@ -29,9 +29,17 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>({
     const focusableElements = container.querySelectorAll<HTMLElement>(focusableSelector)
 
     if (initialFocusRef?.current) {
-      initialFocusRef.current.focus()
+      try {
+        initialFocusRef.current.focus()
+      } catch {
+        // Ignore focus errors on detached elements
+      }
     } else if (focusableElements.length > 0) {
-      focusableElements[0].focus()
+      try {
+        focusableElements[0].focus()
+      } catch {
+        // Ignore focus errors
+      }
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -70,7 +78,13 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       // Restore focus to triggering element for seamless keyboard workflow
-      previousActiveElementRef.current?.focus()
+      try {
+        if (previousActiveElementRef.current && typeof previousActiveElementRef.current.focus === 'function') {
+          previousActiveElementRef.current.focus()
+        }
+      } catch {
+        // Ignore focus error if trigger element was unmounted
+      }
     }
   }, [isOpen, onClose, initialFocusRef])
 

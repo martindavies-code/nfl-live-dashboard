@@ -5,9 +5,16 @@ import { safeParseInt, isHalftimeSituation } from './nflHelpers.ts'
  * Standard Normal Cumulative Distribution Function (Abramowitz & Stegun 7.1.26)
  * Accurate to within 1.5e-7 across all real numbers.
  */
+/**
+ * Standard Normal Cumulative Distribution Function (Abramowitz & Stegun 7.1.26)
+ * Accurate to within 1.5e-7 across all real numbers.
+ * Hardened against NaN, +Infinity, and -Infinity.
+ */
 export function normalCdf(z: number): number {
-  if (z < -8) return 0
-  if (z > 8) return 1
+  if (typeof z !== 'number' || isNaN(z)) return 0.5
+  if (z === 0) return 0.5
+  if (z === Infinity || z > 8) return 1
+  if (z === -Infinity || z < -8) return 0
   const t = 1 / (1 + 0.2316419 * Math.abs(z))
   const d = 0.3989422804014327 * Math.exp((-z * z) / 2)
   const prob =
@@ -20,6 +27,7 @@ export function normalCdf(z: number): number {
 
 /**
  * Converts American Moneyline Odds (e.g. -395, +310) to raw implied probability.
+ * Clamps inputs to prevent numeric overflows or negative probabilities.
  */
 function moneylineToImplied(mlVal?: string | number | null): number | null {
   if (mlVal === undefined || mlVal === null) return null
@@ -27,10 +35,13 @@ function moneylineToImplied(mlVal?: string | number | null): number | null {
   const num = parseInt(cleanStr, 10)
   if (!Number.isFinite(num) || num === 0) return null
 
-  if (num < 0) {
-    return -num / (-num + 100)
+  // Clamp within realistic odds boundaries [-100000, 100000]
+  const clamped = Math.max(-100000, Math.min(100000, num))
+
+  if (clamped < 0) {
+    return -clamped / (-clamped + 100)
   } else {
-    return 100 / (num + 100)
+    return 100 / (clamped + 100)
   }
 }
 

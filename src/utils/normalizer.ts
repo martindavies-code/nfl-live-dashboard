@@ -69,10 +69,83 @@ export interface NormalizedEvent {
  *     script tags, event handlers (on[a-z]+), foreignObject, use, animate, set, handler,
  *     javascript:/vbscript: links, XML entity declarations, CDATA blocks.
  */
-export function sanitizeUrl(url?: string | null, fallback = FALLBACK_LOGO): string {
-  if (!url || typeof url !== 'string') return fallback
+/**
+ * Strictly verifies whether an input is a safe HTTP or HTTPS URL without credentials.
+ */
+function isSafeHttpUrl(url?: unknown): url is string {
+  if (!url || typeof url !== 'string') return false
   const trimmed = url.trim()
-  if (!trimmed) return fallback
+  if (!trimmed) return false
+  try {
+    const p = new URL(trimmed)
+    return (p.protocol === 'http:' || p.protocol === 'https:') && !p.username && !p.password
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Decodes percent encoding, decimal entities, hex entities, and common named entities
+ * to unmask obfuscated injection vectors.
+ */
+function decodeAllEntities(str: string): string {
+  let decoded = str
+  for (let i = 0; i < 3; i++) {
+    try {
+      const next = decodeURIComponent(decoded)
+      if (next === decoded) break
+      decoded = next
+    } catch {
+      break
+    }
+  }
+
+  // Decode hex entities: &#x61; or &#x61
+  decoded = decoded.replace(/&#x([0-9a-f]+);?/gi, (_, hex) => {
+    try {
+      return String.fromCharCode(parseInt(hex, 16))
+    } catch {
+      return ''
+    }
+  })
+
+  // Decode decimal entities: &#97; or &#97
+  decoded = decoded.replace(/&#([0-9]+);?/g, (_, dec) => {
+    try {
+      return String.fromCharCode(parseInt(dec, 10))
+    } catch {
+      return ''
+    }
+  })
+
+  // Decode named entities
+  decoded = decoded
+    .replace(/&colon;/gi, ':')
+    .replace(/&tab;/gi, ' ')
+    .replace(/&newline;/gi, ' ')
+    .replace(/&quot;/gi, '"')
+
+  return decoded
+}
+
+/**
+ * Sanitize URLs to prevent XSS, prototype injection, SSRF, and malicious protocol schemes.
+ * - Validates fallback parameter to ensure untrusted fallback strings cannot introduce vulnerabilities
+ * - Blocks control characters, non-printable ASCII (0-31, 127), and Unicode directional overrides
+ * - Blocks dangerous pseudo-protocols (javascript:, vbscript:, file:, blob:, data:text/html)
+ * - Blocks userinfo credential injection (http://user:pass@host)
+ * - Validates HTTP and HTTPS schemes via RFC URL parser
+ * - For data:image/ URIs:
+ *   - Allows safe raster images (png, jpeg, webp, gif)
+ *   - For SVG data URIs (utf8 or base64): strictly decodes entities, scans against XSS vectors:
+ *     script tags, style tags, foreignObject, use, animate, set, handler, iframe, embed, object,
+ *     xlink:href/href javascript links, event handlers (on[a-z]+), XML entities, DOCTYPE declarations.
+ */
+export function sanitizeUrl(url?: string | null, fallback = FALLBACK_LOGO): string {
+  const safeFallback = isSafeHttpUrl(fallback) ? fallback : FALLBACK_LOGO
+  if (!url || typeof url !== 'string') return safeFallback
+  const trimmed = url.trim()
+  if (!trimmed) return safeFallback
 
   // Block control characters, null bytes, and unicode directional formatting controls
   for (let i = 0; i < trimmed.length; i++) {
@@ -83,13 +156,16 @@ export function sanitizeUrl(url?: string | null, fallback = FALLBACK_LOGO): stri
       (code >= 0x200e && code <= 0x200f) || // LTR / RTL marks
       (code >= 0x202a && code <= 0x202e)    // Embedding / override controls
     ) {
-      return fallback
+      return safeFallback
     }
   }
 
+  // Strip internal whitespace for protocol detection (e.g. "java\tscript:" -> "javascript:")
+  const compactUrl = trimmed.replace(/[\s\r\n\t]+/g, '').toLowerCase()
+
   // Explicitly disallow dangerous pseudo-protocols and forbidden schemes
-  if (/^(?:javascript|vbscript|file|blob|data:text|data:application):/i.test(trimmed)) {
-    return fallback
+  if (/^(?:javascript|vbscript|file|blob|data:text|data:application):/i.test(compactUrl)) {
+    return safeFallback
   }
 
   // Parse HTTP/HTTPS URLs strictly
@@ -98,7 +174,7 @@ export function sanitizeUrl(url?: string | null, fallback = FALLBACK_LOGO): stri
     if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
       // Reject URLs with embedded credentials (prevents credential-leakage or phishing vectors)
       if (parsed.username || parsed.password) {
-        return fallback
+        return safeFallback
       }
       return parsed.href
     }
@@ -115,35 +191,34 @@ export function sanitizeUrl(url?: string | null, fallback = FALLBACK_LOGO): stri
 
     // 2. SVG data URIs: require rigorous inspection
     if (/^data:image\/svg\+xml/i.test(trimmed)) {
-      let decodedContent = trimmed
+      let rawContent = trimmed
 
       if (/;base64,/i.test(trimmed)) {
         const base64Part = trimmed.split(/;base64,/i)[1] || ''
         try {
           if (typeof atob === 'function') {
-            decodedContent = atob(base64Part)
+            rawContent = atob(base64Part)
           } else if (typeof globalThis !== 'undefined' && 'Buffer' in globalThis) {
             const nodeBuf = (globalThis as unknown as { Buffer: { from: (s: string, e: string) => { toString: (e: string) => string } } }).Buffer
-            decodedContent = nodeBuf.from(base64Part, 'base64').toString('utf-8')
+            rawContent = nodeBuf.from(base64Part, 'base64').toString('utf-8')
           } else {
-            return fallback
+            return safeFallback
           }
         } catch {
-          return fallback
-        }
-      } else {
-        // Percent-decode if needed
-        try {
-          decodedContent = decodeURIComponent(trimmed)
-        } catch {
-          // If percent-decode fails, proceed with raw trimmed
+          return safeFallback
         }
       }
 
-      // Check decoded content for malicious SVG script execution vectors
+      // Fully decode entities, percent-encoding, and hex representations
+      const decodedContent = decodeAllEntities(rawContent)
+
+      // Check decoded content for malicious SVG script execution and injection vectors
       const maliciousPatterns = [
         /<script/i,
         /<\/script/i,
+        /<style/i,
+        /<\/style/i,
+        /@import/i,
         /\bon[a-z]+\s*=/i, // any event handler (onload, onerror, onclick, onbegin, etc.)
         /<foreignObject/i,
         /<use/i,
@@ -153,16 +228,28 @@ export function sanitizeUrl(url?: string | null, fallback = FALLBACK_LOGO): stri
         /<iframe/i,
         /<embed/i,
         /<object/i,
-        /javascript:/i,
-        /vbscript:/i,
-        /data:\s*text\/html/i,
+        /<applet/i,
+        /<link/i,
+        /<meta/i,
+        /<base/i,
+        /<form/i,
+        /<input/i,
+        /<button/i,
+        /<isindex/i,
         /<!ENTITY/i,
+        /<!DOCTYPE/i,
         /SYSTEM\s+["']/i,
+        /PUBLIC\s+["']/i,
+        /\b(?:xlink:)?href\s*=\s*["']?\s*(?:javascript|vbscript|data):/i,
+        /\b(?:src|action)\s*=\s*["']?\s*(?:javascript|vbscript|data):/i,
+        /javascript\s*:/i,
+        /vbscript\s*:/i,
+        /data:\s*text\/html/i,
       ]
 
       for (const pattern of maliciousPatterns) {
         if (pattern.test(decodedContent)) {
-          return fallback
+          return safeFallback
         }
       }
 
@@ -170,7 +257,7 @@ export function sanitizeUrl(url?: string | null, fallback = FALLBACK_LOGO): stri
     }
   }
 
-  return fallback
+  return safeFallback
 }
 
 /**

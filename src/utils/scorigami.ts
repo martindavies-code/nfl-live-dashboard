@@ -128,7 +128,10 @@ export function getGameSecondsRemaining(
   }
 
   const period = typeof status?.period === 'number' && Number.isFinite(status.period) ? status.period : 1
-  const clock = typeof status?.clock === 'number' && Number.isFinite(status.clock) ? status.clock : 900
+  const clock = typeof status?.clock === 'number' && Number.isFinite(status.clock) ? Math.max(0, status.clock) : 900
+
+  // Unstarted or period 0
+  if (period < 1) return 3600
 
   // Regulation quarters 1-4 (15 minutes / 900s each)
   if (period >= 1 && period <= 4) {
@@ -328,6 +331,8 @@ export function getScorigamiInfo(
         : `Current score (${key}) is a Scorigami right now if score holds!`
     } else if (top) {
       whenScenario = `Current score is novel! Next target: ${top.score} (Needs +${top.dh} ${homeAbbr}, +${top.da} ${awayAbbr})`
+    } else {
+      whenScenario = `Current score (${key}) is a Scorigami right now if score holds!`
     }
   } else if (top) {
     const homeDiff = top.dh > 0 ? `+${top.dh} ${homeAbbr}` : ''

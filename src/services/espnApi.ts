@@ -26,6 +26,8 @@ export interface RedundantSource {
   enabledForEnv?: (isLocalDev: boolean) => boolean
 }
 
+let _lastCacheWriteTime = 0
+
 /**
  * 5 Redundant Real-Time NFL Data Sources & Mirrors.
  * All public endpoints have open CORS (Access-Control-Allow-Origin: *)
@@ -166,29 +168,33 @@ export async function fetchNFLScoreboard(
         if (parsedData && Array.isArray(parsedData.events)) {
           const responseTimeMs = Date.now() - startTime
 
-          // Persist verified real data cache in localStorage for offline resiliency
-          try {
-            if (typeof window !== 'undefined' && window.localStorage) {
-              const safeSeason = typeof params?.seasonType === 'number' && Number.isFinite(params.seasonType)
-                ? String(Math.max(1, Math.min(4, Math.floor(params.seasonType))))
-                : 'live'
-              const safeWeek = typeof params?.week === 'number' && Number.isFinite(params.week)
-                ? String(Math.max(1, Math.min(25, Math.floor(params.week))))
-                : 'live'
-              const cachePayload = {
-                timestamp: new Date().toISOString(),
-                sourceId: source.id,
-                sourceName: source.name,
-                seasonType: params?.seasonType,
-                week: params?.week,
-                data: parsedData,
+          // Persist verified real data cache in localStorage for offline resiliency (throttled to avoid blocking I/O)
+          const now = Date.now()
+          if (now - _lastCacheWriteTime > 15000) {
+            _lastCacheWriteTime = now
+            try {
+              if (typeof window !== 'undefined' && window.localStorage) {
+                const safeSeason = typeof params?.seasonType === 'number' && Number.isFinite(params.seasonType)
+                  ? String(Math.max(1, Math.min(4, Math.floor(params.seasonType))))
+                  : 'live'
+                const safeWeek = typeof params?.week === 'number' && Number.isFinite(params.week)
+                  ? String(Math.max(1, Math.min(25, Math.floor(params.week))))
+                  : 'live'
+                const cachePayload = {
+                  timestamp: new Date().toISOString(),
+                  sourceId: source.id,
+                  sourceName: source.name,
+                  seasonType: params?.seasonType,
+                  week: params?.week,
+                  data: parsedData,
+                }
+                const cacheKey = `nfl_real_cache_${safeSeason}_${safeWeek}`
+                window.localStorage.setItem(cacheKey, JSON.stringify(cachePayload))
+                window.localStorage.setItem('nfl_real_cache_latest', JSON.stringify(cachePayload))
               }
-              const cacheKey = `nfl_real_cache_${safeSeason}_${safeWeek}`
-              window.localStorage.setItem(cacheKey, JSON.stringify(cachePayload))
-              window.localStorage.setItem('nfl_real_cache_latest', JSON.stringify(cachePayload))
+            } catch {
+              // Ignore localStorage quota or incognito limitations
             }
-          } catch {
-            // Ignore localStorage quota or incognito limitations
           }
 
           const sanitizedData = sanitizePatriotsInScoreboardData(parsedData)
