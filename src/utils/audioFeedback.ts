@@ -98,36 +98,62 @@ export function playRedZoneSound(isMuted = false): void {
 }
 
 /**
- * Play a subtle major chord chime for score updates.
+ * Play the iconic NFL Films orchestral brass fanfare chord (inspired by Sam Spence classic scores).
+ * Synthesizes rich brass harmonics with low-pass filter decay.
  */
-export function playScoreChime(isMuted = false): void {
+export function playNFLFilmsFanfare(isMuted = false): void {
   if (isMuted || activeNodesCount >= MAX_CONCURRENT_NODES) return
   try {
     const audio = getAudioContext()
     if (!audio) return
     const { ctx, master } = audio
 
-    const notes = [523.25, 659.25, 783.99] // C5, E5, G5
     const now = ctx.currentTime
+    // Orchestral Brass Triad: Bb3 (233Hz), F4 (349Hz), Bb4 (466Hz), D5 (587Hz)
+    const brassNotes = [
+      { freq: 233.08, delay: 0.0, dur: 0.6 },
+      { freq: 349.23, delay: 0.04, dur: 0.65 },
+      { freq: 466.16, delay: 0.08, dur: 0.7 },
+      { freq: 587.33, delay: 0.12, dur: 0.75 },
+    ]
 
-    notes.forEach((freq, idx) => {
+    brassNotes.forEach(({ freq, delay, dur }) => {
       const osc = ctx.createOscillator()
+      const filter = ctx.createBiquadFilter()
       const gain = ctx.createGain()
 
-      osc.type = 'triangle'
-      osc.frequency.setValueAtTime(freq, now + idx * 0.06)
+      osc.type = 'sawtooth' // Sawtooth wave gives authentic brass warmth
+      osc.frequency.setValueAtTime(freq, now + delay)
 
-      gain.gain.setValueAtTime(0.12, now + idx * 0.06)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.3)
+      // Warm orchestral low-pass filter
+      filter.type = 'lowpass'
+      filter.frequency.setValueAtTime(freq * 1.5, now + delay)
+      filter.frequency.exponentialRampToValueAtTime(freq * 4, now + delay + 0.1)
+      filter.frequency.exponentialRampToValueAtTime(freq * 1.2, now + delay + dur)
 
-      safeConnectAndCleanup(osc, gain, master, 500)
+      gain.gain.setValueAtTime(0.06, now + delay)
+      gain.gain.exponentialRampToValueAtTime(0.0005, now + delay + dur)
 
-      osc.start(now + idx * 0.06)
-      osc.stop(now + idx * 0.06 + 0.3)
+      osc.connect(filter)
+      filter.connect(gain)
+      gain.connect(master)
+
+      safeConnectAndCleanup(osc, gain, master, Math.ceil((delay + dur) * 1000))
+
+      osc.start(now + delay)
+      osc.stop(now + delay + dur)
     })
   } catch {
     // Graceful fallback
   }
+}
+
+/**
+ * Play a subtle major chord chime for score updates.
+ */
+export function playScoreChime(isMuted = false): void {
+  // Use the NFL Films brass fanfare for authentic cinematic triumph
+  playNFLFilmsFanfare(isMuted)
 }
 
 /**
@@ -159,3 +185,4 @@ export function playTactileClick(isMuted = false): void {
     // Graceful fallback
   }
 }
+

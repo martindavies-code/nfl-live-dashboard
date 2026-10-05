@@ -237,10 +237,17 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
 
           <defs>
             <linearGradient id={turfGradId} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#153621" />
-              <stop offset="50%" stopColor="#194228" />
-              <stop offset="100%" stopColor="#122f1d" />
+              <stop offset="0%" stopColor="#0d2414" />
+              <stop offset="50%" stopColor="#143920" />
+              <stop offset="100%" stopColor="#0a1d10" />
             </linearGradient>
+
+            {/* Cinematic Stadium Arc Floodlight Glow (Golden Autumn Evening) */}
+            <radialGradient id={`${uniqueId}-stadium-light`} cx="50%" cy="40%" r="55%">
+              <stop offset="0%" stopColor="rgba(255, 245, 215, 0.08)" />
+              <stop offset="60%" stopColor="rgba(0, 0, 0, 0)" />
+              <stop offset="100%" stopColor="rgba(0, 0, 0, 0.28)" />
+            </radialGradient>
 
             <pattern id={turfPatternId} width="100" height="400" patternUnits="userSpaceOnUse">
               <rect x="0" y="0" width="50" height="400" fill="rgba(255,255,255,0.02)" />
@@ -279,6 +286,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
           {/* Turf Background */}
           <rect x="0" y="0" width="1200" height="400" fill={`url(#${turfGradId})`} />
           <rect x="100" y="0" width="1000" height="400" fill={`url(#${turfPatternId})`} />
+          <rect x="100" y="0" width="1000" height="400" fill={`url(#${uniqueId}-stadium-light)`} pointerEvents="none" />
 
           {/* HOME ENDZONE (Left, 0-100) with Bold Team Abbreviation */}
           <g>
