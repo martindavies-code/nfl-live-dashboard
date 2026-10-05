@@ -791,10 +791,23 @@ export function sanitizePatriotsInScoreboardData<T = any>(data: T): T {
  * Prevents CDN edge cache discrepancies, DNS flip-flops, or out-of-order polling responses
  * from regressing game clock, down, distance, yardline, lastPlay text, or scores.
  */
+/**
+ * Reconciles incoming scoreboard data against existing scoreboard data,
+ * strictly enforcing monotonic forward progression while honoring authentic
+ * NFL referee adjustments (replay reviews, overturned scores, time put back on clock).
+ *
+ * Prevents CDN edge cache discrepancies, DNS flip-flops, or out-of-order polling responses
+ * from regressing game state while ensuring genuine referee overturns and clock resets
+ * are accurately and immediately displayed.
+ */
 export function reconcileScoreboardData(
   prevData: NFLScoreboardData | null,
-  nextData: NFLScoreboardData
+  nextData: NFLScoreboardData,
+  options?: { force?: boolean }
 ): NFLScoreboardData {
+  if (options?.force) {
+    return nextData
+  }
   if (!prevData || !Array.isArray(prevData.events) || prevData.events.length === 0) {
     return nextData
   }
@@ -817,10 +830,15 @@ export function reconcileScoreboardData(
     const prevState = prevEv.status?.type?.state || prevComp?.status?.type?.state || 'pre'
     const nextState = nextEv.status?.type?.state || nextComp?.status?.type?.state || 'pre'
 
-    // Invariant 1: Completed games cannot revert to live or pre-game
+    // Invariant 1: Completed games cannot revert to live or pre-game (unless official overturn)
     if (prevState === 'post') {
       if (nextState !== 'post') {
-        return prevEv
+        const isPostOverturn = /review|overturn|revers|challeng|correct|ruling/i.test(
+          nextComp?.situation?.lastPlay?.text || nextEv.status?.type?.detail || ''
+        )
+        if (!isPostOverturn) {
+          return prevEv
+        }
       }
       return nextEv
     }
@@ -838,16 +856,21 @@ export function reconcileScoreboardData(
       const prevPeriod = prevEv.status?.period ?? prevComp?.status?.period ?? 1
       const nextPeriod = nextEv.status?.period ?? nextComp?.status?.period ?? 1
 
-      // Quarter / Period check: never go backwards in quarters
+      // Quarter / Period check: never go backwards in quarters unless explicit review
       if (nextPeriod < prevPeriod) {
-        return prevEv
+        const isQuarterOverturn = /review|overturn|revers|quarter|period/i.test(
+          nextComp?.situation?.lastPlay?.text || nextEv.status?.type?.detail || ''
+        )
+        if (!isQuarterOverturn) {
+          return prevEv
+        }
       }
+
       if (nextPeriod > prevPeriod) {
         return nextEv
       }
 
-      // Same period: Game clock check
-      // In NFL, clock counts DOWN from 900s to 0s
+      // Same period: Game clock check & Score check
       const prevClock = typeof prevEv.status?.clock === 'number'
         ? prevEv.status.clock
         : typeof prevComp?.status?.clock === 'number'
@@ -860,27 +883,63 @@ export function reconcileScoreboardData(
         ? nextComp.status.clock
         : null
 
-      if (prevClock !== null && nextClock !== null) {
-        // If nextClock is significantly higher than prevClock (e.g. > 3s higher),
-        // time moved backwards, indicating a stale CDN edge node!
-        if (nextClock > prevClock + 3) {
+      const prevLastPlay = prevComp?.situation?.lastPlay?.text || ''
+      const nextLastPlay = nextComp?.situation?.lastPlay?.text || ''
+      const nextDetail = nextEv.status?.type?.detail || ''
+      const nextShortDetail = nextEv.status?.type?.shortDetail || ''
+      const nextDescription = nextEv.status?.type?.description || ''
+
+      // Review and referee adjustment detection
+      const reviewRegex =
+        /review|overturn|revers|challeng|penalt|nullif|cancel|incomplet|correct|ruling|booth|stand|confirmed|recalled|erased/i
+      const isReviewOrOverturn =
+        reviewRegex.test(nextLastPlay) ||
+        reviewRegex.test(prevLastPlay) ||
+        reviewRegex.test(nextDetail) ||
+        reviewRegex.test(nextShortDetail) ||
+        reviewRegex.test(nextDescription)
+
+      const clockRegex =
+        /clock|reset|time|runoff|put.*back|referee|adjustment|operator|correction/i
+      const isClockAdjustment =
+        clockRegex.test(nextLastPlay) ||
+        clockRegex.test(nextDetail) ||
+        clockRegex.test(nextShortDetail) ||
+        clockRegex.test(nextDescription) ||
+        isReviewOrOverturn
+
+      // Score check: scores can go down if a play is overturned on review or corrected
+      const prevHomeScore = safeParseInt(prevComp?.competitors?.find((c) => c.homeAway === 'home')?.score)
+      const nextHomeScore = safeParseInt(nextComp?.competitors?.find((c) => c.homeAway === 'home')?.score)
+      const prevAwayScore = safeParseInt(prevComp?.competitors?.find((c) => c.homeAway === 'away')?.score)
+      const nextAwayScore = safeParseInt(nextComp?.competitors?.find((c) => c.homeAway === 'away')?.score)
+
+      const scoreDecreased = nextHomeScore < prevHomeScore || nextAwayScore < prevAwayScore
+      if (scoreDecreased) {
+        // In NFL football, scores ONLY decrease if a play was reviewed, challenged, overturned, penalized, or officially corrected.
+        // If there is no review/overturn indicator, this is an unverified stale mirror. Reject it.
+        if (!isReviewOrOverturn) {
           return prevEv
         }
       }
 
-      // Score check: team scores NEVER decrease
-      const prevHomeScore = safeParseInt(prevComp?.competitors?.find(c => c.homeAway === 'home')?.score)
-      const nextHomeScore = safeParseInt(nextComp?.competitors?.find(c => c.homeAway === 'home')?.score)
-      const prevAwayScore = safeParseInt(prevComp?.competitors?.find(c => c.homeAway === 'away')?.score)
-      const nextAwayScore = safeParseInt(nextComp?.competitors?.find(c => c.homeAway === 'away')?.score)
-
-      if (nextHomeScore < prevHomeScore || nextAwayScore < prevAwayScore) {
-        return prevEv
+      // Game clock check: refs can put time back on the clock (e.g. runoff correction, replay review)
+      if (prevClock !== null && nextClock !== null) {
+        if (nextClock > prevClock + 3) {
+          // Time jumped backwards by >3 seconds in the same quarter.
+          // In the NFL, time is only put back on the clock due to official reviews/overturns or referee clock resets.
+          const isLegitimateRefReset = isClockAdjustment || isReviewOrOverturn
+          if (!isLegitimateRefReset) {
+            return prevEv
+          }
+        } else if (nextClock > prevClock && !isClockAdjustment && !isReviewOrOverturn) {
+          // Small clock jitter within 3s without a referee reset - keep the more progressed clock
+          if (nextEv.status) nextEv.status.clock = prevClock
+          if (nextComp?.status) nextComp.status.clock = prevClock
+        }
       }
 
       // Last play check: if clock is identical and incoming lastPlay is empty while prev has a lastPlay
-      const prevLastPlay = prevComp?.situation?.lastPlay?.text
-      const nextLastPlay = nextComp?.situation?.lastPlay?.text
       if (prevLastPlay && !nextLastPlay && prevClock === nextClock && nextComp?.situation && prevComp?.situation) {
         const updatedSituation: NFLSituation = {
           ...nextComp.situation,

@@ -144,7 +144,7 @@ export const Dashboard: React.FC = () => {
 
       const result = await fetchNFLScoreboard(params, controller.signal)
       const scoreboard = result.data
-      setData((prevData) => reconcileScoreboardData(prevData, scoreboard))
+      setData((prevData) => reconcileScoreboardData(prevData, scoreboard, { force: isManual }))
       setActiveSource({
         id: result.sourceId,
         name: result.sourceName,
@@ -375,13 +375,19 @@ export const Dashboard: React.FC = () => {
 
         // Monotonic check: Never allow drive plays to go backwards to an earlier subset
         // If existing has 3 plays and incoming has only 2 plays matching the beginning of existing,
-        // it's an outdated response from a stale CDN edge node!
+        // it's an outdated response from a stale CDN edge node — UNLESS a play was overturned on review!
         const isStaleSubset =
           plays.length < existing.length &&
-          plays.every((p, idx) => existing[idx] && (existing[idx].id === p.id || existing[idx].text === p.text))
+          plays.every((p, idx) => existing[idx] && (existing[idx].id === p.id && existing[idx].text === p.text))
 
         if (isStaleSubset) {
-          return prev
+          const isOverturn =
+            existing.some((p) => /review|overturn|revers|penalt|nullif|cancel/i.test(p.text)) ||
+            plays.some((p) => /review|overturn|revers|penalt|nullif|cancel/i.test(p.text))
+
+          if (!isOverturn) {
+            return prev
+          }
         }
 
         return { ...prev, [heroId]: plays }

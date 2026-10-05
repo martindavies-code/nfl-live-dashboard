@@ -175,7 +175,7 @@ test('reconcileScoreboardData: Valid clock countdown progress IS accepted', () =
   assert.equal(reconciled.events[0].status.clock, 52)
 })
 
-test('reconcileScoreboardData: Scores NEVER decrease', () => {
+test('reconcileScoreboardData: Scores do not decrease on unverified stale mirror repeating older play', () => {
   const prevData = {
     events: [
       {
@@ -187,23 +187,30 @@ test('reconcileScoreboardData: Scores NEVER decrease', () => {
               { homeAway: 'home', score: '27' },
               { homeAway: 'away', score: '31' }, // Away just scored a TD
             ],
+            situation: {
+              lastPlay: { id: 'p102', text: 'P.Mahomes pass to X.Worthy for 25 yards, TOUCHDOWN' },
+            },
           },
         ],
       },
     ],
   }
 
+  // Stale mirror repeating older play without any review or overturn
   const staleScoreData = {
     events: [
       {
         id: 'game-score',
-        status: { period: 4, clock: 40, type: { state: 'in' } },
+        status: { period: 4, clock: 44, type: { state: 'in' } },
         competitions: [
           {
             competitors: [
               { homeAway: 'home', score: '27' },
               { homeAway: 'away', score: '24' }, // Stale node forgot the TD!
             ],
+            situation: {
+              lastPlay: { id: 'p102', text: 'P.Mahomes pass to X.Worthy for 25 yards, TOUCHDOWN' },
+            },
           },
         ],
       },
@@ -214,3 +221,128 @@ test('reconcileScoreboardData: Scores NEVER decrease', () => {
   const awayComp = reconciled.events[0].competitions[0].competitors.find((c) => c.homeAway === 'away')
   assert.equal(awayComp.score, '31')
 })
+
+test('reconcileScoreboardData: Overturned touchdown on review DOES decrease score correctly', () => {
+  const prevData = {
+    events: [
+      {
+        id: 'game-review-score',
+        status: { period: 4, clock: 44, type: { state: 'in' } },
+        competitions: [
+          {
+            competitors: [
+              { homeAway: 'home', score: '27' },
+              { homeAway: 'away', score: '31' }, // Temporary TD on field
+            ],
+            situation: {
+              lastPlay: { id: 'p105', text: 'P.Mahomes pass to X.Worthy for 25 yards, TOUCHDOWN' },
+            },
+          },
+        ],
+      },
+    ],
+  }
+
+  // Official Replay Review: Touchdown overturned! Receiver was out of bounds at the 2.
+  const overturnedData = {
+    events: [
+      {
+        id: 'game-review-score',
+        status: { period: 4, clock: 52, type: { state: 'in' } }, // Refs also put 8 seconds back on clock!
+        competitions: [
+          {
+            competitors: [
+              { homeAway: 'home', score: '27' },
+              { homeAway: 'away', score: '24' }, // Score decreased back to 24!
+            ],
+            situation: {
+              down: 1,
+              distance: 2,
+              yardLine: 2,
+              lastPlay: {
+                id: 'p106',
+                text: 'Play Overturned: After review, the receiver was out of bounds at the 2-yard line. 1st & Goal.',
+              },
+            },
+          },
+        ],
+      },
+    ],
+  }
+
+  const reconciled = reconcileScoreboardData(prevData, overturnedData)
+  const awayComp = reconciled.events[0].competitions[0].competitors.find((c) => c.homeAway === 'away')
+  assert.equal(awayComp.score, '24', 'Score must correctly decrease following official replay review')
+  assert.equal(reconciled.events[0].status.clock, 52, 'Time put back on clock must be honored')
+  assert.equal(reconciled.events[0].competitions[0].situation.yardLine, 2)
+})
+
+test('reconcileScoreboardData: Refs putting time back on the clock IS accepted', () => {
+  const prevData = {
+    events: [
+      {
+        id: 'game-time-reset',
+        status: { period: 4, clock: 14, type: { state: 'in' } }, // 14 seconds remaining
+        competitions: [
+          {
+            status: { clock: 14, period: 4 },
+            competitors: [{ homeAway: 'home', score: '21' }, { homeAway: 'away', score: '20' }],
+            situation: {
+              lastPlay: { id: 'p201', text: 'J.Allen scrambles out of bounds' },
+            },
+          },
+        ],
+      },
+    ],
+  }
+
+  // Referees instruct the timekeeper to reset clock to 0:26 (+12 seconds back on clock)
+  const refClockResetData = {
+    events: [
+      {
+        id: 'game-time-reset',
+        status: { period: 4, clock: 26, type: { state: 'in' } }, // Clock reset to 26 seconds
+        competitions: [
+          {
+            status: { clock: 26, period: 4 },
+            competitors: [{ homeAway: 'home', score: '21' }, { homeAway: 'away', score: '20' }],
+            situation: {
+              lastPlay: { id: 'p202', text: 'Clock reset to 0:26 by referee signal after incomplete pass' },
+            },
+          },
+        ],
+      },
+    ],
+  }
+
+  const reconciled = reconcileScoreboardData(prevData, refClockResetData)
+  assert.equal(reconciled.events[0].status.clock, 26, 'Clock reset by referee must be accepted')
+  assert.equal(reconciled.events[0].competitions[0].situation.lastPlay.id, 'p202')
+})
+
+test('reconcileScoreboardData: Force manual refresh accepts network truth unconditionally', () => {
+  const prevData = {
+    events: [
+      {
+        id: 'game-forced',
+        status: { period: 4, clock: 60, type: { state: 'in' } },
+        competitions: [{ competitors: [{ homeAway: 'home', score: '30' }, { homeAway: 'away', score: '20' }] }],
+      },
+    ],
+  }
+
+  const manualData = {
+    events: [
+      {
+        id: 'game-forced',
+        status: { period: 4, clock: 120, type: { state: 'in' } },
+        competitions: [{ competitors: [{ homeAway: 'home', score: '20' }, { homeAway: 'away', score: '20' }] }],
+      },
+    ],
+  }
+
+  const reconciled = reconcileScoreboardData(prevData, manualData, { force: true })
+  assert.equal(reconciled.events[0].status.clock, 120)
+  assert.equal(reconciled.events[0].competitions[0].competitors[0].score, '20')
+})
+
