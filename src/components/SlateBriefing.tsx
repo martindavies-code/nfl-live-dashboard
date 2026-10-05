@@ -59,13 +59,16 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
   return (
     <section
       aria-label="Slate Executive Briefing and Navigation Pathways"
-      className="rounded-2xl border border-white/[0.08] bg-gradient-to-r from-[#0c1322] via-[#0e172a] to-[#0c1322] p-3.5 sm:p-5 shadow-lg"
+      className="relative overflow-hidden rounded-2xl border border-sky-500/20 bg-gradient-to-br from-[#0c1426] via-[#090e1c] to-[#0a1022] p-3.5 sm:p-5 shadow-xl shadow-black/50"
     >
+      {/* Radiant Top Specular Highlight */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-sky-400/50 to-transparent" />
+
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
-        {/* Narrative Orientation (Kucharski Reason #1 Fix) */}
+        {/* Narrative Orientation */}
         <div className="space-y-1 sm:space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-[11px] sm:text-xs font-bold text-sky-300 uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-[11px] sm:text-xs font-bold text-sky-300 uppercase tracking-wider shadow-sm shadow-sky-500/20">
               <Zap className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-sky-400" />
               SLATE BRIEFING
             </span>
