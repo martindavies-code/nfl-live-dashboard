@@ -101,32 +101,9 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   const isBadgeClose = Math.abs(firstDownX - scrimmageX) < 65
   const firstDownBadgeY = isBadgeClose ? 380 : 20
 
-  // Sleek, compact broadcast directional arrow (60px long, no redundant text inside)
-  const arrowLength = 60
-  let arrowStartX: number
-  let arrowTipX: number
-  let arrowHeadBaseX: number
-  let arrowPathD: string
-
-  if (direction === 'right') {
-    const rawTipX = scrimmageX + 26 + arrowLength
-    arrowTipX = Math.min(1185, rawTipX)
-    arrowStartX = arrowTipX - arrowLength
-    arrowHeadBaseX = arrowTipX - 22
-    arrowPathD = `M ${arrowStartX},188 L ${arrowHeadBaseX},188 L ${arrowHeadBaseX},176 L ${arrowTipX},200 L ${arrowHeadBaseX},224 L ${arrowHeadBaseX},212 L ${arrowStartX},212 Z`
-  } else {
-    const rawTipX = scrimmageX - 26 - arrowLength
-    arrowTipX = Math.max(15, rawTipX)
-    arrowStartX = arrowTipX + arrowLength
-    arrowHeadBaseX = arrowTipX + 22
-    arrowPathD = `M ${arrowStartX},188 L ${arrowHeadBaseX},188 L ${arrowHeadBaseX},176 L ${arrowTipX},200 L ${arrowHeadBaseX},224 L ${arrowHeadBaseX},212 L ${arrowStartX},212 Z`
-  }
-
   // SVG Unique Def IDs
   const turfGradId = `turf-grad-${uniqueId}`
   const turfPatternId = `turf-pat-${uniqueId}`
-  const ballGradId = `ball-grad-${uniqueId}`
-  const arrowGradId = `arrow-grad-${uniqueId}`
   const titleId = `field-title-${uniqueId}`
   const descId = `field-desc-${uniqueId}`
   const homePatternId = `hatch-home-${uniqueId}`
@@ -136,16 +113,26 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   const rawOffensiveAbbr = offensiveTeam?.team?.abbreviation || 'Offense'
   const offensiveAbbr = rawOffensiveAbbr === 'NE' ? 'FNE' : rawOffensiveAbbr
 
+  // Preserve last known valid real drive plays in state to prevent flipping to mock plays during poll cycles
+  const [cachedDrivePlays, setCachedDrivePlays] = useState<NFLDrivePlay[]>(drivePlays || [])
+
+  if (drivePlays && drivePlays.length > 0 && drivePlays !== cachedDrivePlays) {
+    setCachedDrivePlays(drivePlays)
+  }
+
   // Effective drive plays: use supplied plays from API/mock or generate realistic drive trail when in live action
   const effectiveDrivePlays = useMemo(() => {
     if (drivePlays && drivePlays.length > 0) {
       return drivePlays
     }
+    if (cachedDrivePlays.length > 0) {
+      return cachedDrivePlays
+    }
     if (hasSituation && gameState === 'in' && yardLineClamped > 0 && yardLineClamped < 100) {
       return generateMockDrivePlays(yardLineClamped, direction, offensiveAbbr)
     }
     return []
-  }, [drivePlays, hasSituation, gameState, yardLineClamped, direction, offensiveAbbr])
+  }, [drivePlays, cachedDrivePlays, hasSituation, gameState, yardLineClamped, direction, offensiveAbbr])
 
   const activePlay = hoveredPlay || (pinnedPlayId ? effectiveDrivePlays.find((p) => (p.id || String(p.sequence)) === pinnedPlayId) : null) || null
 
@@ -280,19 +267,6 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               <line x1="0" y1="0" x2="16" y2="0" stroke="rgba(244,63,94,0.45)" strokeWidth="2.5" />
             </pattern>
 
-            {/* Pro Football Saddle Leather Gradient */}
-            <linearGradient id={ballGradId} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#b45309" />
-              <stop offset="35%" stopColor="#92400e" />
-              <stop offset="70%" stopColor="#78350f" />
-              <stop offset="100%" stopColor="#451a03" />
-            </linearGradient>
-
-            {/* Tactical Drive Arrow Broadcast Gradient */}
-            <linearGradient id={arrowGradId} x1={direction === 'right' ? "0%" : "100%"} y1="0%" x2={direction === 'right' ? "100%" : "0%"} y2="0%">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#fbbf24" stopOpacity="1" />
-            </linearGradient>
           </defs>
 
           {/* Turf Background */}
@@ -720,48 +694,6 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 </text>
               </g>
 
-              {/* Directional Drive Chevron (Sleek broadcast arrow without cluttering text) */}
-              {isRegularPlay && (
-                <g>
-                  <path
-                    d={arrowPathD}
-                    fill={`url(#${arrowGradId})`}
-                    stroke="#ffffff"
-                    strokeWidth="2"
-                    filter="drop-shadow(0 3px 8px rgba(0,0,0,0.85))"
-                  />
-                </g>
-              )}
-
-              {/* Authentic NFL Pro Football */}
-              <g transform={`translate(${scrimmageX}, 200)`}>
-                {/* Turf Ground Shadow */}
-                <ellipse cx="0" cy="18" rx="26" ry="6" fill="rgba(0,0,0,0.6)" filter="blur(1.5px)" />
-
-                {/* Tactical Radar Pulse Ring */}
-                <circle cx="0" cy="0" r="30" fill="none" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="4,4" opacity="0.8" />
-
-                {/* Pro Leather Football Body */}
-                <path
-                  d="M -26,0 C -22,-15 -8,-15 0,-15 C 8,-15 22,-15 26,0 C 22,15 8,15 0,15 C -8,15 -22,15 -26,0 Z"
-                  fill={`url(#${ballGradId})`}
-                  stroke="#270e02"
-                  strokeWidth="1.6"
-                  filter="drop-shadow(0 4px 8px rgba(0,0,0,0.8))"
-                />
-
-                {/* White Pro Tip Stripes */}
-                <path d="M -18,-11 C -15,-5 -15,5 -18,11" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.95" />
-                <path d="M 18,-11 C 15,-5 15,5 18,11" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.95" />
-
-                {/* White NFL Seam & Laces */}
-                <line x1="-11" y1="0" x2="11" y2="0" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
-                <line x1="-7" y1="-3.5" x2="-7" y2="3.5" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" />
-                <line x1="-3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" />
-                <line x1="0" y1="-3.5" x2="0" y2="3.5" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" />
-                <line x1="3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" />
-                <line x1="7" y1="-3.5" x2="7" y2="3.5" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" />
-              </g>
             </>
           )}
 

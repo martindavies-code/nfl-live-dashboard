@@ -9,6 +9,7 @@ import {
   getNextWeek,
   getPrevWeek,
   sanitizePatriotsInEvent,
+  reconcileScoreboardData,
 } from '../utils/nflHelpers'
 import { fetchNFLScoreboard, fetchEventDrivePlays, type ScoreboardQueryParams } from '../services/espnApi'
 import { HeroMatchup } from './HeroMatchup'
@@ -79,6 +80,7 @@ export const Dashboard: React.FC = () => {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const abortControllerRef = useRef<AbortController | null>(null)
+  const latestDriveFetchIdRef = useRef<Record<string, number>>({})
   // Always-current reference to loadData so event listeners never capture stale closures
   const loadDataRef = useRef<((isManual?: boolean) => void) | null>(null)
 
@@ -142,7 +144,7 @@ export const Dashboard: React.FC = () => {
 
       const result = await fetchNFLScoreboard(params, controller.signal)
       const scoreboard = result.data
-      setData(scoreboard)
+      setData((prevData) => reconcileScoreboardData(prevData, scoreboard))
       setActiveSource({
         id: result.sourceId,
         name: result.sourceName,
@@ -358,10 +360,32 @@ export const Dashboard: React.FC = () => {
     if (!heroId || heroState !== 'in') return
 
     let isMounted = true
+    const reqId = (latestDriveFetchIdRef.current[heroId] || 0) + 1
+    latestDriveFetchIdRef.current[heroId] = reqId
+
     fetchEventDrivePlays(heroId).then((plays) => {
-      if (isMounted && plays.length > 0) {
-        setDrivePlaysMap((prev) => ({ ...prev, [heroId]: plays }))
-      }
+      if (!isMounted || latestDriveFetchIdRef.current[heroId] !== reqId) return
+      if (plays.length === 0) return
+
+      setDrivePlaysMap((prev) => {
+        const existing = prev[heroId] || []
+        if (existing.length === 0) {
+          return { ...prev, [heroId]: plays }
+        }
+
+        // Monotonic check: Never allow drive plays to go backwards to an earlier subset
+        // If existing has 3 plays and incoming has only 2 plays matching the beginning of existing,
+        // it's an outdated response from a stale CDN edge node!
+        const isStaleSubset =
+          plays.length < existing.length &&
+          plays.every((p, idx) => existing[idx] && (existing[idx].id === p.id || existing[idx].text === p.text))
+
+        if (isStaleSubset) {
+          return prev
+        }
+
+        return { ...prev, [heroId]: plays }
+      })
     })
 
     return () => {

@@ -279,13 +279,14 @@ export async function fetchEventDrivePlays(
     typeof window !== 'undefined' &&
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
 
+  const now = Date.now()
   const urlsToTry: string[] = []
   if (isLocalDev) {
-    urlsToTry.push(`/api/espn/apis/site/v2/sports/football/nfl/summary?event=${eventId}`)
+    urlsToTry.push(`/api/espn/apis/site/v2/sports/football/nfl/summary?event=${eventId}&_t=${now}`)
   }
   urlsToTry.push(
-    `https://site.web.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${eventId}`,
-    `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${eventId}`
+    `https://site.web.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${eventId}&_t=${now}`,
+    `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${eventId}&_t=${now}`
   )
 
   for (const url of urlsToTry) {
@@ -297,11 +298,15 @@ export async function fetchEventDrivePlays(
       if (Array.isArray(currentPlays) && currentPlays.length > 0) {
         return parseRawESPNPlays(currentPlays)
       }
-      const prevDrives = json?.drives?.previous
-      if (Array.isArray(prevDrives) && prevDrives.length > 0) {
-        const lastPrev = prevDrives[prevDrives.length - 1]
-        if (Array.isArray(lastPrev?.plays) && lastPrev.plays.length > 0) {
-          return parseRawESPNPlays(lastPrev.plays)
+      // Strictly protect against flipping: If a current drive exists (even if plays array is briefly empty),
+      // do NOT fall back to the previous drive!
+      if (!json?.drives?.current) {
+        const prevDrives = json?.drives?.previous
+        if (Array.isArray(prevDrives) && prevDrives.length > 0) {
+          const lastPrev = prevDrives[prevDrives.length - 1]
+          if (Array.isArray(lastPrev?.plays) && lastPrev.plays.length > 0) {
+            return parseRawESPNPlays(lastPrev.plays)
+          }
         }
       }
     } catch {

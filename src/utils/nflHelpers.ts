@@ -1,4 +1,4 @@
-import type { NFLSituation, NFLCompetitor, NFLStatus } from '../types/nfl'
+import type { NFLSituation, NFLCompetitor, NFLCompetition, NFLStatus, NFLScoreboardData, NFLEvent } from '../types/nfl'
 
 /**
  * Safely parse score or number strings, handling "-", empty strings, or nulls without returning NaN.
@@ -783,5 +783,128 @@ export function sanitizePatriotsInScoreboardData<T = any>(data: T): T {
   }
   return cloned as unknown as T
 }
+
+/**
+ * Reconciles incoming scoreboard data against existing scoreboard data,
+ * strictly enforcing monotonic forward progression ("never go back").
+ *
+ * Prevents CDN edge cache discrepancies, DNS flip-flops, or out-of-order polling responses
+ * from regressing game clock, down, distance, yardline, lastPlay text, or scores.
+ */
+export function reconcileScoreboardData(
+  prevData: NFLScoreboardData | null,
+  nextData: NFLScoreboardData
+): NFLScoreboardData {
+  if (!prevData || !Array.isArray(prevData.events) || prevData.events.length === 0) {
+    return nextData
+  }
+  if (!nextData || !Array.isArray(nextData.events)) {
+    return nextData
+  }
+
+  const prevEventsMap = new Map<string, NFLEvent>()
+  for (const ev of prevData.events) {
+    if (ev?.id) prevEventsMap.set(ev.id, ev)
+  }
+
+  const reconciledEvents = nextData.events.map((nextEv) => {
+    if (!nextEv?.id) return nextEv
+    const prevEv = prevEventsMap.get(nextEv.id)
+    if (!prevEv) return nextEv
+
+    const prevComp = prevEv.competitions?.[0]
+    const nextComp = nextEv.competitions?.[0]
+    const prevState = prevEv.status?.type?.state || prevComp?.status?.type?.state || 'pre'
+    const nextState = nextEv.status?.type?.state || nextComp?.status?.type?.state || 'pre'
+
+    // Invariant 1: Completed games cannot revert to live or pre-game
+    if (prevState === 'post') {
+      if (nextState !== 'post') {
+        return prevEv
+      }
+      return nextEv
+    }
+
+    // Invariant 2: Live games cannot revert to pregame
+    if (prevState === 'in') {
+      if (nextState === 'pre') {
+        return prevEv
+      }
+      if (nextState === 'post') {
+        return nextEv
+      }
+
+      // Both are live 'in'
+      const prevPeriod = prevEv.status?.period ?? prevComp?.status?.period ?? 1
+      const nextPeriod = nextEv.status?.period ?? nextComp?.status?.period ?? 1
+
+      // Quarter / Period check: never go backwards in quarters
+      if (nextPeriod < prevPeriod) {
+        return prevEv
+      }
+      if (nextPeriod > prevPeriod) {
+        return nextEv
+      }
+
+      // Same period: Game clock check
+      // In NFL, clock counts DOWN from 900s to 0s
+      const prevClock = typeof prevEv.status?.clock === 'number'
+        ? prevEv.status.clock
+        : typeof prevComp?.status?.clock === 'number'
+        ? prevComp.status.clock
+        : null
+
+      const nextClock = typeof nextEv.status?.clock === 'number'
+        ? nextEv.status.clock
+        : typeof nextComp?.status?.clock === 'number'
+        ? nextComp.status.clock
+        : null
+
+      if (prevClock !== null && nextClock !== null) {
+        // If nextClock is significantly higher than prevClock (e.g. > 3s higher),
+        // time moved backwards, indicating a stale CDN edge node!
+        if (nextClock > prevClock + 3) {
+          return prevEv
+        }
+      }
+
+      // Score check: team scores NEVER decrease
+      const prevHomeScore = safeParseInt(prevComp?.competitors?.find(c => c.homeAway === 'home')?.score)
+      const nextHomeScore = safeParseInt(nextComp?.competitors?.find(c => c.homeAway === 'home')?.score)
+      const prevAwayScore = safeParseInt(prevComp?.competitors?.find(c => c.homeAway === 'away')?.score)
+      const nextAwayScore = safeParseInt(nextComp?.competitors?.find(c => c.homeAway === 'away')?.score)
+
+      if (nextHomeScore < prevHomeScore || nextAwayScore < prevAwayScore) {
+        return prevEv
+      }
+
+      // Last play check: if clock is identical and incoming lastPlay is empty while prev has a lastPlay
+      const prevLastPlay = prevComp?.situation?.lastPlay?.text
+      const nextLastPlay = nextComp?.situation?.lastPlay?.text
+      if (prevLastPlay && !nextLastPlay && prevClock === nextClock && nextComp?.situation && prevComp?.situation) {
+        const updatedSituation: NFLSituation = {
+          ...nextComp.situation,
+          lastPlay: prevComp.situation.lastPlay,
+        }
+        const updatedCompetition: NFLCompetition = {
+          ...nextComp,
+          situation: updatedSituation,
+        }
+        return {
+          ...nextEv,
+          competitions: [updatedCompetition, ...(nextEv.competitions?.slice(1) || [])],
+        }
+      }
+    }
+
+    return nextEv
+  })
+
+  return {
+    ...nextData,
+    events: reconciledEvents,
+  }
+}
+
 
 
