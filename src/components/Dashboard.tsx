@@ -711,7 +711,7 @@ export const Dashboard: React.FC = () => {
 
       {/* HEADER: Sleek, Purposeful, Zero Redundant Clutter */}
       <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#090d16]/90 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12">
           <div className="flex min-h-[56px] py-2 sm:py-0 sm:h-16 items-center justify-between gap-2 sm:gap-4">
             {/* Logo & Season Context */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -836,7 +836,7 @@ export const Dashboard: React.FC = () => {
       </header>
 
       {/* MAIN CONTAINER */}
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-8 focus:outline-none">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-8 lg:px-12 py-5 sm:py-7 space-y-6 sm:space-y-8 focus:outline-none">
         {/* Error notification banner */}
         {error && (
           <div
@@ -947,17 +947,23 @@ export const Dashboard: React.FC = () => {
         )}
 
         {/* SECTION 2: SLATE DIRECTORY TOOLBAR */}
-        <section className="space-y-4" aria-labelledby="all-matchups-title">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
-            <div>
-              <h2
-                id="all-matchups-title"
-                className="font-['Oswald'] text-lg font-bold uppercase tracking-wide text-white"
-              >
-                All Matchups
-              </h2>
-              <p className="text-xs text-slate-400">
-                Click any matchup to select and inspect its tactical radar above • Red Zone threats highlighted in red
+        <section className="space-y-5" aria-labelledby="all-matchups-title">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2.5">
+                <span className="h-5 w-1.5 rounded-full bg-sky-400 shrink-0" aria-hidden="true" />
+                <h2
+                  id="all-matchups-title"
+                  className="font-['Oswald'] text-xl font-bold uppercase tracking-wider text-white"
+                >
+                  All Matchups
+                </h2>
+                <span className="rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-0.5 text-[11px] font-mono font-semibold text-slate-300">
+                  {events.length} {events.length === 1 ? 'Game' : 'Games'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 pl-4">
+                Click any matchup to spotlight • Live Red Zone threats highlighted in red
               </p>
             </div>
 

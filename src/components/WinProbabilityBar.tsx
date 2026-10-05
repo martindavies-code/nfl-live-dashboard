@@ -73,45 +73,44 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
     return (
       <div
         className="w-full select-none"
-        role="region"
         aria-label={`Win probability: ${homeAbbr} ${homePct.toFixed(1)}%, ${awayAbbr} ${awayPct.toFixed(1)}%`}
       >
-        <div className="flex items-center justify-between text-[11px] font-mono font-bold mb-1">
+        <div className="flex items-center justify-between text-[11px] font-mono font-bold mb-1.5">
           <div className="flex items-center gap-1.5">
             <span
-              className="h-2 w-2 rounded-full shrink-0 ring-1 ring-white/20"
+              className="h-2 w-2 rounded-full shrink-0 ring-1 ring-white/30"
               style={{ backgroundColor: homeColor }}
             />
-            <span className="text-white">{homeAbbr}</span>
+            <span className="text-white font-semibold">{homeAbbr}</span>
             <span
-              className="tabular-nums"
-              style={{ color: isHomeFavored ? '#38bdf8' : '#94a3b8' }}
+              className="tabular-nums font-bold"
+              style={{ color: isHomeFavored ? '#38bdf8' : '#cbd5e1' }}
             >
               {homePct.toFixed(1)}%
             </span>
           </div>
 
-          <span className="text-[10px] font-sans font-semibold text-slate-400 uppercase tracking-wider">
-            Win Prob
+          <span className="text-[10px] font-sans font-bold text-slate-400 uppercase tracking-wider">
+            WIN PROB
           </span>
 
           <div className="flex items-center gap-1.5">
             <span
-              className="tabular-nums"
-              style={{ color: isAwayFavored ? '#38bdf8' : '#94a3b8' }}
+              className="tabular-nums font-bold"
+              style={{ color: isAwayFavored ? '#38bdf8' : '#cbd5e1' }}
             >
               {awayPct.toFixed(1)}%
             </span>
-            <span className="text-white">{awayAbbr}</span>
+            <span className="text-white font-semibold">{awayAbbr}</span>
             <span
-              className="h-2 w-2 rounded-full shrink-0 ring-1 ring-white/20"
+              className="h-2 w-2 rounded-full shrink-0 ring-1 ring-white/30"
               style={{ backgroundColor: awayColor }}
             />
           </div>
         </div>
 
         {/* Crisp dual-segment progress track */}
-        <div className="relative h-1.5 w-full rounded-full bg-slate-800/90 overflow-hidden flex">
+        <div className="relative h-2 w-full rounded-full bg-slate-900/90 overflow-hidden flex ring-1 ring-white/[0.08]">
           <div
             className="h-full transition-all duration-500 ease-out"
             style={{ width: `${homePct}%`, backgroundColor: homeColor }}
@@ -130,7 +129,6 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
   return (
     <div
       className="w-full rounded-xl border border-white/[0.08] bg-[#090e18] p-3.5 select-none shadow-sm"
-      role="region"
       aria-label={`Win probability: ${homeAbbr} ${homePct.toFixed(1)}%, ${awayAbbr} ${awayPct.toFixed(1)}% (${modelSource})`}
     >
       {/* High-Impact Broadcast Dual Header */}

@@ -109,18 +109,12 @@
   }
 }
 
-/* High-Contrast Pro Mode for Low Vision & High Glare */
+/* High-Contrast Enhanced Visual Clarity */
 .high-contrast-pro {
-  filter: contrast(1.15);
-}
-.high-contrast-pro article,
-.high-contrast-pro section,
-.high-contrast-pro [role="region"] {
-  border-width: 2px !important;
-  border-color: rgba(255, 255, 255, 0.45) !important;
+  filter: contrast(1.08);
 }
 .high-contrast-pro text {
-  font-weight: 800 !important;
+  font-weight: 700;
 }
 
 /* Focus Visibility Ergonomics */
