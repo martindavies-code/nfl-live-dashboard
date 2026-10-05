@@ -24,6 +24,8 @@ const SHORTCUTS: ShortcutItem[] = [
   { keyLabel: 'S or D', action: 'Inspect 5 redundant live data sources & telemetry', category: 'Controls' },
   { keyLabel: 'A', action: 'Toggle Auto Red Zone follow', category: 'Controls' },
   { keyLabel: 'F', action: 'Toggle all 100-yard field radars (Expand / Collapse All)', category: 'Controls' },
+  { keyLabel: 'B', action: 'Toggle all US broadcast announcing crews (Expand / Collapse All)', category: 'Controls' },
+  { keyLabel: 'C', action: 'Toggle all Scorigami metrics (Expand / Collapse All)', category: 'Controls' },
   { keyLabel: 'M', action: 'Toggle broadcast audio effects', category: 'Controls' },
   { keyLabel: 'H', action: 'Toggle High Contrast Pro mode', category: 'Controls' },
   { keyLabel: '?', action: 'Open this keyboard shortcuts legend', category: 'General' },

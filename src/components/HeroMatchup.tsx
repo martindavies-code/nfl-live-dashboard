@@ -3,7 +3,7 @@ import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
 import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation, sanitizePatriotsName } from '../utils/nflHelpers'
-import { Radio, Flame, Tv, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check, Clock, Mic } from 'lucide-react'
+import { Flame, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check, Clock, Mic, Radio } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
 
@@ -94,7 +94,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
     const playText = isLive && situation?.downDistanceText ? ` • ${situation.downDistanceText} at ${situation.possessionText || ''}` : ''
     const rzText = isRedZone ? ' 🔥 RED ZONE' : ''
 
-    const shareText = `🏈 NFL Score: ${awayName} (${awayScore}) @ ${homeName} (${homeScore}) [${statusText}${playText}${rzText}]\n📺 UK TV: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})\n📻 UK Radio: ${broadcastDetails.ukRadio}\n🎙️ Announcers: ${broadcastDetails.announcers.fullCrew}\nLive Command: https://martindavies-code.github.io/nfl-live-dashboard/`.replace(/\bNE\b/g, 'FNE')
+    const shareText = `🏈 NFL Score: ${awayName} (${awayScore}) @ ${homeName} (${homeScore}) [${statusText}${playText}${rzText}]\n📺 US TV: ${broadcastDetails.usTv}\n🎙️ Announcers: ${broadcastDetails.announcers.fullCrew}\nLive Command: https://martindavies-code.github.io/nfl-live-dashboard/`.replace(/\bNE\b/g, 'FNE')
 
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -522,137 +522,53 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
         </div>
       </div>
 
-      {/* UK Broadcast, Radio & Live Announcers Center */}
-      {isMultiThreat ? (
-        <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-3.5 py-2.5">
-          <div className="flex flex-col gap-1.5 text-xs">
-            <div className="flex items-center justify-between gap-2 text-slate-300">
-              <span className="flex items-center gap-1.5 truncate">
-                <Tv className="h-3.5 w-3.5 text-sky-400 shrink-0" />
-                <strong className="text-white truncate">{broadcastDetails.ukTv}</strong>
-                <span className="text-slate-400 text-[11px] font-mono shrink-0">({broadcastDetails.ukTvChannelNumber})</span>
-              </span>
-              <span className="flex items-center gap-1.5 shrink-0 text-slate-400">
-                <Radio className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                <span className="text-slate-300 truncate max-w-[130px]">{broadcastDetails.ukRadio}</span>
-              </span>
+      {/* US Announcing Crew & Network */}
+      <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-3.5 py-2.5 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1.5 rounded-md bg-rose-500/20 text-rose-300 shrink-0">
+              <Mic className="h-4 w-4 text-rose-400" />
             </div>
-            <div className="flex flex-col gap-1 text-[11px] text-slate-400 border-t border-white/[0.04] pt-1">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 truncate">
-                  <Mic className="h-3 w-3 text-rose-400 shrink-0" />
-                  <span className={broadcastDetails.announcers.verified ? 'text-slate-200 font-medium truncate' : 'text-amber-300/90 italic truncate'}>
-                    {broadcastDetails.announcers.leadDuo}
-                  </span>
-                  {broadcastDetails.announcers.verified ? (
-                    <span
-                      className="inline-flex shrink-0 text-emerald-400"
-                      title={`Fact-checked ${broadcastDetails.announcers.verifiedOn ?? ''}`}
-                    >
-                      <Check className="h-3 w-3" aria-hidden="true" />
-                    </span>
-                  ) : (
-                    <span
-                      className="inline-flex shrink-0 text-amber-400"
-                      title="Announce team not yet confirmed"
-                    >
-                      <Clock className="h-3 w-3" aria-hidden="true" />
-                    </span>
-                  )}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-rose-400">US Announcing Crew</span>
+                <span className="text-[11px] font-mono font-bold text-sky-300 bg-sky-950/60 px-1.5 py-0.2 rounded border border-sky-800/40">
+                  {broadcastDetails.usTv}
                 </span>
-                <span className="text-slate-500 font-mono text-[10px] shrink-0">({broadcastDetails.usTv})</span>
-              </div>
-              {broadcastDetails.announcers.sideline && (
-                <div className="text-[10px] text-slate-400 pl-4.5 flex items-center gap-1">
-                  <span className="text-slate-400 uppercase text-[8px] font-semibold tracking-wider px-1 py-0.2 rounded bg-white/[0.05]">Sideline</span>
-                  <span className="text-slate-300">{broadcastDetails.announcers.sideline}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-3.5 py-3 sm:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-            {/* UK TV Channel */}
-            <div className="flex items-start gap-2.5 rounded-lg bg-sky-500/10 border border-sky-500/25 px-3 py-2 text-sky-200 shadow-sm">
-              <div className="p-1.5 rounded-md bg-sky-500/20 text-sky-300 flex-shrink-0 mt-0.5">
-                <Tv className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-sky-400 block">UK Television</span>
-                <span className="font-bold text-white text-xs sm:text-sm block">{broadcastDetails.ukTv}</span>
-                <span className="text-[11px] text-sky-300/80 font-mono block mt-0.5">({broadcastDetails.ukTvChannelNumber})</span>
-              </div>
-            </div>
-
-            {/* UK Radio Broadcast */}
-            <div className="flex items-start gap-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 px-3 py-2 text-amber-200 shadow-sm">
-              <div className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 flex-shrink-0 mt-0.5">
-                <Radio className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 block">UK Radio Broadcast</span>
-                <span className="font-bold text-white text-xs sm:text-sm block">{broadcastDetails.ukRadio}</span>
-                <span className="text-[11px] text-amber-300/80 font-mono block mt-0.5">({broadcastDetails.ukRadioFrequency})</span>
-              </div>
-            </div>
-
-            {/* Announcers Calling the Game */}
-            <div className="flex items-start gap-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2">
-              <div className="p-1.5 rounded-md bg-rose-500/20 text-rose-300 flex-shrink-0 mt-0.5">
-                <Mic className="h-4 w-4 text-rose-400" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-rose-400">Live Commentary Booth</span>
-                  <span className="text-[10px] text-slate-400 font-mono">({broadcastDetails.usTv})</span>
-                </div>
-                <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-xs sm:text-sm mt-0.5">
-                  <strong className={broadcastDetails.announcers.verified ? 'text-white font-bold' : 'text-amber-300 font-bold italic'}>
-                    {broadcastDetails.announcers.leadDuo}
-                  </strong>
-                  {broadcastDetails.announcers.verified ? (
-                    <span
-                      className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-400 shrink-0"
-                      title={`Fact-checked ${broadcastDetails.announcers.verifiedOn ?? ''} — ${broadcastDetails.announcers.sources.map((s) => s.label).join('; ')}`}
-                    >
-                      <Check className="h-3 w-3" aria-hidden="true" />
-                      <span>Verified</span>
-                    </span>
-                  ) : (
-                    <span
-                      className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-400 shrink-0"
-                      title="Announce team not yet confirmed by the network — names are never guessed"
-                    >
-                      <Clock className="h-3 w-3" aria-hidden="true" />
-                      <span>Awaiting confirmation</span>
-                    </span>
-                  )}
-                </div>
-                {broadcastDetails.announcers.sideline && (
-                  <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5 flex-wrap">
-                    <span className="text-slate-400 font-semibold uppercase text-[9px] tracking-wider px-1 py-0.5 rounded bg-white/[0.05] border border-white/[0.08]">Sideline</span>
-                    <span className="text-slate-200 font-medium">{broadcastDetails.announcers.sideline}</span>
-                  </div>
+                {broadcastDetails.announcers.verified ? (
+                  <span
+                    className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-400 shrink-0"
+                    title={`Fact-checked ${broadcastDetails.announcers.verifiedOn ?? ''} — ${broadcastDetails.announcers.sources.map((s) => s.label).join('; ')}`}
+                  >
+                    <Check className="h-3 w-3" aria-hidden="true" />
+                    <span>Verified</span>
+                  </span>
+                ) : (
+                  <span
+                    className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-400 shrink-0"
+                    title="Announce team not yet confirmed by the network — names are never guessed"
+                  >
+                    <Clock className="h-3 w-3" aria-hidden="true" />
+                    <span>Awaiting confirmation</span>
+                  </span>
                 )}
               </div>
+              <div className="text-sm font-bold text-white mt-0.5 truncate">
+                {broadcastDetails.announcers.leadDuo}
+              </div>
             </div>
           </div>
 
-          {/* UK Studio Pundits & Streaming Options */}
-          <div className="mt-2.5 pt-2 border-t border-white/[0.05] flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
-            <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-slate-300">UK Studio:</span>
-              <span>{broadcastDetails.ukPundits}</span>
+          {broadcastDetails.announcers.sideline && (
+            <div className="flex items-center gap-1.5 shrink-0 pl-9 sm:pl-0 text-slate-300 text-xs">
+              <span className="text-slate-400 font-semibold uppercase text-[9px] tracking-wider px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.08]">
+                Sideline
+              </span>
+              <span className="font-medium text-slate-200">{broadcastDetails.announcers.sideline}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <span className="font-semibold text-slate-300">Streaming:</span>
-              <span className="text-slate-400">{broadcastDetails.streaming}</span>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </section>
   )
 }

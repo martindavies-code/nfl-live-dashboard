@@ -30,10 +30,13 @@ import {
   Compass,
   Server,
   Database,
+  Mic,
+  Sparkles,
 } from 'lucide-react'
 import { playRedZoneSound, playScoreChime, playTactileClick } from '../utils/audioFeedback'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
 import { DataSourcesModal } from './DataSourcesModal'
+import { getBestMatchupByPowerRanking } from '../utils/powerRankings'
 
 export const Dashboard: React.FC = () => {
   const [data, setData] = useState<NFLScoreboardData | null>(null)
@@ -44,11 +47,31 @@ export const Dashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [countdown, setCountdown] = useState<number>(10)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
-  const [selectedHeroId, setSelectedHeroId] = useState<string | null>(null)
+  const [selectedHeroId, setSelectedHeroId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('nfl_spotlighted_game_id')
+    } catch {
+      return null
+    }
+  })
   const [autoRedZoneSpotlight, setAutoRedZoneSpotlight] = useState<boolean>(true)
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true)
-  const [showAllFieldRadars, setShowAllFieldRadars] = useState<boolean>(false)
+  const [globalExpandedTab, setGlobalExpandedTab] = useState<'radar' | 'broadcast' | 'scorigami' | null>(null)
   const [drivePlaysMap, setDrivePlaysMap] = useState<Record<string, NFLDrivePlay[]>>({})
+
+  // Helper to persist user spotlight selection across browser refresh
+  const handleSetSpotlight = useCallback((id: string | null) => {
+    setSelectedHeroId(id)
+    try {
+      if (id) {
+        localStorage.setItem('nfl_spotlighted_game_id', id)
+      } else {
+        localStorage.removeItem('nfl_spotlighted_game_id')
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [])
 
   // NFL Season & Week Navigation States (Regular Season W1-18 & Postseason/Playoffs)
   const [selectedSeasonType, setSelectedSeasonType] = useState<number>(2)
@@ -187,13 +210,13 @@ export const Dashboard: React.FC = () => {
       setHasUserSelectedWeek(!isLive)
       setSelectedSeasonType(seasonType)
       setSelectedWeek(weekNumber)
-      setSelectedHeroId(null)
+      handleSetSpotlight(null)
       setIsLoading(true)
       playTactileClick(isMuted)
       setSrAnnouncement(`Navigated to ${getWeekLabel(seasonType, weekNumber)}`)
       loadData(true, seasonType, weekNumber)
     },
-    [liveSeasonType, liveWeek, isMuted, loadData]
+    [liveSeasonType, liveWeek, isMuted, loadData, handleSetSpotlight]
   )
 
   // Keep loadDataRef in sync with the latest loadData so stable event listeners always call the current version
@@ -317,27 +340,43 @@ export const Dashboard: React.FC = () => {
 
   // Identify matchups for the Hero Spotlight
   // If autoRedZoneSpotlight is active and multiple games are in the Red Zone, spotlight ALL of them simultaneously!
-  // Rather than flicking/jumping between different games.
+  // Priority order for Spotlighted Matchup:
+  // 1. User pinned matchup (persisted in localStorage across browser refresh)
+  // 2. NY Giants (NYG) if they are currently live and NOT at halftime
+  // 3. Auto Red Zone threats (if autoRedZoneSpotlight is active and threats exist)
+  // 4. Best matchup by power ranking (live active > live halftime > upcoming > final)
   const spotlightMatchups: NFLEvent[] = useMemo(() => {
     if (events.length === 0) return []
 
-    // 1. If autoRedZoneSpotlight is active, spotlight all active Red Zone scoring threats simultaneously!
-    if (autoRedZoneSpotlight && redZoneThreats.length > 0) {
-      return redZoneThreats
-    }
-
-    // 2. User pinned matchup
+    // 1. User pinned matchup (persisted on browser refresh)
     if (selectedHeroId) {
       const found = events.find((e) => e.id === selectedHeroId)
       if (found) return [found]
     }
 
-    // 3. Fallback to any live game
-    const liveGame = events.find((e) => {
-      const comp = e.competitions?.[0]
-      return (e.status?.type?.state || comp?.status?.type?.state) === 'in'
+    // 2. Check if NYG is currently live and NOT at halftime
+    const nygLiveGame = events.find((ev) => {
+      const comp = ev.competitions?.[0]
+      const competitors = comp?.competitors || []
+      const isNyg = competitors.some((c) => c.team?.abbreviation?.toUpperCase() === 'NYG')
+      if (!isNyg) return false
+      const st = ev.status || comp?.status
+      const state = st?.type?.state || 'pre'
+      if (state !== 'in') return false
+      return !isHalftimeSituation(st, comp?.situation)
     })
-    if (liveGame) return [liveGame]
+    if (nygLiveGame) {
+      return [nygLiveGame]
+    }
+
+    // 3. If autoRedZoneSpotlight is active and there are red zone threats, spotlight them
+    if (autoRedZoneSpotlight && redZoneThreats.length > 0) {
+      return redZoneThreats
+    }
+
+    // 4. Best matchup by power ranking
+    const bestByPower = getBestMatchupByPowerRanking(events)
+    if (bestByPower) return [bestByPower]
 
     return [events[0]]
   }, [events, autoRedZoneSpotlight, redZoneThreats, selectedHeroId])
@@ -570,26 +609,42 @@ export const Dashboard: React.FC = () => {
         if (filteredEvents.length > 0) {
           const currentIndex = filteredEvents.findIndex((ev) => ev.id === heroMatchup?.id)
           const nextIndex = (currentIndex + 1) % filteredEvents.length
-          setSelectedHeroId(filteredEvents[nextIndex].id)
+          handleSetSpotlight(filteredEvents[nextIndex].id)
           setAutoRedZoneSpotlight(false)
           setSrAnnouncement(`Spotlighted ${filteredEvents[nextIndex].name}`)
         }
-      } else if (e.key.toLowerCase() === 'f') {
-        e.preventDefault()
-        setShowAllFieldRadars((prev) => {
-          const next = !prev
-          playTactileClick(isMuted)
-          setSrAnnouncement(next ? 'All 100-yard field radars expanded' : 'All field radars collapsed')
-          return next
-        })
       } else if (e.key.toLowerCase() === 'k') {
         if (filteredEvents.length > 0) {
           const currentIndex = filteredEvents.findIndex((ev) => ev.id === heroMatchup?.id)
           const prevIndex = (currentIndex - 1 + filteredEvents.length) % filteredEvents.length
-          setSelectedHeroId(filteredEvents[prevIndex].id)
+          handleSetSpotlight(filteredEvents[prevIndex].id)
           setAutoRedZoneSpotlight(false)
           setSrAnnouncement(`Spotlighted ${filteredEvents[prevIndex].name}`)
         }
+      } else if (e.key.toLowerCase() === 'f') {
+        e.preventDefault()
+        setGlobalExpandedTab((prev) => {
+          const next = prev === 'radar' ? null : 'radar'
+          playTactileClick(isMuted)
+          setSrAnnouncement(next ? 'All 100-yard field radars expanded' : 'All field radars collapsed')
+          return next
+        })
+      } else if (e.key.toLowerCase() === 'b') {
+        e.preventDefault()
+        setGlobalExpandedTab((prev) => {
+          const next = prev === 'broadcast' ? null : 'broadcast'
+          playTactileClick(isMuted)
+          setSrAnnouncement(next ? 'All broadcast announcing crews expanded' : 'All broadcast booths collapsed')
+          return next
+        })
+      } else if (e.key.toLowerCase() === 'c') {
+        e.preventDefault()
+        setGlobalExpandedTab((prev) => {
+          const next = prev === 'scorigami' ? null : 'scorigami'
+          playTactileClick(isMuted)
+          setSrAnnouncement(next ? 'All Scorigami metrics expanded' : 'All Scorigami collapsed')
+          return next
+        })
       }
     }
 
@@ -607,6 +662,7 @@ export const Dashboard: React.FC = () => {
     selectedWeek,
     liveSeasonType,
     liveWeek,
+    handleSetSpotlight,
   ])
 
   // Single-pass O(N) status badge counts memoized strictly on events array
@@ -872,7 +928,7 @@ export const Dashboard: React.FC = () => {
               playTactileClick(isMuted)
             }}
             onSpotlightEvent={(id) => {
-              setSelectedHeroId(id)
+              handleSetSpotlight(id)
               setAutoRedZoneSpotlight(false)
               window.scrollTo({ top: 0, behavior: 'smooth' })
               playTactileClick(isMuted)
@@ -1040,32 +1096,80 @@ export const Dashboard: React.FC = () => {
                 })}
               </div>
 
-              {/* Expand All / Collapse All Field Radars Toggle */}
-              <button
-                onClick={() => {
-                  setShowAllFieldRadars((prev) => {
-                    const next = !prev
-                    playTactileClick(isMuted)
-                    setSrAnnouncement(next ? 'All field radars expanded' : 'All field radars collapsed')
-                    return next
-                  })
-                }}
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all border focus:outline-none focus:ring-2 focus:ring-sky-400 min-h-[36px] ${
-                  showAllFieldRadars
-                    ? 'bg-sky-500/20 text-sky-300 border-sky-500/50 shadow-sm'
-                    : 'bg-[#111927] text-slate-400 border-white/[0.08] hover:text-white'
-                }`}
-                title="Toggle 100-yard field radar for all matchups (Shortcut: F)"
-                aria-pressed={showAllFieldRadars}
-              >
-                <Compass className={`h-3.5 w-3.5 ${showAllFieldRadars ? 'text-sky-400' : 'text-slate-400'}`} />
-                <span className="hidden sm:inline">
-                  {showAllFieldRadars ? 'Hide All Radars' : 'Expand All Radars'}
-                </span>
-                <span className="sm:hidden">
-                  {showAllFieldRadars ? 'Hide Radars' : 'All Radars'}
-                </span>
-              </button>
+              {/* Global Expand Buttons for Radars, Broadcast, Scorigami */}
+              <div className="flex items-center rounded-lg bg-[#111927] p-1 border border-white/[0.08] gap-1" role="group" aria-label="Global Card Views">
+                {/* 1. All Radars */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGlobalExpandedTab((prev) => {
+                      const next = prev === 'radar' ? null : 'radar'
+                      playTactileClick(isMuted)
+                      setSrAnnouncement(next ? 'All field radars expanded' : 'All field radars collapsed')
+                      return next
+                    })
+                  }}
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] ${
+                    globalExpandedTab === 'radar'
+                      ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
+                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                  title="Toggle 100-yard field radar for all matchups (Shortcut: F)"
+                  aria-pressed={globalExpandedTab === 'radar'}
+                >
+                  <Compass className={`h-3.5 w-3.5 ${globalExpandedTab === 'radar' ? 'text-sky-400' : 'text-slate-400'}`} />
+                  <span className="hidden lg:inline">{globalExpandedTab === 'radar' ? 'Hide Radars' : 'Expand Radars'}</span>
+                  <span className="lg:hidden">Radars</span>
+                </button>
+
+                {/* 2. All Broadcast / Booths */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGlobalExpandedTab((prev) => {
+                      const next = prev === 'broadcast' ? null : 'broadcast'
+                      playTactileClick(isMuted)
+                      setSrAnnouncement(next ? 'All broadcast announcing crews expanded' : 'All broadcast booths collapsed')
+                      return next
+                    })
+                  }}
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] ${
+                    globalExpandedTab === 'broadcast'
+                      ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
+                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                  title="Toggle US broadcast announcing crew for all matchups (Shortcut: B)"
+                  aria-pressed={globalExpandedTab === 'broadcast'}
+                >
+                  <Mic className={`h-3.5 w-3.5 ${globalExpandedTab === 'broadcast' ? 'text-sky-400' : 'text-slate-400'}`} />
+                  <span className="hidden lg:inline">{globalExpandedTab === 'broadcast' ? 'Hide Broadcast' : 'Expand Broadcast'}</span>
+                  <span className="lg:hidden">Broadcast</span>
+                </button>
+
+                {/* 3. All Scorigami */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGlobalExpandedTab((prev) => {
+                      const next = prev === 'scorigami' ? null : 'scorigami'
+                      playTactileClick(isMuted)
+                      setSrAnnouncement(next ? 'All Scorigami metrics expanded' : 'All Scorigami collapsed')
+                      return next
+                    })
+                  }}
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] ${
+                    globalExpandedTab === 'scorigami'
+                      ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/50 shadow-sm'
+                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                  title="Toggle historical Scorigami probability for all matchups (Shortcut: C)"
+                  aria-pressed={globalExpandedTab === 'scorigami'}
+                >
+                  <Sparkles className={`h-3.5 w-3.5 ${globalExpandedTab === 'scorigami' ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
+                  <span className="hidden lg:inline">{globalExpandedTab === 'scorigami' ? 'Hide Scorigami' : 'Expand Scorigami'}</span>
+                  <span className="lg:hidden">Scorigami</span>
+                </button>
+              </div>
 
               {/* Search Bar */}
               <div className="relative min-w-[180px] sm:min-w-[200px]" role="search">
@@ -1159,12 +1263,17 @@ export const Dashboard: React.FC = () => {
                   event={event}
                   isSpotlighted={spotlightIds.has(event.id)}
                   onSpotlight={() => {
-                    setSelectedHeroId(event.id)
+                    if (selectedHeroId === event.id) {
+                      // Clicking on already spotlighted game clears custom pin and restores dynamic NYG / Power ranking
+                      handleSetSpotlight(null)
+                    } else {
+                      handleSetSpotlight(event.id)
+                    }
                     setAutoRedZoneSpotlight(false)
                     window.scrollTo({ top: 0, behavior: 'smooth' })
                   }}
-                  showField={showAllFieldRadars}
-                  onToggleAllRadars={() => setShowAllFieldRadars((prev) => !prev)}
+                  globalExpandedTab={globalExpandedTab}
+                  onToggleAllRadars={() => setGlobalExpandedTab((prev) => prev === 'radar' ? null : 'radar')}
                 />
               ))}
             </div>

@@ -4,7 +4,6 @@ import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
 import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, formatLocalizedKickoff, getWeekLabel, sanitizePatriotsAbbreviation } from '../utils/nflHelpers'
 import { 
-  Tv, 
   Flame, 
   Clock, 
   Activity,
@@ -13,8 +12,8 @@ import {
   Pause,
   Compass,
   Trophy,
-  Radio,
   Mic,
+  Check,
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
@@ -24,6 +23,7 @@ interface GameCardProps {
   isSpotlighted?: boolean
   onSpotlight?: () => void
   showField?: boolean
+  globalExpandedTab?: 'radar' | 'broadcast' | 'scorigami' | null
   onToggleAllRadars?: () => void
 }
 
@@ -34,20 +34,33 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   isSpotlighted = false,
   onSpotlight,
   showField: controlledShowField,
+  globalExpandedTab,
   onToggleAllRadars
 }) => {
-  const [activeTab, setActiveTab] = useState<'radar' | 'broadcast' | 'scorigami' | null>(null)
-  const isRadarActive = activeTab === 'radar' || (Boolean(controlledShowField) && activeTab === null)
+  const [prevGlobalTab, setPrevGlobalTab] = useState(globalExpandedTab)
+  const [localTab, setLocalTab] = useState<'radar' | 'broadcast' | 'scorigami' | null | undefined>(undefined)
+
+  // Reset local override when dashboard global expanded tab changes
+  if (globalExpandedTab !== prevGlobalTab) {
+    setPrevGlobalTab(globalExpandedTab)
+    setLocalTab(undefined)
+  }
+
+  const activeTab = localTab !== undefined ? localTab : (globalExpandedTab ?? (controlledShowField ? 'radar' : null))
+  const isRadarActive = activeTab === 'radar'
   const isBroadcastActive = activeTab === 'broadcast'
   const isScorigamiActive = activeTab === 'scorigami'
 
   const handleToggleTab = (tab: 'radar' | 'broadcast' | 'scorigami', e: React.MouseEvent) => {
     e.stopPropagation()
-    if (tab === 'radar' && onToggleAllRadars && controlledShowField !== undefined) {
+    if (tab === 'radar' && onToggleAllRadars && controlledShowField !== undefined && globalExpandedTab === undefined) {
       onToggleAllRadars()
       return
     }
-    setActiveTab((prev) => (prev === tab ? null : tab))
+    setLocalTab((prev) => {
+      const current = prev !== undefined ? prev : (globalExpandedTab ?? (controlledShowField ? 'radar' : null))
+      return current === tab ? null : tab
+    })
   }
 
   const competition = event.competitions?.[0]
@@ -99,7 +112,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const broadcastPanelId = `broadcast-panel-${event.id}`
   const scorigamiPanelId = `scorigami-panel-${event.id}`
   const broadcastDetails = getGameBroadcastDetails(event)
-  const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in Quarter ${status.period} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''} Televised in UK on ${broadcastDetails.ukTv}, UK radio on ${broadcastDetails.ukRadio}, ${broadcastDetails.announcers.verified ? `commentary by ${broadcastDetails.announcers.leadDuo}` : 'commentary crew not yet confirmed'}.`
+  const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in Quarter ${status.period} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''} US broadcast on ${broadcastDetails.usTv}, ${broadcastDetails.announcers.verified ? `commentary by ${broadcastDetails.announcers.leadDuo}` : 'commentary crew TBD'}.`
 
   return (
     <article
@@ -383,28 +396,32 @@ export const GameCard: React.FC<GameCardProps> = memo(({
         )
       )}
 
-      {/* Dynamic Expanded Section: Broadcast & Booth */}
+      {/* Dynamic Expanded Section: US Announcing Crew */}
       {isBroadcastActive && (
-        <div id={broadcastPanelId} className="mx-3 mb-2 p-2.5 rounded-lg border border-white/[0.06] bg-[#070b14]/90 space-y-2 text-xs" role="region" aria-label="Broadcast coverage details">
+        <div id={broadcastPanelId} className="mx-3 mb-2 p-2.5 rounded-lg border border-sky-500/20 bg-[#070b14]/95 space-y-2 text-xs" role="region" aria-label="US Announcing crew details">
           <div className="flex items-center justify-between gap-2">
-            <span className="flex items-center gap-1.5 text-sky-300 font-semibold" title={`UK Television: ${broadcastDetails.ukTv} (${broadcastDetails.ukTvChannelNumber})`}>
-              <Tv className="h-3.5 w-3.5 text-sky-400 shrink-0" />
-              <span>{broadcastDetails.ukTv}</span>
-              <span className="text-slate-400 font-mono text-[11px]">({broadcastDetails.ukTvChannelNumber})</span>
-            </span>
-            <span className="flex items-center gap-1 text-amber-300 font-medium text-[11px]" title={`UK Radio Broadcast: ${broadcastDetails.ukRadio} (${broadcastDetails.ukRadioFrequency})`}>
-              <Radio className="h-3 w-3 text-amber-400 shrink-0" />
-              <span>{broadcastDetails.ukRadioShort}</span>
-            </span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="inline-flex items-center gap-1 rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-bold text-sky-300 border border-sky-500/30">
+                <Mic className="h-3 w-3 text-sky-400" />
+                {broadcastDetails.usTv}
+              </span>
+              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">US Announcing Crew</span>
+            </div>
+            {broadcastDetails.announcers.verified && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 shrink-0">
+                <Check className="h-2.5 w-2.5" />
+                Verified
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-1.5 text-slate-300 border-t border-white/[0.04] pt-1.5">
-            <Mic className="h-3.5 w-3.5 text-rose-400 shrink-0" />
-            <span className={broadcastDetails.announcers.verified ? 'text-white font-medium' : 'text-amber-300/90 font-medium italic'} title={broadcastDetails.announcers.verified ? `Fact-checked ${broadcastDetails.announcers.verifiedOn ?? ''}` : 'Announce team not yet confirmed — names are never guessed'}>{broadcastDetails.announcers.leadDuo}</span>
-            <span className="text-slate-400 text-[11px] shrink-0 ml-auto font-mono">({broadcastDetails.usTv})</span>
+          <div className="flex items-center gap-1.5 text-slate-200 pt-0.5 font-medium">
+            <span className={broadcastDetails.announcers.verified ? 'text-white font-semibold' : 'text-amber-300/90 italic'}>
+              {broadcastDetails.announcers.leadDuo}
+            </span>
           </div>
           {broadcastDetails.announcers.sideline && (
-            <div className="text-[11px] text-slate-400 pl-5">
-              Sideline: <span className="text-slate-300">{broadcastDetails.announcers.sideline}</span>
+            <div className="text-[11px] text-slate-400">
+              Sideline: <span className="text-slate-300 font-medium">{broadcastDetails.announcers.sideline}</span>
             </div>
           )}
         </div>
@@ -487,9 +504,9 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             }`}
             aria-expanded={isBroadcastActive}
             aria-controls={broadcastPanelId}
-            aria-label="View UK television, UK radio, and live commentary booth"
+            aria-label="View US television announcing crew"
           >
-            <Tv className={`h-3 w-3 ${isBroadcastActive ? 'text-sky-400' : 'text-slate-400'}`} />
+            <Mic className={`h-3 w-3 ${isBroadcastActive ? 'text-sky-400' : 'text-slate-400'}`} />
             <span>Broadcast</span>
           </button>
 
