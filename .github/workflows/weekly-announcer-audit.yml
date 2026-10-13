@@ -1,0 +1,30 @@
+name: Weekly NFL Announcer Audit
+
+on:
+  schedule:
+    # Run every Thursday and Friday at 15:00 UTC (11:00 AM ET) ahead of the weekend games
+    - cron: '0 15 * * 4,5'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/data/announcerRegistry.ts'
+      - 'scripts/audit-announcers.mjs'
+
+jobs:
+  audit-announcers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Announcer Audit against live NFL schedule
+        run: npm run audit:announcers -- --within-hours 72 --weeks 2

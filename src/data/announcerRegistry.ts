@@ -53,6 +53,16 @@ const YAHOO_WEEK4 = {
   url: 'https://sports.yahoo.com/articles/nfl-schedule-announcer-pairings-week-125515895.html',
 }
 
+const SOURCES_WEEK5 = {
+  label: '506 Sports / Yahoo Sports — NFL schedule and announcer pairings for Week 5',
+  url: 'https://506sports.com/nfl.php?yr=2026&wk=5',
+}
+
+const SOURCES_WEEK6 = {
+  label: '506 Sports / Yahoo Sports — NFL schedule and announcer pairings for Week 6',
+  url: 'https://506sports.com/nfl.php?yr=2026&wk=6',
+}
+
 export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
   // ---------------------------------------------------------------------------
   // 2026 — Week 4
@@ -183,8 +193,7 @@ export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
     verifiedOn: '2026-10-04',
   },
   // ---------------------------------------------------------------------------
-  // 2026 — Week 5 (Confirmed Primetime Booths)
-  // Sunday afternoon CBS & FOX games rotate weekly and are announced on Tue/Wed.
+  // 2026 — Week 5
   // ---------------------------------------------------------------------------
   {
     season: 2026, week: 5, away: 'TB', home: 'DAL', kickoffUtc: '2026-10-09T00:15:00Z',
@@ -193,7 +202,97 @@ export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
     sources: [
       { label: 'Amazon Prime Video Thursday Night Football official crew', url: 'https://www.amazon.com/tnf' },
     ],
-    verifiedOn: '2026-10-04',
+    verifiedOn: '2026-10-08',
+  },
+  {
+    season: 2026, week: 5, away: 'PHI', home: 'JAX', kickoffUtc: '2026-10-11T13:30:00Z',
+    network: 'NFL Network',
+    playByPlay: 'Dave Pasch', analysts: ['Kurt Warner', 'Jason Kelce'], sideline: ['Molly McGrath'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
+    ukTv: 'Sky Sports NFL & Channel 5 (Free-to-Air)',
+    ukTvShort: 'Sky Sports & Channel 5',
+    ukTvChannelNumber: 'Freeview 5 • Sky 105/407 • Virgin 105/507',
+    ukRadio: 'talkSPORT 2 (Full Live Match Commentary)',
+    ukRadioShort: 'talkSPORT 2',
+    ukRadioFrequency: 'DAB Digital Radio • talkSPORT App',
+  },
+  {
+    season: 2026, week: 5, away: 'CHI', home: 'GB', kickoffUtc: '2026-10-11T17:00:00Z',
+    network: 'FOX',
+    playByPlay: 'Kenny Albert', analysts: ['Greg Olsen'], sideline: ['Pam Oliver'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
+  },
+  {
+    season: 2026, week: 5, away: 'HOU', home: 'TEN', kickoffUtc: '2026-10-11T17:00:00Z',
+    network: 'CBS',
+    playByPlay: 'Spero Dedes', analysts: ['Adam Archuleta'], sideline: ['Aditi Kinkhabwala'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
+  },
+  {
+    season: 2026, week: 5, away: 'CIN', home: 'MIA', kickoffUtc: '2026-10-11T17:00:00Z',
+    network: 'FOX',
+    playByPlay: 'Eric Collins', analysts: ['Mark Schlereth'], sideline: ['Jen Hale'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
+  },
+  {
+    season: 2026, week: 5, away: 'LV', home: 'NE', kickoffUtc: '2026-10-11T17:00:00Z',
+    network: 'CBS',
+    playByPlay: 'Kevin Harlan', analysts: ['Trent Green'], sideline: ['Melanie Collins'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
+  },
+  {
+    season: 2026, week: 5, away: 'MIN', home: 'NO', kickoffUtc: '2026-10-11T17:00:00Z',
+    network: 'FOX',
+    playByPlay: 'Adam Amin', analysts: ['Drew Brees'], sideline: ['Kristina Pink'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
+  },
+  {
+    season: 2026, week: 5, away: 'CLE', home: 'NYJ', kickoffUtc: '2026-10-11T17:00:00Z',
+    network: 'CBS',
+    playByPlay: 'Andrew Catalon', analysts: ['Logan Ryan'], sideline: ['AJ Ross'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
+  },
+  {
+    season: 2026, week: 5, away: 'IND', home: 'PIT', kickoffUtc: '2026-10-11T17:00:00Z',
+    network: 'CBS',
+    playByPlay: 'Jim Nantz', analysts: ['J.J. Watt'], sideline: ['Tracy Wolfson'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
+  },
+  {
+    season: 2026, week: 5, away: 'NYG', home: 'WSH', kickoffUtc: '2026-10-11T17:00:00Z',
+    network: 'FOX',
+    playByPlay: 'Chris Myers', analysts: ['Jonathan Vilma'], sideline: ['Megan Olivi'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
+  },
+  {
+    season: 2026, week: 5, away: 'DEN', home: 'LAC', kickoffUtc: '2026-10-11T20:05:00Z',
+    network: 'CBS',
+    playByPlay: 'Ian Eagle', analysts: ['Ross Tucker'], sideline: ['Evan Washburn'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
+  },
+  {
+    season: 2026, week: 5, away: 'DET', home: 'ARI', kickoffUtc: '2026-10-11T20:25:00Z',
+    network: 'FOX',
+    playByPlay: 'Kevin Kugler', analysts: ['Daryl Johnston'], sideline: ['Allison Williams'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
+  },
+  {
+    season: 2026, week: 5, away: 'SF', home: 'SEA', kickoffUtc: '2026-10-11T20:25:00Z',
+    network: 'FOX',
+    playByPlay: 'Kevin Burkhardt', analysts: ['Tom Brady'], sideline: ['Erin Andrews', 'Tom Rinaldi'],
+    sources: [SOURCES_WEEK5],
+    verifiedOn: '2026-10-09',
   },
   {
     season: 2026, week: 5, away: 'BAL', home: 'ATL', kickoffUtc: '2026-10-12T00:20:00Z',
@@ -202,40 +301,123 @@ export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
     sources: [
       { label: 'NBC Sports Sunday Night Football official crew', url: 'https://www.nbcsports.com/nfl/sunday-night-football' },
     ],
-    verifiedOn: '2026-10-04',
+    verifiedOn: '2026-10-09',
   },
   {
     season: 2026, week: 5, away: 'BUF', home: 'LAR', kickoffUtc: '2026-10-13T00:15:00Z',
     network: 'ESPN / ABC',
-    playByPlay: 'Joe Buck', analysts: ['Troy Aikman'], sideline: ['Lisa Salters'],
+    playByPlay: 'Joe Buck', analysts: ['Troy Aikman'], sideline: ['Lisa Salters', 'Laura Rutledge'],
     sources: [
       { label: 'ESPN Monday Night Football official crew', url: 'https://www.espn.com/nfl' },
     ],
-    verifiedOn: '2026-10-04',
+    verifiedOn: '2026-10-09',
   },
   // ---------------------------------------------------------------------------
-  // 2026 — Week 6 (Confirmed Primetime Booths)
+  // 2026 — Week 6
   // ---------------------------------------------------------------------------
   {
     season: 2026, week: 6, away: 'SEA', home: 'DEN', kickoffUtc: '2026-10-16T00:15:00Z',
     network: 'Amazon Prime Video',
     playByPlay: 'Al Michaels', analysts: ['Kirk Herbstreit'], sideline: ['Kaylee Hartung'],
     sources: [{ label: 'Amazon Prime Video Thursday Night Football official crew', url: 'https://www.amazon.com/tnf' }],
-    verifiedOn: '2026-10-04',
+    verifiedOn: '2026-10-13',
+  },
+  {
+    season: 2026, week: 6, away: 'HOU', home: 'JAX', kickoffUtc: '2026-10-18T13:30:00Z',
+    network: 'NFL Network',
+    playByPlay: 'Bob Wischusen', analysts: ['Louis Riddick'], sideline: ['Molly McGrath'],
+    sources: [{ label: 'NFL Network London Game official announcement', url: 'https://espnpressroom.com' }],
+    verifiedOn: '2026-10-13',
+    ukTv: 'Sky Sports NFL & Channel 5 (Free-to-Air)',
+    ukTvShort: 'Sky Sports & Channel 5',
+    ukTvChannelNumber: 'Freeview 5 • Sky 105/407 • Virgin 105/507',
+    ukRadio: 'talkSPORT 2 (Full Live Match Commentary)',
+    ukRadioShort: 'talkSPORT 2',
+    ukRadioFrequency: 'DAB Digital Radio • talkSPORT App',
+  },
+  {
+    season: 2026, week: 6, away: 'CHI', home: 'ATL', kickoffUtc: '2026-10-18T17:00:00Z',
+    network: 'FOX',
+    playByPlay: 'Adam Amin', analysts: ['Greg Olsen'], sideline: ['Pam Oliver'],
+    sources: [SOURCES_WEEK6],
+    verifiedOn: '2026-10-13',
+  },
+  {
+    season: 2026, week: 6, away: 'BAL', home: 'CLE', kickoffUtc: '2026-10-18T17:00:00Z',
+    network: 'FOX',
+    playByPlay: 'Kevin Burkhardt', analysts: ['Tom Brady'], sideline: ['Erin Andrews', 'Tom Rinaldi'],
+    sources: [SOURCES_WEEK6],
+    verifiedOn: '2026-10-13',
+  },
+  {
+    season: 2026, week: 6, away: 'TEN', home: 'IND', kickoffUtc: '2026-10-18T17:00:00Z',
+    network: 'FOX',
+    playByPlay: 'Kevin Kugler', analysts: ['Daryl Johnston'], sideline: ['Allison Williams'],
+    sources: [SOURCES_WEEK6],
+    verifiedOn: '2026-10-13',
+  },
+  {
+    season: 2026, week: 6, away: 'NYJ', home: 'NE', kickoffUtc: '2026-10-18T17:00:00Z',
+    network: 'CBS',
+    playByPlay: 'Spero Dedes', analysts: ['Adam Archuleta'], sideline: ['Aditi Kinkhabwala'],
+    sources: [SOURCES_WEEK6],
+    verifiedOn: '2026-10-13',
+  },
+  {
+    season: 2026, week: 6, away: 'NO', home: 'NYG', kickoffUtc: '2026-10-18T17:00:00Z',
+    network: 'FOX',
+    playByPlay: 'Chris Myers', analysts: ['Drew Brees'], sideline: ['Kristina Pink'],
+    sources: [SOURCES_WEEK6],
+    verifiedOn: '2026-10-13',
+  },
+  {
+    season: 2026, week: 6, away: 'CAR', home: 'PHI', kickoffUtc: '2026-10-18T17:00:00Z',
+    network: 'CBS',
+    playByPlay: 'Ian Eagle', analysts: ['Ross Tucker'], sideline: ['Evan Washburn'],
+    sources: [SOURCES_WEEK6],
+    verifiedOn: '2026-10-13',
+  },
+  {
+    season: 2026, week: 6, away: 'PIT', home: 'TB', kickoffUtc: '2026-10-18T17:00:00Z',
+    network: 'CBS',
+    playByPlay: 'Andrew Catalon', analysts: ['Logan Ryan'], sideline: ['AJ Ross'],
+    sources: [SOURCES_WEEK6],
+    verifiedOn: '2026-10-13',
+  },
+  {
+    season: 2026, week: 6, away: 'ARI', home: 'LAR', kickoffUtc: '2026-10-18T20:05:00Z',
+    network: 'FOX',
+    playByPlay: 'Kenny Albert', analysts: ['Jonathan Vilma'], sideline: ['Megan Olivi'],
+    sources: [SOURCES_WEEK6],
+    verifiedOn: '2026-10-13',
+  },
+  {
+    season: 2026, week: 6, away: 'LAC', home: 'KC', kickoffUtc: '2026-10-18T20:25:00Z',
+    network: 'CBS',
+    playByPlay: 'Kevin Harlan', analysts: ['Trent Green'], sideline: ['Melanie Collins'],
+    sources: [SOURCES_WEEK6],
+    verifiedOn: '2026-10-13',
+  },
+  {
+    season: 2026, week: 6, away: 'BUF', home: 'LV', kickoffUtc: '2026-10-18T20:25:00Z',
+    network: 'CBS',
+    playByPlay: 'Jim Nantz', analysts: ['J.J. Watt'], sideline: ['Tracy Wolfson'],
+    sources: [SOURCES_WEEK6],
+    verifiedOn: '2026-10-13',
   },
   {
     season: 2026, week: 6, away: 'DAL', home: 'GB', kickoffUtc: '2026-10-19T00:20:00Z',
     network: 'NBC',
     playByPlay: 'Mike Tirico', analysts: ['Cris Collinsworth'], sideline: ['Melissa Stark'],
     sources: [{ label: 'NBC Sports Sunday Night Football official crew', url: 'https://www.nbcsports.com/nfl/sunday-night-football' }],
-    verifiedOn: '2026-10-04',
+    verifiedOn: '2026-10-13',
   },
   {
     season: 2026, week: 6, away: 'WSH', home: 'SF', kickoffUtc: '2026-10-20T00:15:00Z',
     network: 'ESPN / ABC',
     playByPlay: 'Joe Buck', analysts: ['Troy Aikman'], sideline: ['Lisa Salters'],
     sources: [{ label: 'ESPN Monday Night Football official crew', url: 'https://www.espn.com/nfl' }],
-    verifiedOn: '2026-10-04',
+    verifiedOn: '2026-10-13',
   },
 ]
 
