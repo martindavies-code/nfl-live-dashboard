@@ -162,13 +162,14 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   }, [activePlay, effectiveDrivePlays])
 
   const canGoPrevious = effectiveDrivePlays.length > 1 && (activeIndex > 0 || activeIndex === -1)
-  const canGoNext = effectiveDrivePlays.length > 1 && activeIndex !== -1 && activeIndex < effectiveDrivePlays.length - 1
+  const canGoNext = effectiveDrivePlays.length > 1 && (activeIndex < effectiveDrivePlays.length - 1 || activeIndex === -1)
 
   const goToPreviousPlay = () => {
     if (effectiveDrivePlays.length === 0) return
     setIsDismissed(false)
     if (activeIndex === -1) {
-      const targetIdx = Math.max(0, effectiveDrivePlays.length - 2)
+      // From full drive view, start inspecting from the latest play
+      const targetIdx = effectiveDrivePlays.length - 1
       const target = effectiveDrivePlays[targetIdx]
       setPinnedPlayId(target.id || String(target.sequence || targetIdx + 1))
       setHoveredPlay(null)
@@ -183,9 +184,9 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
     if (effectiveDrivePlays.length === 0) return
     setIsDismissed(false)
     if (activeIndex === -1) {
-      const targetIdx = effectiveDrivePlays.length - 1
-      const target = effectiveDrivePlays[targetIdx]
-      setPinnedPlayId(target.id || String(target.sequence || targetIdx + 1))
+      // From full drive view, start inspecting from the very first play
+      const target = effectiveDrivePlays[0]
+      setPinnedPlayId(target.id || String(target.sequence || 1))
       setHoveredPlay(null)
     } else if (activeIndex < effectiveDrivePlays.length - 1) {
       const target = effectiveDrivePlays[activeIndex + 1]
@@ -521,22 +522,22 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                     const isSelected = activePlay ? (activePlay.id === play.id || String(activePlay.sequence) === String(play.sequence)) : false
 
                     // Mobile-optimized bold dimensional scales
-                    const circleR = isSelected ? (isCompact ? 14 : 16) : (isCompact ? 11 : 13)
-                    const circleFont = isSelected ? (isCompact ? 12 : 14) : (isCompact ? 10 : 11.5)
-                    const coreStroke = isSelected ? (isCompact ? 5.5 : 7) : (isCompact ? 3.8 : 4.8)
-                    const haloStroke = isSelected ? (isCompact ? 13 : 16) : (isCompact ? 8 : 10)
+                    const circleR = isSelected ? (isCompact ? 15 : 17) : (isCompact ? 11.5 : 13.5)
+                    const circleFont = isSelected ? (isCompact ? 13 : 15) : (isCompact ? 10.5 : 12)
+                    const coreStroke = isSelected ? (isCompact ? 6 : 7.5) : (isCompact ? 4 : 5)
+                    const haloStroke = isSelected ? (isCompact ? 14 : 17) : (isCompact ? 8 : 10)
                     const arrowHeadLen = isSelected ? (isCompact ? 18 : 22) : (isCompact ? 14 : 17)
                     const arrowHeadH = isSelected ? (isCompact ? 8 : 9.5) : (isCompact ? 6 : 7.5)
-                    const pillW = isSelected ? (isCompact ? 40 : 48) : (isCompact ? 34 : 40)
-                    const pillH = isSelected ? (isCompact ? 20 : 23) : (isCompact ? 17 : 20)
-                    const pillFont = isSelected ? (isCompact ? 11 : 12.5) : (isCompact ? 9.5 : 11)
-                    const pillOffset = isSelected ? 16 : 13
+                    const pillW = isSelected ? (isCompact ? 44 : 52) : (isCompact ? 36 : 42)
+                    const pillH = isSelected ? (isCompact ? 22 : 25) : (isCompact ? 18 : 21)
+                    const pillFont = isSelected ? (isCompact ? 11.5 : 13) : (isCompact ? 10 : 11.5)
+                    const pillOffset = isSelected ? 18 : 15
 
                     return (
                       <g
                         key={`drive-play-${play.id || idx}`}
                         className="cursor-pointer transition-opacity"
-                        opacity={activePlay ? (isSelected ? 1 : 0.45) : 0.92}
+                        opacity={activePlay ? (isSelected ? 1 : 0.68) : 0.95}
                         onClick={() => {
                           const id = play.id || String(play.sequence || idx + 1)
                           setIsDismissed(false)
@@ -866,7 +867,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
       {/* Interactive Active Play Detail Banner with Mobile-First Step Scrubbing Controls */}
       {effectiveDrivePlays.length > 0 && (
         <div
-          className="flex items-center justify-between gap-1.5 sm:gap-2.5 border-t border-white/[0.08] bg-[#050914] px-2 sm:px-3 py-2 text-xs text-slate-300 select-none"
+          className="flex flex-col border-t border-white/[0.08] bg-[#070c17] px-2.5 sm:px-3 py-2 text-xs text-slate-300 select-none transition-colors"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'ArrowLeft') {
@@ -875,85 +876,137 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
             } else if (e.key === 'ArrowRight') {
               e.preventDefault()
               goToNextPlay()
+            } else if (e.key === 'Escape') {
+              e.preventDefault()
+              handleDismissPlay()
+            } else if (e.key === 'Home') {
+              e.preventDefault()
+              if (effectiveDrivePlays.length > 0) {
+                const target = effectiveDrivePlays[0]
+                setPinnedPlayId(target.id || String(target.sequence || 1))
+                setIsDismissed(false)
+                setHoveredPlay(null)
+              }
+            } else if (e.key === 'End') {
+              e.preventDefault()
+              if (effectiveDrivePlays.length > 0) {
+                const target = effectiveDrivePlays[effectiveDrivePlays.length - 1]
+                setPinnedPlayId(target.id || String(target.sequence || effectiveDrivePlays.length))
+                setIsDismissed(false)
+                setHoveredPlay(null)
+              }
             }
           }}
           role="region"
-          aria-label="Drive plays navigation"
+          aria-label="Drive plays navigation and details"
         >
-          {/* Back / Previous Play Button */}
-          <button
-            type="button"
-            onClick={goToPreviousPlay}
-            disabled={!canGoPrevious}
-            className={`flex items-center justify-center p-2 rounded-md min-h-[36px] min-w-[36px] shrink-0 transition-all cursor-pointer ${
-              canGoPrevious
-                ? 'bg-white/[0.08] text-white hover:bg-white/[0.16] active:bg-white/[0.22] border border-white/[0.15] shadow-sm'
-                : 'bg-white/[0.02] text-slate-600 border border-white/[0.04] cursor-not-allowed opacity-30'
-            }`}
-            aria-label={canGoPrevious ? "Go to previous play in drive" : "At first play"}
-            title={canGoPrevious ? "Previous play in drive" : "At beginning of drive"}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
+          {/* Top Bar: Navigation Stepper Controls [<] [PLAY #3 • RUN] [>], Yardage badge, Situation metadata, and All Plays button */}
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+            {/* Stepper Cluster: [<] [PLAY #3 • RUN] [+8 yds] [>] */}
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              {/* Back / Previous Play Button */}
+              <button
+                type="button"
+                onClick={goToPreviousPlay}
+                disabled={!canGoPrevious}
+                className={`flex items-center justify-center h-8 w-8 rounded-md shrink-0 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none ${
+                  canGoPrevious
+                    ? 'bg-white/[0.08] text-white hover:bg-white/[0.18] active:bg-white/[0.24] border border-white/[0.15] shadow-sm'
+                    : 'bg-white/[0.02] text-slate-600 border border-white/[0.04] cursor-not-allowed opacity-30'
+                }`}
+                aria-label={canGoPrevious ? `Go to previous play${activePlay && activePlay.sequence ? ` (Play #${activePlay.sequence - 1})` : ''}` : "At beginning of drive"}
+                title="Previous play (ArrowLeft)"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
 
-          {/* Central Play Indicator & Description */}
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 justify-center sm:justify-start overflow-hidden">
-            {activePlay ? (
-              <>
-                <span
-                  className="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-black uppercase tracking-wider shrink-0"
-                  style={{
-                    backgroundColor: `${getPlayColor(activePlay.category)}25`,
-                    color: getPlayColor(activePlay.category),
-                    border: `1px solid ${getPlayColor(activePlay.category)}60`,
-                  }}
+              {/* Play Badge + Yardage Indicator */}
+              {activePlay ? (
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <span
+                    className="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-black uppercase tracking-wider shrink-0 shadow-sm"
+                    style={{
+                      backgroundColor: `${getPlayColor(activePlay.category)}25`,
+                      color: getPlayColor(activePlay.category),
+                      border: `1px solid ${getPlayColor(activePlay.category)}60`,
+                    }}
+                  >
+                    PLAY #{activePlay.sequence || '•'} • {getPlayCategoryLabel(activePlay.category)}
+                  </span>
+                  <span
+                    className="font-mono font-black text-xs sm:text-sm tabular-nums px-1.5 py-0.5 rounded bg-black/40 border border-white/[0.08] shrink-0"
+                    style={{ color: getPlayColor(activePlay.category) }}
+                  >
+                    {activePlay.statYardage > 0 ? `+${activePlay.statYardage} yds` : `${activePlay.statYardage} yds`}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-slate-300 font-semibold text-xs">
+                  <span className="text-amber-400">⚡</span>
+                  <span>Drive Trail ({effectiveDrivePlays.length} Plays)</span>
+                </div>
+              )}
+
+              {/* Forward / Next Play Button */}
+              <button
+                type="button"
+                onClick={goToNextPlay}
+                disabled={!canGoNext}
+                className={`flex items-center justify-center h-8 w-8 rounded-md shrink-0 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none ${
+                  canGoNext
+                    ? 'bg-white/[0.08] text-white hover:bg-white/[0.18] active:bg-white/[0.24] border border-white/[0.15] shadow-sm'
+                    : 'bg-white/[0.02] text-slate-600 border border-white/[0.04] cursor-not-allowed opacity-30'
+                }`}
+                aria-label={canGoNext ? `Go to next play${activePlay && activePlay.sequence ? ` (Play #${activePlay.sequence + 1})` : ''}` : "At latest play"}
+                title="Next play (ArrowRight)"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Right Side: Down/Distance & Dismiss Button */}
+            <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+              {activePlay?.down && activePlay.distance && (
+                <span className="hidden xs:inline-flex text-[10px] sm:text-[11px] font-bold text-slate-300 bg-white/[0.05] px-1.5 py-0.5 rounded border border-white/[0.08]">
+                  {activePlay.down === 1 ? '1st' : activePlay.down === 2 ? '2nd' : activePlay.down === 3 ? '3rd' : '4th'} & {activePlay.distance}
+                </span>
+              )}
+
+              {activePlay ? (
+                <button
+                  type="button"
+                  onClick={handleDismissPlay}
+                  className="text-slate-400 hover:text-white px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none"
+                  aria-label="Deselect play and view entire drive trail"
+                  title="Deselect play (view full drive)"
                 >
-                  PLAY #{activePlay.sequence || '•'} {getPlayCategoryLabel(activePlay.category)}
+                  <span className="hidden sm:inline">All Plays</span>
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              ) : (
+                <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
+                  Step ◀ ▶
                 </span>
-                <span className="font-mono font-bold text-white shrink-0 text-xs sm:text-sm tabular-nums">
-                  {activePlay.statYardage > 0 ? `+${activePlay.statYardage} yds` : `${activePlay.statYardage} yds`}
-                </span>
-                <span className="text-slate-300 truncate text-[11px] sm:text-xs" title={activePlay.text}>
-                  {activePlay.text || (activePlay.down && activePlay.distance ? `${activePlay.down}&${activePlay.distance}` : '')}
-                </span>
-              </>
-            ) : (
-              <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
-                <span>Drive Trail: {effectiveDrivePlays.length} Plays</span>
-                <span className="text-slate-600 hidden sm:inline">•</span>
-                <span className="text-[11px] text-slate-500 hidden sm:inline">Use arrows to step through</span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Forward / Next Play Button */}
-          <button
-            type="button"
-            onClick={goToNextPlay}
-            disabled={!canGoNext}
-            className={`flex items-center justify-center p-2 rounded-md min-h-[36px] min-w-[36px] shrink-0 transition-all cursor-pointer ${
-              canGoNext
-                ? 'bg-white/[0.08] text-white hover:bg-white/[0.16] active:bg-white/[0.22] border border-white/[0.15] shadow-sm'
-                : 'bg-white/[0.02] text-slate-600 border border-white/[0.04] cursor-not-allowed opacity-30'
-            }`}
-            aria-label={canGoNext ? "Go to next play in drive" : "At latest play"}
-            title={canGoNext ? "Next play in drive" : "At latest play of drive"}
+          {/* Dedicated Play Narrative Row - 100% full width, ZERO truncation */}
+          <div
+            className="mt-1.5 pt-1.5 border-t border-white/[0.06] text-[12px] sm:text-[13px] leading-relaxed"
+            aria-live="polite"
+            aria-atomic="true"
           >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-
-          {/* Dismiss / Deselect Button */}
-          {activePlay && (
-            <button
-              type="button"
-              onClick={handleDismissPlay}
-              className="text-slate-400 hover:text-white p-2 rounded-md min-h-[36px] min-w-[32px] flex items-center justify-center bg-white/[0.04] hover:bg-white/[0.08] shrink-0 cursor-pointer transition-colors"
-              aria-label="Deselect play and view full drive"
-              title="Deselect play (view full drive)"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
+            {activePlay ? (
+              <p className="text-slate-100 font-medium select-text break-words">
+                {activePlay.text || `${getPlayCategoryLabel(activePlay.category)} for ${activePlay.statYardage} yards.`}
+              </p>
+            ) : (
+              <p className="text-slate-400 italic text-[11px] sm:text-xs">
+                Viewing full drive trail. Click any play on the field or use ◀ ▶ to inspect individual plays.
+              </p>
+            )}
+          </div>
         </div>
       )}
 
