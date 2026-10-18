@@ -715,19 +715,21 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                   {/* Direct 1st Down Label Tag (Intelligently offset to bottom if close to LOS) */}
                   <g transform={`translate(${firstDownBadgeX}, ${firstDownBadgeY})`}>
                     <rect
-                      x="-23"
-                      y="-11"
-                      width="46"
-                      height="22"
-                      rx="4"
+                      x="-30"
+                      y="-14"
+                      width="60"
+                      height="28"
+                      rx="6"
                       fill="#eab308"
-                      filter="drop-shadow(0 2px 4px rgba(0,0,0,0.6))"
+                      stroke="#0f172a"
+                      strokeWidth="1.5"
+                      filter="drop-shadow(0 2px 5px rgba(0,0,0,0.75))"
                     />
                     <text
                       x="0"
                       y="1.5"
                       fill="#0f172a"
-                      fontSize="11"
+                      fontSize="14"
                       fontWeight="900"
                       fontFamily="var(--font-mono)"
                       textAnchor="middle"
@@ -753,19 +755,21 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               {/* Direct Line of Scrimmage Label (Always at Top) */}
               <g transform={`translate(${losBadgeX}, 20)`}>
                 <rect
-                  x="-22"
-                  y="-11"
-                  width="44"
-                  height="22"
-                  rx="4"
+                  x="-28"
+                  y="-14"
+                  width="56"
+                  height="28"
+                  rx="6"
                   fill="#0284c7"
-                  filter="drop-shadow(0 2px 4px rgba(0,0,0,0.6))"
+                  stroke="#ffffff"
+                  strokeWidth="1.5"
+                  filter="drop-shadow(0 2px 5px rgba(0,0,0,0.75))"
                 />
                 <text
                   x="0"
                   y="1.5"
                   fill="#ffffff"
-                  fontSize="11"
+                  fontSize="14"
                   fontWeight="900"
                   fontFamily="var(--font-mono)"
                   textAnchor="middle"
@@ -782,21 +786,21 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
           {isHalftime && (
             <g transform="translate(600, 200)">
               <rect
-                x="-150"
-                y="-27"
-                width="300"
-                height="54"
-                rx="10"
+                x="-200"
+                y="-36"
+                width="400"
+                height="72"
+                rx="14"
                 fill="#090d16"
                 stroke="#f59e0b"
-                strokeWidth="2"
-                filter="drop-shadow(0 4px 12px rgba(0,0,0,0.8))"
+                strokeWidth="2.5"
+                filter="drop-shadow(0 6px 16px rgba(0,0,0,0.85))"
               />
               <text
                 x="0"
-                y="-4"
+                y="-6"
                 fill="#fbbf24"
-                fontSize="15"
+                fontSize="24"
                 fontWeight="900"
                 fontFamily="var(--font-display)"
                 letterSpacing="1.5"
@@ -806,9 +810,9 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               </text>
               <text
                 x="0"
-                y="16"
+                y="20"
                 fill="#cbd5e1"
-                fontSize="11"
+                fontSize="15"
                 fontWeight="700"
                 fontFamily="var(--font-mono)"
                 textAnchor="middle"
@@ -822,23 +826,23 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
           {!hasSituation && (
             <g transform="translate(600, 200)">
               <rect
-                x="-160"
-                y="-28"
-                width="320"
-                height="56"
-                rx="10"
+                x="-210"
+                y="-38"
+                width="420"
+                height="76"
+                rx="14"
                 fill="#090d16"
                 fillOpacity="0.95"
-                stroke="rgba(255,255,255,0.15)"
-                strokeWidth="1.5"
-                filter="drop-shadow(0 4px 12px rgba(0,0,0,0.8))"
+                stroke="rgba(255,255,255,0.25)"
+                strokeWidth="2"
+                filter="drop-shadow(0 6px 16px rgba(0,0,0,0.85))"
               />
               <text
                 x="0"
-                y="-4"
+                y="-6"
                 fill="#ffffff"
-                fontSize="14"
-                fontWeight="800"
+                fontSize="22"
+                fontWeight="900"
                 fontFamily="var(--font-sans)"
                 textAnchor="middle"
               >
@@ -850,10 +854,10 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               </text>
               <text
                 x="0"
-                y="16"
-                fill="#94a3b8"
-                fontSize="11"
-                fontWeight="600"
+                y="22"
+                fill="#cbd5e1"
+                fontSize="15"
+                fontWeight="700"
                 fontFamily="var(--font-mono)"
                 textAnchor="middle"
               >

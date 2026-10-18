@@ -308,8 +308,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg sm:text-xl font-black text-white tracking-tight truncate">
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <span className="text-base sm:text-xl font-black text-white tracking-tight leading-tight">
                       {awayComp?.team?.displayName || awayComp?.team?.name}
                     </span>
                     <span className="font-mono text-xs text-slate-400 font-bold shrink-0">
@@ -369,8 +369,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg sm:text-xl font-black text-white tracking-tight truncate">
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <span className="text-base sm:text-xl font-black text-white tracking-tight leading-tight">
                       {homeComp?.team?.displayName || homeComp?.team?.name}
                     </span>
                     <span className="font-mono text-xs text-slate-400 font-bold shrink-0">

@@ -111,10 +111,7 @@
   }
 }
 
-/* High-Contrast Enhanced Visual Clarity */
-.high-contrast-pro {
-  filter: contrast(1.06);
-}
+/* High-Contrast Enhanced Visual Clarity without breaking position: fixed containing blocks */
 .high-contrast-pro text {
   font-weight: 700;
 }

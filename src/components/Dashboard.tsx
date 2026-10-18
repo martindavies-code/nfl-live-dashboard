@@ -967,16 +967,16 @@ export const Dashboard: React.FC = () => {
             {/* Filter Tabs & Search */}
             <div className="flex flex-wrap items-center gap-2 max-w-full">
               <div
-                className="flex items-center gap-1 rounded-lg bg-[#111927] p-1 border border-white/[0.08] overflow-x-auto no-scrollbar max-w-full"
+                className="flex items-center gap-1 rounded-lg bg-[#111927] p-1 border border-white/[0.08] overflow-x-auto no-scrollbar max-w-full flex-nowrap"
                 role="tablist"
                 aria-label="Filter games by state"
               >
                 {[
                   { id: 'all' as GameFilter, label: 'All', mobileLabel: 'All', count: events.length },
                   { id: 'live' as GameFilter, label: 'Live', mobileLabel: 'Live', count: liveCount },
-                  { id: 'redzone' as GameFilter, label: 'Red Zone', mobileLabel: 'Red Zone', count: redZoneCount },
+                  { id: 'redzone' as GameFilter, label: 'Red Zone', mobileLabel: 'RZ', count: redZoneCount },
                   { id: 'halftime' as GameFilter, label: 'At Halftime', mobileLabel: 'Half', count: halftimeCount },
-                  { id: 'upcoming' as GameFilter, label: 'Upcoming', mobileLabel: 'Upcoming', count: upcomingCount },
+                  { id: 'upcoming' as GameFilter, label: 'Upcoming', mobileLabel: 'Soon', count: upcomingCount },
                   { id: 'final' as GameFilter, label: 'Final', mobileLabel: 'Final', count: finalCount },
                 ].map((tab, idx, arr) => {
                   const isSelected = filter === tab.id
@@ -1049,7 +1049,7 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Global Expand Buttons for Radars, Broadcast, Scorigami */}
-              <div className="flex items-center rounded-lg bg-[#111927] p-1 border border-white/[0.08] gap-1" role="group" aria-label="Global Card Views">
+              <div className="flex items-center rounded-lg bg-[#111927] p-1 border border-white/[0.08] gap-1 shrink-0" role="group" aria-label="Global Card Views">
                 {/* 1. All Radars */}
                 <button
                   type="button"

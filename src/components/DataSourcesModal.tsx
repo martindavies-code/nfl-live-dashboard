@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { Server, CheckCircle2, ShieldCheck, X, RefreshCw, Zap, Database } from 'lucide-react'
 import { REAL_NFL_DATA_SOURCES } from '../services/espnApi'
 import { useFocusTrap } from '../utils/useFocusTrap'
@@ -30,7 +31,7 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
 
   if (!isOpen) return null
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
       role="dialog"
@@ -208,4 +209,6 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
       </div>
     </div>
   )
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent
 }

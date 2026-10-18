@@ -103,8 +103,22 @@ async function runAudit(options = {}) {
   const outDir = path.join(ROOT_DIR, 'screenshots')
   ensureDir(outDir)
 
-  // Current artifact directory
-  const artifactDir = 'C:\\Users\\Martin\\.gemini\\antigravity-ide\\brain\\f8fb1880-542c-4b0d-9418-fa1e3678d497'
+  // Current conversation artifact directory
+  const artifactDir = process.env.GEMINI_ARTIFACT_DIR || 'C:\\Users\\Martin\\.gemini\\antigravity-ide\\brain\\3af0f0f6-bae9-44f2-85ee-e8039860a520'
+  ensureDir(artifactDir)
+
+  const saveShot = async (page, filename, element = null) => {
+    const destLocal = path.join(outDir, filename)
+    if (element) {
+      await element.screenshot({ path: destLocal })
+    } else {
+      await page.screenshot({ path: destLocal, fullPage: false })
+    }
+    console.log(`  ✔ Saved: ${filename}`)
+    if (fs.existsSync(artifactDir)) {
+      fs.copyFileSync(destLocal, path.join(artifactDir, filename))
+    }
+  }
 
   let spawnedServer = null
   if (!(await isServerUp(targetUrl))) {
@@ -115,7 +129,7 @@ async function runAudit(options = {}) {
       stdio: 'ignore',
       shell: true,
     })
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 25; i++) {
       await new Promise((r) => setTimeout(r, 500))
       if (await isServerUp(targetUrl)) {
         console.log('  ✔ Vite preview server is ready!')
@@ -147,23 +161,17 @@ async function runAudit(options = {}) {
       }
     })
 
-    console.log(`[1/6] Navigating to ${targetUrl}...`)
+    console.log(`[1/14] Navigating to ${targetUrl}...`)
     await page.goto(targetUrl, { waitUntil: 'networkidle0', timeout: 15000 })
-
     const title = await page.title()
     console.log(`  ✔ Page loaded successfully! Title: "${title}"`)
 
-    // Wait 1.5 seconds for mock/live data hydration
+    // Wait for hydration
     await new Promise((r) => setTimeout(r, 1500))
 
-    // 1. Desktop Initial State Screenshot
-    console.log(`[2/6] Capturing Desktop Viewport (1440x900)...`)
-    const desktopPath = path.join(outDir, '01-desktop-live.png')
-    await page.screenshot({ path: desktopPath, fullPage: false })
-    console.log(`  ✔ Saved: ${desktopPath}`)
-    if (fs.existsSync(artifactDir)) {
-      fs.copyFileSync(desktopPath, path.join(artifactDir, '01-desktop-live.png'))
-    }
+    // 1. Desktop Initial State
+    console.log(`[2/14] Capturing Desktop Viewport (1440x900)...`)
+    await saveShot(page, '01-desktop-live.png')
 
     // Capture Hero Field Position Radar with Drive Plays
     const radarEl = await page.$('div[role="region"][aria-label*="Football field"]')
@@ -172,194 +180,134 @@ async function runAudit(options = {}) {
         el.scrollIntoView({ block: 'center' })
       }, radarEl)
       await new Promise((r) => setTimeout(r, 300))
-
-      const radarPath = path.join(outDir, '10-hero-field-radar.png')
-      await radarEl.screenshot({ path: radarPath })
-      console.log(`  ✔ Saved: ${radarPath}`)
-      if (fs.existsSync(artifactDir)) {
-        fs.copyFileSync(radarPath, path.join(artifactDir, '10-hero-field-radar.png'))
-      }
-
-      // Click on a drive play arrow to pin interactive play callout banner
-      const playArrow = await page.$('g[id^="drive-plays-"] g.cursor-pointer')
-      if (playArrow) {
-        await playArrow.click()
-        await new Promise((r) => setTimeout(r, 400))
-        await page.evaluate((el) => {
-          el.scrollIntoView({ block: 'center' })
-        }, radarEl)
-        await new Promise((r) => setTimeout(r, 200))
-        const hoverPath = path.join(outDir, '11-radar-play-hover.png')
-        await radarEl.screenshot({ path: hoverPath })
-        console.log(`  ✔ Saved: ${hoverPath}`)
-        if (fs.existsSync(artifactDir)) {
-          fs.copyFileSync(hoverPath, path.join(artifactDir, '11-radar-play-hover.png'))
-        }
-      }
+      await saveShot(page, '01b-hero-field-radar.png', radarEl)
     }
 
-    // 2. Test Keyboard Shortcuts Modal (Press '?')
-    console.log(`[3/6] Testing Keyboard Shortcut: '?' (Open Help Dialog)...`)
+    // 2. Keyboard Shortcuts Modal (Press '?')
+    console.log(`[3/14] Testing Keyboard Shortcut: '?' (Open Help Dialog)...`)
     await page.keyboard.press('?')
-    await new Promise((r) => setTimeout(r, 400))
-
-    const modalVisible = await page.$eval(
-      '[role="dialog"]',
-      (el) => el !== null && window.getComputedStyle(el).display !== 'none'
-    ).catch(() => false)
-
-    if (modalVisible) {
-      console.log(`  ✔ Modal dialog opened successfully with role="dialog"!`)
-      const modalPath = path.join(outDir, '02-shortcuts-modal.png')
-      await page.screenshot({ path: modalPath, fullPage: false })
-      console.log(`  ✔ Saved: ${modalPath}`)
-      if (fs.existsSync(artifactDir)) {
-        fs.copyFileSync(modalPath, path.join(artifactDir, '02-shortcuts-modal.png'))
-      }
-    } else {
-      console.log(`  ⚠️ Notice: Modal element not immediately found via query.`)
-    }
-
-    // Dismiss modal with Escape key
+    await new Promise((r) => setTimeout(r, 500))
+    await saveShot(page, '02-shortcuts-modal.png')
     await page.keyboard.press('Escape')
     await new Promise((r) => setTimeout(r, 300))
 
-    // 3. Test High-Contrast Pro Mode (Active permanently by default)
-    console.log(`[4/6] Verifying High-Contrast Pro Mode active by default...`)
-    const isHighContrast = await page.evaluate(() =>
-      document.documentElement.classList.contains('high-contrast-pro')
-    )
-    console.log(`  ✔ High-Contrast Pro class active: ${isHighContrast}`)
-
-    const contrastPath = path.join(outDir, '03-high-contrast-mode.png')
-    await page.screenshot({ path: contrastPath, fullPage: false })
-    console.log(`  ✔ Saved: ${contrastPath}`)
-    if (fs.existsSync(artifactDir)) {
-      fs.copyFileSync(contrastPath, path.join(artifactDir, '03-high-contrast-mode.png'))
-    }
-
-    // 4. Test Data Redundancy Modal (Press 'S')
-    console.log(`[5/7] Testing Data Redundancy Modal: 'S'...`)
+    // 3. Data Sources Modal (Press 'S')
+    console.log(`[4/14] Testing Data Sources Modal: 'S'...`)
     await page.keyboard.press('s')
-    await new Promise((r) => setTimeout(r, 600))
-
-    const simPath = path.join(outDir, '04-simulation-radar.png')
-    await page.screenshot({ path: simPath, fullPage: false })
-    console.log(`  ✔ Saved: ${simPath}`)
-    if (fs.existsSync(artifactDir)) {
-      fs.copyFileSync(simPath, path.join(artifactDir, '04-simulation-radar.png'))
-    }
-
-    // Dismiss redundancy modal with Escape
+    await new Promise((r) => setTimeout(r, 500))
+    await saveShot(page, '03-data-sources-modal.png')
     await page.keyboard.press('Escape')
     await new Promise((r) => setTimeout(r, 300))
 
-    // 5. Test Synchronized Field Radars (Press 'F')
-    console.log(`[6/7] Testing Synchronized Field Radars: 'F'...`)
-    await page.keyboard.press('f')
-    await new Promise((r) => setTimeout(r, 600))
-
-    // Scroll to the All Matchups grid section so all 3 cards in row are clearly visible
-    await page.evaluate(() => {
-      const el = document.querySelector('#all-matchups-title')
-      if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' })
-    })
-    await new Promise((r) => setTimeout(r, 400))
-
-    const gridRadarPath = path.join(outDir, '07-grid-all-radars.png')
-    await page.screenshot({ path: gridRadarPath, fullPage: false })
-    console.log(`  ✔ Saved: ${gridRadarPath}`)
-    if (fs.existsSync(artifactDir)) {
-      fs.copyFileSync(gridRadarPath, path.join(artifactDir, '07-grid-all-radars.png'))
-    }
-
-    // Scroll back to top
-    await page.evaluate(() => window.scrollTo(0, 0))
-    await new Promise((r) => setTimeout(r, 300))
-
-    // 6. Test Week & Playoff Navigation: Open Week Selector Popover
-    console.log(`[7/9] Testing Week Selector Dropdown Dialog...`)
+    // 4. Week Selector Menu (Regular Season)
+    console.log(`[5/14] Testing Week Selector Dropdown Dialog...`)
     const weekBtn = await page.$('button[aria-haspopup="dialog"]')
     if (weekBtn) {
       await weekBtn.click()
       await new Promise((r) => setTimeout(r, 400))
-      const weekMenuPath = path.join(outDir, '08-week-selector-menu.png')
-      await page.screenshot({ path: weekMenuPath, fullPage: false })
-      console.log(`  ✔ Saved: ${weekMenuPath}`)
-      if (fs.existsSync(artifactDir)) {
-        fs.copyFileSync(weekMenuPath, path.join(artifactDir, '08-week-selector-menu.png'))
-      }
+      await saveShot(page, '04-week-selector-regular.png')
 
-      // Switch to NFL Playoffs tab in dialog
+      // Switch to NFL Playoffs tab
       await page.evaluate(() => {
         const btns = Array.from(document.querySelectorAll('button'))
         const playoffTab = btns.find((b) => b.textContent?.includes('NFL Playoffs'))
         playoffTab?.click()
       })
       await new Promise((r) => setTimeout(r, 400))
+      await saveShot(page, '05-week-selector-playoffs.png')
 
-      const playoffMenuPath = path.join(outDir, '08b-playoffs-tab-menu.png')
-      await page.screenshot({ path: playoffMenuPath, fullPage: false })
-      console.log(`  ✔ Saved: ${playoffMenuPath}`)
-      if (fs.existsSync(artifactDir)) {
-        fs.copyFileSync(playoffMenuPath, path.join(artifactDir, '08b-playoffs-tab-menu.png'))
-      }
-
-      // Close dropdown with Escape
       await page.keyboard.press('Escape')
       await new Promise((r) => setTimeout(r, 300))
     }
 
-    // 7. Test NFL Playoffs & Super Bowl Navigation (Press 'P')
-    console.log(`[8/9] Testing NFL Playoffs & Super Bowl Navigation: 'P'...`)
+    // 5. Expand All Radars (Press 'F')
+    console.log(`[6/14] Testing Bulk Expand All Radars: 'F'...`)
+    await page.keyboard.press('f')
+    await new Promise((r) => setTimeout(r, 500))
+    await page.evaluate(() => {
+      const el = document.querySelector('#all-matchups-title')
+      if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' })
+    })
+    await new Promise((r) => setTimeout(r, 400))
+    await saveShot(page, '06-grid-all-radars.png')
+
+    // 6. Expand All Announcers (Press 'B')
+    console.log(`[7/14] Testing Bulk Expand All Announcers: 'B'...`)
+    await page.keyboard.press('b')
+    await new Promise((r) => setTimeout(r, 500))
+    await saveShot(page, '07-grid-all-announcers.png')
+
+    // 7. Expand All Scorigamis (Press 'C')
+    console.log(`[8/14] Testing Bulk Expand All Scorigamis: 'C'...`)
+    await page.keyboard.press('c')
+    await new Promise((r) => setTimeout(r, 500))
+    await saveShot(page, '08-grid-all-scorigamis.png')
+
+    // Reset expanders (Press 'C' again to close)
+    await page.keyboard.press('c')
+    await new Promise((r) => setTimeout(r, 300))
+    await page.evaluate(() => window.scrollTo(0, 0))
+
+    // 8. Super Bowl / Playoff Navigation (Press 'P')
+    console.log(`[9/14] Testing Playoff & Super Bowl Navigation: 'P'...`)
     await page.keyboard.press('p')
     await new Promise((r) => setTimeout(r, 600))
+    await saveShot(page, '09-playoffs-superbowl.png')
 
-    const playoffPath = path.join(outDir, '09-playoffs-superbowl.png')
-    await page.screenshot({ path: playoffPath, fullPage: false })
-    console.log(`  ✔ Saved: ${playoffPath}`)
-    if (fs.existsSync(artifactDir)) {
-      fs.copyFileSync(playoffPath, path.join(artifactDir, '09-playoffs-superbowl.png'))
-    }
-
-    // Return back to live week (Press '0')
+    // Return to live week
     await page.keyboard.press('0')
-    await new Promise((r) => setTimeout(r, 400))
+    await new Promise((r) => setTimeout(r, 500))
 
-    // 8. Test Mobile Responsive Viewport (390x844 iPhone / Android standard)
-    console.log(`[9/10] Testing Mobile Responsive Viewport (390x844)...`)
-    await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
+    // 9. Mobile Portrait Viewport - Pixel 6 (393x851)
+    console.log(`[10/14] Testing Mobile Portrait Viewport - Google Pixel 6 (393x851)...`)
+    await page.setViewport({ width: 393, height: 851, isMobile: true, hasTouch: true })
     await page.evaluate(() => window.scrollTo(0, 0))
-    await page.waitForSelector('#matchups-grid article', { timeout: 4000 }).catch(() => {})
     await new Promise((r) => setTimeout(r, 600))
+    await saveShot(page, '10-mobile-portrait-hero.png')
 
-    const mobilePath = path.join(outDir, '05-mobile-viewport.png')
-    await page.screenshot({ path: mobilePath, fullPage: false })
-    console.log(`  ✔ Saved: ${mobilePath}`)
-    if (fs.existsSync(artifactDir)) {
-      fs.copyFileSync(mobilePath, path.join(artifactDir, '05-mobile-viewport.png'))
+    // 10. Mobile Field Radar with Play Text Close-up
+    console.log(`[11/14] Capturing Mobile Field Radar close-up...`)
+    const mobileRadar = await page.$('div[role="region"][aria-label*="Football field"]')
+    if (mobileRadar) {
+      await page.evaluate((el) => {
+        el.scrollIntoView({ block: 'center' })
+      }, mobileRadar)
+      await new Promise((r) => setTimeout(r, 400))
+      await saveShot(page, '11-mobile-field-radar.png', mobileRadar)
     }
 
-    // 9. Test Tablet Responsive Viewport (820x1180 iPad Air standard)
-    console.log(`[10/10] Testing Tablet Responsive Viewport (820x1180)...`)
+    // 11. Mobile Matchups Grid
+    console.log(`[12/14] Capturing Mobile Matchups Grid...`)
+    await page.evaluate(() => {
+      const el = document.querySelector('#all-matchups-title')
+      if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' })
+    })
+    await new Promise((r) => setTimeout(r, 500))
+    await saveShot(page, '12-mobile-matchups-grid.png')
+
+    // 12. Mobile Keyboard Shortcuts / Help Modal
+    console.log(`[13/14] Testing Mobile Dialogs...`)
+    await page.keyboard.press('?')
+    await new Promise((r) => setTimeout(r, 500))
+    await saveShot(page, '13-mobile-shortcuts-modal.png')
+    await page.keyboard.press('Escape')
+    await new Promise((r) => setTimeout(r, 300))
+
+    // 13. Tablet Viewport - iPad Air (820x1180)
+    console.log(`[14/14] Testing Tablet Viewport - iPad Air (820x1180)...`)
     await page.setViewport({ width: 820, height: 1180, isMobile: true, hasTouch: true })
     await page.evaluate(() => window.scrollTo(0, 0))
     await new Promise((r) => setTimeout(r, 600))
-
-    const tabletPath = path.join(outDir, '05b-tablet-viewport.png')
-    await page.screenshot({ path: tabletPath, fullPage: false })
-    console.log(`  ✔ Saved: ${tabletPath}`)
-    if (fs.existsSync(artifactDir)) {
-      fs.copyFileSync(tabletPath, path.join(artifactDir, '05b-tablet-viewport.png'))
-    }
+    await saveShot(page, '14-tablet-viewport.png')
 
     console.log(`\n======================================================`)
-    console.log(`🎉 Automated Headless Audit Complete!`)
+    console.log(`🎉 Automated Visual & Accessibility Audit Complete!`)
     console.log(`Console Errors: ${consoleErrors.length}`)
     if (consoleErrors.length > 0) {
       console.log(`Errors encountered:`, consoleErrors)
     }
     console.log(`Screenshots saved to: ${outDir}`)
+    console.log(`Screenshots copied to artifact dir: ${artifactDir}`)
     console.log(`======================================================\n`)
   } finally {
     try {
