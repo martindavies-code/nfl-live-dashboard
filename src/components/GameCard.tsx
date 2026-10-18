@@ -125,7 +125,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
       }}
       aria-label={cardAriaLabel}
       className={`group relative flex flex-col h-full rounded-xl transition-all duration-200 overflow-hidden ${
-        onSpotlight && !isSpotlighted ? 'cursor-pointer hover:-translate-y-0.5' : ''
+        onSpotlight && !isSpotlighted ? 'cursor-pointer hover:border-sky-400/50' : ''
       } ${
         isRedZone
           ? 'card-tier-redzone'

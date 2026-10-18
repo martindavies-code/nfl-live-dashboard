@@ -154,7 +154,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
           onClick={handleReturnToLive}
           title="Jump directly to current live week (Shortcut: 0 or W)"
           aria-label={`Jump back to Live Week ${liveWeek}`}
-          className="ml-2 hidden sm:flex items-center gap-1.5 rounded-full bg-red-500/20 border border-red-500/40 px-2.5 py-1 text-[11px] font-bold text-red-300 hover:bg-red-500/30 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 animate-pulse"
+          className="ml-2 hidden sm:flex items-center gap-1.5 rounded-full bg-red-500/20 border border-red-500/40 px-2.5 py-1 text-[11px] font-bold text-red-300 hover:bg-red-500/30 transition-all hover:border-red-400/60 focus:outline-none focus:ring-2 focus:ring-red-400 animate-pulse"
         >
           <Radio className="h-3 w-3 text-red-400 shrink-0" />
           <span>Live: W{liveWeek}</span>
