@@ -1,4 +1,5 @@
 import React, { useId, useState, useMemo, memo } from 'react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import type { NFLSituation, NFLCompetitor, NFLStatus, NFLDrivePlay } from '../types/nfl'
 import { sanitizeHexColor, getOffensiveDrive, isRedZoneSituation, isHalftimeSituation, formatDownAndDistance } from '../utils/nflHelpers'
 import { getPlayColor, getPlayLaneY, getPlayCategoryLabel, generateMockDrivePlays, isKickoffPlay } from '../utils/drivePlays'
@@ -28,6 +29,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   const uniqueId = useId().replace(/:/g, '')
   const [pinnedPlayId, setPinnedPlayId] = useState<string | null>(null)
   const [hoveredPlay, setHoveredPlay] = useState<NFLDrivePlay | null>(null)
+  const [isDismissed, setIsDismissed] = useState<boolean>(false)
 
   const homeComp = competitors.find((c) => c.homeAway === 'home')
   const awayComp = competitors.find((c) => c.homeAway === 'away')
@@ -139,7 +141,64 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
     return []
   }, [drivePlays, cachedDrivePlays, hasSituation, gameState, yardLineClamped, direction, offensiveAbbr])
 
-  const activePlay = hoveredPlay || (pinnedPlayId ? effectiveDrivePlays.find((p) => (p.id || String(p.sequence)) === pinnedPlayId) : null) || null
+  const activePlay = useMemo(() => {
+    if (hoveredPlay) return hoveredPlay
+    if (pinnedPlayId) {
+      const found = effectiveDrivePlays.find((p) => (p.id || String(p.sequence)) === pinnedPlayId)
+      if (found) return found
+    }
+    // Default to the latest play of the drive so mobile portrait users immediately see the play and can scrub backwards
+    if (!isDismissed && effectiveDrivePlays.length > 0) {
+      return effectiveDrivePlays[effectiveDrivePlays.length - 1]
+    }
+    return null
+  }, [hoveredPlay, pinnedPlayId, isDismissed, effectiveDrivePlays])
+
+  const activeIndex = useMemo(() => {
+    if (!activePlay) return -1
+    return effectiveDrivePlays.findIndex(
+      (p) => (p.id || String(p.sequence)) === (activePlay.id || String(activePlay.sequence))
+    )
+  }, [activePlay, effectiveDrivePlays])
+
+  const canGoPrevious = effectiveDrivePlays.length > 1 && (activeIndex > 0 || activeIndex === -1)
+  const canGoNext = effectiveDrivePlays.length > 1 && activeIndex !== -1 && activeIndex < effectiveDrivePlays.length - 1
+
+  const goToPreviousPlay = () => {
+    if (effectiveDrivePlays.length === 0) return
+    setIsDismissed(false)
+    if (activeIndex === -1) {
+      const targetIdx = Math.max(0, effectiveDrivePlays.length - 2)
+      const target = effectiveDrivePlays[targetIdx]
+      setPinnedPlayId(target.id || String(target.sequence || targetIdx + 1))
+      setHoveredPlay(null)
+    } else if (activeIndex > 0) {
+      const target = effectiveDrivePlays[activeIndex - 1]
+      setPinnedPlayId(target.id || String(target.sequence || activeIndex))
+      setHoveredPlay(null)
+    }
+  }
+
+  const goToNextPlay = () => {
+    if (effectiveDrivePlays.length === 0) return
+    setIsDismissed(false)
+    if (activeIndex === -1) {
+      const targetIdx = effectiveDrivePlays.length - 1
+      const target = effectiveDrivePlays[targetIdx]
+      setPinnedPlayId(target.id || String(target.sequence || targetIdx + 1))
+      setHoveredPlay(null)
+    } else if (activeIndex < effectiveDrivePlays.length - 1) {
+      const target = effectiveDrivePlays[activeIndex + 1]
+      setPinnedPlayId(target.id || String(target.sequence || activeIndex + 2))
+      setHoveredPlay(null)
+    }
+  }
+
+  const handleDismissPlay = () => {
+    setPinnedPlayId(null)
+    setHoveredPlay(null)
+    setIsDismissed(true)
+  }
 
   const accessibilityDesc = hasSituation
     ? `Football field diagram: Ball at ${losLabel}, ${situation?.downDistanceText || 'Active play'}, ${offensiveAbbr} driving towards ${direction === 'right' ? awayAbbr : homeAbbr}.`
@@ -222,11 +281,11 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
         </div>
       )}
 
-      {/* SVG American Football Pitch: Sleek, Panoramic Aspect Ratio without Wasted Space (Kucharski Reason #3) */}
+      {/* SVG American Football Pitch: Sleek, Panoramic Aspect Ratio with optimized mobile legibility */}
       <div className={
         isCompact
-          ? "relative w-full aspect-[1200/400] min-h-[120px] max-h-[160px]"
-          : "relative w-full aspect-[1200/400] min-h-[160px] max-h-[230px] mx-auto"
+          ? "relative w-full aspect-[1200/400] min-h-[135px] max-h-[180px]"
+          : "relative w-full aspect-[1200/400] min-h-[165px] xs:min-h-[185px] sm:min-h-[200px] max-h-[250px] mx-auto"
       }>
         <svg
           viewBox="0 0 1200 400"
@@ -459,15 +518,28 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                     const isPass = play.category === 'pass'
                     const isSack = play.category === 'sack'
                     const isPenalty = play.category === 'penalty'
-                    const isSelected = activePlay?.id === play.id
+                    const isSelected = activePlay ? (activePlay.id === play.id || String(activePlay.sequence) === String(play.sequence)) : false
+
+                    // Mobile-optimized bold dimensional scales
+                    const circleR = isSelected ? (isCompact ? 14 : 16) : (isCompact ? 11 : 13)
+                    const circleFont = isSelected ? (isCompact ? 12 : 14) : (isCompact ? 10 : 11.5)
+                    const coreStroke = isSelected ? (isCompact ? 5.5 : 7) : (isCompact ? 3.8 : 4.8)
+                    const haloStroke = isSelected ? (isCompact ? 13 : 16) : (isCompact ? 8 : 10)
+                    const arrowHeadLen = isSelected ? (isCompact ? 18 : 22) : (isCompact ? 14 : 17)
+                    const arrowHeadH = isSelected ? (isCompact ? 8 : 9.5) : (isCompact ? 6 : 7.5)
+                    const pillW = isSelected ? (isCompact ? 40 : 48) : (isCompact ? 34 : 40)
+                    const pillH = isSelected ? (isCompact ? 20 : 23) : (isCompact ? 17 : 20)
+                    const pillFont = isSelected ? (isCompact ? 11 : 12.5) : (isCompact ? 9.5 : 11)
+                    const pillOffset = isSelected ? 16 : 13
 
                     return (
                       <g
                         key={`drive-play-${play.id || idx}`}
                         className="cursor-pointer transition-opacity"
-                        opacity={activePlay ? (isSelected ? 1 : 0.35) : 0.92}
+                        opacity={activePlay ? (isSelected ? 1 : 0.45) : 0.92}
                         onClick={() => {
                           const id = play.id || String(play.sequence || idx + 1)
+                          setIsDismissed(false)
                           setPinnedPlayId((prev) => (prev === id ? null : id))
                         }}
                         onMouseEnter={() => setHoveredPlay(play)}
@@ -475,12 +547,12 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                       >
                         <title>{`Play #${play.sequence || idx + 1}: ${play.text || `${play.category.toUpperCase()} (${play.statYardage >= 0 ? `+${play.statYardage}` : play.statYardage} yds)`}`}</title>
 
-                        {/* Generous touch & hover hitbox */}
+                        {/* Generous touch & hover hitbox for easy tapping on mobile */}
                         <rect
-                          x={Math.min(startX, endX) - 10}
-                          y={laneY - 14}
-                          width={Math.max(28, Math.abs(deltaX) + 20)}
-                          height={28}
+                          x={Math.min(startX, endX) - 14}
+                          y={laneY - 20}
+                          width={Math.max(38, Math.abs(deltaX) + 28)}
+                          height={40}
                           fill="rgba(0,0,0,0.001)"
                           pointerEvents="all"
                         />
@@ -489,17 +561,17 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                         <circle
                           cx={startX}
                           cy={laneY}
-                          r={isCompact ? 7 : 9}
-                          fill="#090d16"
+                          r={circleR}
+                          fill="#070b14"
                           stroke={color}
-                          strokeWidth={isSelected ? 2.5 : 1.8}
-                          filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))"
+                          strokeWidth={isSelected ? 3.5 : 2.5}
+                          filter={isSelected ? "drop-shadow(0 0 8px rgba(255,255,255,0.45)) drop-shadow(0 2px 6px rgba(0,0,0,0.9))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.85))"}
                         />
                         <text
                           x={startX}
                           y={laneY + 0.5}
                           fill="#ffffff"
-                          fontSize={isCompact ? 7.5 : 9.5}
+                          fontSize={circleFont}
                           fontWeight="900"
                           fontFamily="var(--font-mono)"
                           textAnchor="middle"
@@ -513,60 +585,61 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                           <>
                             {/* Ambient glow halo */}
                             <line
-                              x1={startX + (deltaX > 0 ? (isCompact ? 7 : 9) : (isCompact ? -7 : -9))}
+                              x1={startX + (deltaX > 0 ? circleR : -circleR)}
                               y1={laneY}
                               x2={endX}
                               y2={laneY}
                               stroke={color}
-                              strokeWidth={isCompact ? 5 : 7}
-                              opacity={isSelected ? 0.5 : 0.25}
+                              strokeWidth={haloStroke}
+                              opacity={isSelected ? 0.65 : 0.3}
                               strokeLinecap="round"
                             />
                             {/* Core arrow stroke */}
                             <line
-                              x1={startX + (deltaX > 0 ? (isCompact ? 7 : 9) : (isCompact ? -7 : -9))}
+                              x1={startX + (deltaX > 0 ? circleR : -circleR)}
                               y1={laneY}
-                              x2={deltaX > 0 ? endX - 8 : endX + 8}
+                              x2={deltaX > 0 ? endX - (arrowHeadLen * 0.7) : endX + (arrowHeadLen * 0.7)}
                               y2={laneY}
                               stroke={color}
-                              strokeWidth={isCompact ? (isSelected ? 3.5 : 2.5) : (isSelected ? 4.5 : 3.2)}
-                              strokeDasharray={isSack || isPenalty ? '6,3' : undefined}
+                              strokeWidth={coreStroke}
+                              strokeDasharray={isSack || isPenalty ? '6,4' : undefined}
                               strokeLinecap="round"
                             />
                             {/* Arrowhead polygon pointing in play direction */}
                             {deltaX > 0 ? (
                               <polygon
-                                points={`${endX},${laneY} ${endX - 11},${laneY - 4.5} ${endX - 11},${laneY + 4.5}`}
+                                points={`${endX},${laneY} ${endX - arrowHeadLen},${laneY - arrowHeadH} ${endX - arrowHeadLen},${laneY + arrowHeadH}`}
                                 fill={color}
-                                filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))"
+                                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.85))"
                               />
                             ) : (
                               <polygon
-                                points={`${endX},${laneY} ${endX + 11},${laneY - 4.5} ${endX + 11},${laneY + 4.5}`}
+                                points={`${endX},${laneY} ${endX + arrowHeadLen},${laneY - arrowHeadH} ${endX + arrowHeadLen},${laneY + arrowHeadH}`}
                                 fill={color}
-                                filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))"
+                                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.85))"
                               />
                             )}
 
                             {/* Yardage Badge Pill */}
-                            <g transform={`translate(${(startX + endX) / 2}, ${laneY - 10})`}>
+                            <g transform={`translate(${(startX + endX) / 2}, ${laneY - pillOffset})`}>
                               <rect
-                                x={isCompact ? -12 : -15}
-                                y={isCompact ? -6 : -7.5}
-                                width={isCompact ? 24 : 30}
-                                height={isCompact ? 12 : 15}
-                                rx={3}
-                                fill="#090d16"
+                                x={-pillW / 2}
+                                y={-pillH / 2}
+                                width={pillW}
+                                height={pillH}
+                                rx={4}
+                                fill="#070b14"
                                 stroke={color}
-                                strokeWidth={1}
-                                opacity={0.95}
+                                strokeWidth={isSelected ? 2 : 1.5}
+                                opacity={0.96}
+                                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.85))"
                               />
                               <text
                                 x={0}
                                 y={0.5}
                                 fill={color}
-                                fontSize={isCompact ? 7 : 8.5}
-                                fontWeight="bold"
+                                fontSize={pillFont}
+                                fontWeight="900"
                                 fontFamily="var(--font-mono)"
                                 textAnchor="middle"
                                 dominantBaseline="middle"
@@ -581,24 +654,25 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                             {isPass ? (
                               <>
                                 <line
-                                  x1={startX + (direction === 'right' ? 8 : -8)}
+                                  x1={startX + (direction === 'right' ? circleR + 2 : -circleR - 2)}
                                   y1={laneY}
-                                  x2={startX + (direction === 'right' ? 45 : -45)}
+                                  x2={startX + (direction === 'right' ? 55 : -55)}
                                   y2={laneY}
                                   stroke={color}
-                                  strokeWidth={isCompact ? 2 : 2.5}
-                                  strokeDasharray="4,3"
-                                  opacity={0.7}
+                                  strokeWidth={isCompact ? 3 : 3.6}
+                                  strokeDasharray="5,4"
+                                  opacity={0.8}
                                 />
                                 <text
-                                  x={startX + (direction === 'right' ? 53 : -53)}
+                                  x={startX + (direction === 'right' ? 68 : -68)}
                                   y={laneY + 1}
                                   fill={color}
-                                  fontSize={isCompact ? 9 : 11}
-                                  fontWeight="bold"
+                                  fontSize={isCompact ? 14 : 17}
+                                  fontWeight="900"
                                   fontFamily="var(--font-mono)"
                                   textAnchor="middle"
                                   dominantBaseline="middle"
+                                  filter="drop-shadow(0 2px 4px rgba(0,0,0,0.9))"
                                 >
                                   ✕
                                 </text>
@@ -606,12 +680,13 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                             ) : (
                               <line
                                 x1={startX}
-                                y1={laneY - 7}
+                                y1={laneY - 10}
                                 x2={startX}
-                                y2={laneY + 7}
+                                y2={laneY + 10}
                                 stroke={color}
-                                strokeWidth={3}
+                                strokeWidth={4.5}
                                 strokeLinecap="round"
+                                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.9))"
                               />
                             )}
                           </>
@@ -788,38 +863,97 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
         </svg>
       </div>
 
-      {/* Interactive Active Play Detail Banner */}
-      {activePlay && (
-        <div className="flex items-center justify-between gap-2 border-t border-white/[0.08] bg-[#050914] px-3.5 py-1.5 text-xs text-slate-300">
-          <div className="flex items-center gap-2 min-w-0">
-            <span
-              className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider shrink-0"
-              style={{
-                backgroundColor: `${getPlayColor(activePlay.category)}25`,
-                color: getPlayColor(activePlay.category),
-                border: `1px solid ${getPlayColor(activePlay.category)}60`,
-              }}
-            >
-              Play #{activePlay.sequence || '•'} {getPlayCategoryLabel(activePlay.category)}
-            </span>
-            <span className="font-mono font-bold text-white shrink-0">
-              {activePlay.statYardage > 0 ? `+${activePlay.statYardage} yds` : `${activePlay.statYardage} yds`}
-            </span>
-            <span className="text-slate-300 truncate text-[11px]">
-              {activePlay.text || (activePlay.down && activePlay.distance ? `${activePlay.down}&${activePlay.distance}` : '')}
-            </span>
-          </div>
+      {/* Interactive Active Play Detail Banner with Mobile-First Step Scrubbing Controls */}
+      {effectiveDrivePlays.length > 0 && (
+        <div
+          className="flex items-center justify-between gap-1.5 sm:gap-2.5 border-t border-white/[0.08] bg-[#050914] px-2 sm:px-3 py-2 text-xs text-slate-300 select-none"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft') {
+              e.preventDefault()
+              goToPreviousPlay()
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault()
+              goToNextPlay()
+            }
+          }}
+          role="region"
+          aria-label="Drive plays navigation"
+        >
+          {/* Back / Previous Play Button */}
           <button
-            onClick={() => {
-              setPinnedPlayId(null)
-              setHoveredPlay(null)
-            }}
-            className="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-white/[0.04] hover:bg-white/[0.08] shrink-0 cursor-pointer"
-            aria-label="Dismiss play detail"
-            title="Close play detail"
+            type="button"
+            onClick={goToPreviousPlay}
+            disabled={!canGoPrevious}
+            className={`flex items-center justify-center p-2 rounded-md min-h-[36px] min-w-[36px] shrink-0 transition-all cursor-pointer ${
+              canGoPrevious
+                ? 'bg-white/[0.08] text-white hover:bg-white/[0.16] active:bg-white/[0.22] border border-white/[0.15] shadow-sm'
+                : 'bg-white/[0.02] text-slate-600 border border-white/[0.04] cursor-not-allowed opacity-30'
+            }`}
+            aria-label={canGoPrevious ? "Go to previous play in drive" : "At first play"}
+            title={canGoPrevious ? "Previous play in drive" : "At beginning of drive"}
           >
-            ✕
+            <ChevronLeft className="h-4 w-4" />
           </button>
+
+          {/* Central Play Indicator & Description */}
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 justify-center sm:justify-start overflow-hidden">
+            {activePlay ? (
+              <>
+                <span
+                  className="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-black uppercase tracking-wider shrink-0"
+                  style={{
+                    backgroundColor: `${getPlayColor(activePlay.category)}25`,
+                    color: getPlayColor(activePlay.category),
+                    border: `1px solid ${getPlayColor(activePlay.category)}60`,
+                  }}
+                >
+                  PLAY #{activePlay.sequence || '•'} {getPlayCategoryLabel(activePlay.category)}
+                </span>
+                <span className="font-mono font-bold text-white shrink-0 text-xs sm:text-sm tabular-nums">
+                  {activePlay.statYardage > 0 ? `+${activePlay.statYardage} yds` : `${activePlay.statYardage} yds`}
+                </span>
+                <span className="text-slate-300 truncate text-[11px] sm:text-xs" title={activePlay.text}>
+                  {activePlay.text || (activePlay.down && activePlay.distance ? `${activePlay.down}&${activePlay.distance}` : '')}
+                </span>
+              </>
+            ) : (
+              <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
+                <span>Drive Trail: {effectiveDrivePlays.length} Plays</span>
+                <span className="text-slate-600 hidden sm:inline">•</span>
+                <span className="text-[11px] text-slate-500 hidden sm:inline">Use arrows to step through</span>
+              </div>
+            )}
+          </div>
+
+          {/* Forward / Next Play Button */}
+          <button
+            type="button"
+            onClick={goToNextPlay}
+            disabled={!canGoNext}
+            className={`flex items-center justify-center p-2 rounded-md min-h-[36px] min-w-[36px] shrink-0 transition-all cursor-pointer ${
+              canGoNext
+                ? 'bg-white/[0.08] text-white hover:bg-white/[0.16] active:bg-white/[0.22] border border-white/[0.15] shadow-sm'
+                : 'bg-white/[0.02] text-slate-600 border border-white/[0.04] cursor-not-allowed opacity-30'
+            }`}
+            aria-label={canGoNext ? "Go to next play in drive" : "At latest play"}
+            title={canGoNext ? "Next play in drive" : "At latest play of drive"}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+
+          {/* Dismiss / Deselect Button */}
+          {activePlay && (
+            <button
+              type="button"
+              onClick={handleDismissPlay}
+              className="text-slate-400 hover:text-white p-2 rounded-md min-h-[36px] min-w-[32px] flex items-center justify-center bg-white/[0.04] hover:bg-white/[0.08] shrink-0 cursor-pointer transition-colors"
+              aria-label="Deselect play and view full drive"
+              title="Deselect play (view full drive)"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       )}
 
