@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation, sanitizePatriotsName } from '../utils/nflHelpers'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation, sanitizePatriotsName, isDarkLogoTeam } from '../utils/nflHelpers'
 import { Flame, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check, Clock, Mic, Radio, CheckCircle2, Calendar } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
@@ -297,7 +297,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                   <img
                     src={awayComp?.team?.logo || DEFAULT_NFL_LOGO}
                     alt={awayComp?.team?.displayName || 'Away Team'}
-                    className={`h-full w-full object-contain filter drop-shadow-md ${
+                    className={`h-full w-full object-contain ${
+                      isDarkLogoTeam(awayComp?.team?.abbreviation, awayComp?.team?.displayName)
+                        ? 'team-logo-dark-outline'
+                        : 'filter drop-shadow-md'
+                    } ${
                       isFinal && !isAwayWinner ? 'opacity-65' : ''
                     }`}
                     loading="eager"
@@ -378,7 +382,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                   <img
                     src={homeComp?.team?.logo || DEFAULT_NFL_LOGO}
                     alt={homeComp?.team?.displayName || 'Home Team'}
-                    className={`h-full w-full object-contain filter drop-shadow-md ${
+                    className={`h-full w-full object-contain ${
+                      isDarkLogoTeam(homeComp?.team?.abbreviation, homeComp?.team?.displayName)
+                        ? 'team-logo-dark-outline'
+                        : 'filter drop-shadow-md'
+                    } ${
                       isFinal && !isHomeWinner ? 'opacity-65' : ''
                     }`}
                     loading="eager"
@@ -490,7 +498,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                     {isHalftime ? 'Halftime Intermission' : downAndDistance}
                   </span>
                 </div>
-                {situation?.lastPlay?.text && (
+                {situation?.lastPlay?.text && (!drivePlays || drivePlays.length === 0) && (
                   <p className="mt-2 text-xs text-slate-300 italic border-t border-white/[0.04] pt-1.5">
                     <span className="font-semibold text-slate-400 not-italic mr-1">Last Play:</span>
                     {situation.lastPlay.text}

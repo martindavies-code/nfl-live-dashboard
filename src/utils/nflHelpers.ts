@@ -965,5 +965,15 @@ export function reconcileScoreboardData(
   }
 }
 
-
-
+/**
+ * Determines whether a team's logo lacks an authentic white outline on ESPN's CDN
+ * and requires a crisp white silhouette outline to ensure optimal contrast against dark backgrounds.
+ * Specifically, the New York Jets 2024 Gotham green scoreboard logo has no border,
+ * while other NFL logos include native white outlines or accents.
+ */
+export function isDarkLogoTeam(abbreviation?: string, teamName?: string): boolean {
+  if (!abbreviation && !teamName) return false
+  const abbr = (abbreviation || '').trim().toUpperCase()
+  const name = (teamName || '').toLowerCase()
+  return abbr === 'NYJ' || name.includes('jets')
+}

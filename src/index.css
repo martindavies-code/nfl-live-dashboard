@@ -158,3 +158,12 @@
   outline-offset: 2px !important;
 }
 
+/* Enhanced visibility for dark team logos (e.g. New York Jets 2024 logo) on dark dashboard backgrounds */
+.team-logo-dark-outline {
+  filter: drop-shadow(1px 0 0 #ffffff) 
+          drop-shadow(-1px 0 0 #ffffff) 
+          drop-shadow(0 1px 0 #ffffff) 
+          drop-shadow(0 -1px 0 #ffffff)
+          drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6)) !important;
+}
+

@@ -2,7 +2,7 @@ import React, { useState, memo } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, formatLocalizedKickoff, getWeekLabel, sanitizePatriotsAbbreviation } from '../utils/nflHelpers'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, formatLocalizedKickoff, getWeekLabel, sanitizePatriotsAbbreviation, isDarkLogoTeam } from '../utils/nflHelpers'
 import { 
   Flame, 
   Activity,
@@ -265,7 +265,11 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               <img
                 src={awayComp?.team?.logo || DEFAULT_NFL_LOGO}
                 alt={awayComp?.team?.displayName || 'Away Team'}
-                className={`h-full w-full object-contain filter drop-shadow-sm transition-opacity ${
+                className={`h-full w-full object-contain ${
+                  isDarkLogoTeam(awayComp?.team?.abbreviation, awayComp?.team?.displayName)
+                    ? 'team-logo-dark-outline'
+                    : 'filter drop-shadow-sm'
+                } transition-opacity ${
                   isFinal && !isAwayWinner && !isTie ? 'opacity-65' : 'opacity-100'
                 }`}
                 loading="lazy"
@@ -349,7 +353,11 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               <img
                 src={homeComp?.team?.logo || DEFAULT_NFL_LOGO}
                 alt={homeComp?.team?.displayName || 'Home Team'}
-                className={`h-full w-full object-contain filter drop-shadow-sm transition-opacity ${
+                className={`h-full w-full object-contain ${
+                  isDarkLogoTeam(homeComp?.team?.abbreviation, homeComp?.team?.displayName)
+                    ? 'team-logo-dark-outline'
+                    : 'filter drop-shadow-sm'
+                } transition-opacity ${
                   isFinal && !isHomeWinner && !isTie ? 'opacity-65' : 'opacity-100'
                 }`}
                 loading="lazy"

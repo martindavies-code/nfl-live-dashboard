@@ -1007,7 +1007,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               </p>
             ) : (
               <p className="text-slate-400 italic text-[11px] sm:text-xs">
-                Viewing full drive trail. Click any play on the field or use ◀ ▶ to inspect individual plays.
+                Click any play on the field or use ◀ ▶ to step through each play.
               </p>
             )}
           </div>
@@ -1076,7 +1076,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
           {effectiveDrivePlays.length > 0 && (
             <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap ml-auto">
               <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 hidden sm:inline">
-                Drive Trail ({effectiveDrivePlays.length} Plays):
+                Legend:
               </span>
               <span className="flex items-center gap-1 text-[11px]">
                 <span className="h-2 w-2 rounded-full bg-[#38bdf8] shrink-0 shadow-[0_0_6px_rgba(56,189,248,0.6)]" />

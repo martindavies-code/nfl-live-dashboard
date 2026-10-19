@@ -21,6 +21,7 @@ import {
   sanitizePatriotsAbbreviation,
   sanitizePatriotsInEvent,
   sanitizePatriotsInScoreboardData,
+  isDarkLogoTeam,
 } from './nflHelpers.ts'
 
 test('safeParseInt handles numbers, strings, dashes, nulls, and undefined', () => {
@@ -593,5 +594,22 @@ test('sanitizePatriotsInEvent and sanitizePatriotsInScoreboardData sanitize all 
   assert.equal(cleanScoreboard.events[0].competitions[0].competitors[1].team.abbreviation, 'FNE')
 })
 
+test('isDarkLogoTeam correctly identifies NY Jets by abbreviation or name for white outline enhancement', () => {
+  // Positive matches (Jets)
+  assert.equal(isDarkLogoTeam('NYJ'), true)
+  assert.equal(isDarkLogoTeam('nyj'), true)
+  assert.equal(isDarkLogoTeam(' NYJ '), true)
+  assert.equal(isDarkLogoTeam(undefined, 'New York Jets'), true)
+  assert.equal(isDarkLogoTeam(undefined, 'Jets'), true)
+  assert.equal(isDarkLogoTeam('NYJ', 'New York Jets'), true)
 
-
+  // Negative matches (Other NFL teams that have native outlines/contrast)
+  assert.equal(isDarkLogoTeam('BUF', 'Buffalo Bills'), false)
+  assert.equal(isDarkLogoTeam('KC', 'Kansas City Chiefs'), false)
+  assert.equal(isDarkLogoTeam('PHI', 'Philadelphia Eagles'), false)
+  assert.equal(isDarkLogoTeam('MIA', 'Miami Dolphins'), false)
+  assert.equal(isDarkLogoTeam('NE', 'New England Patriots'), false)
+  assert.equal(isDarkLogoTeam('FNE', 'Fucking New England Patriots'), false)
+  assert.equal(isDarkLogoTeam(undefined, undefined), false)
+  assert.equal(isDarkLogoTeam('', ''), false)
+})

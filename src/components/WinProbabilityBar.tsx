@@ -1,6 +1,6 @@
 import React, { memo } from 'react'
 import type { NFLCompetitor, NFLSituation, NFLStatus, NFLOdds } from '../types/nfl'
-import { resolveContrastingTeamColors, sanitizePatriotsAbbreviation } from '../utils/nflHelpers'
+import { resolveContrastingTeamColors, sanitizePatriotsAbbreviation, isDarkLogoTeam } from '../utils/nflHelpers'
 import { calculateWinProbability } from '../utils/winProbability'
 import { Activity, TrendingUp } from 'lucide-react'
 
@@ -152,7 +152,11 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
               <img
                 src={safeHomeComp.team.logo}
                 alt=""
-                className="h-4 w-4 object-contain filter drop-shadow-sm shrink-0 hidden sm:inline"
+                className={`h-4 w-4 object-contain ${
+                  isDarkLogoTeam(safeHomeComp.team?.abbreviation, safeHomeComp.team?.displayName)
+                    ? 'team-logo-dark-outline'
+                    : 'filter drop-shadow-sm'
+                } shrink-0 hidden sm:inline`}
                 loading="lazy"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none'
@@ -199,7 +203,11 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
               <img
                 src={safeAwayComp.team.logo}
                 alt=""
-                className="h-4 w-4 object-contain filter drop-shadow-sm shrink-0 hidden sm:inline"
+                className={`h-4 w-4 object-contain ${
+                  isDarkLogoTeam(safeAwayComp.team?.abbreviation, safeAwayComp.team?.displayName)
+                    ? 'team-logo-dark-outline'
+                    : 'filter drop-shadow-sm'
+                } shrink-0 hidden sm:inline`}
                 loading="lazy"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none'
