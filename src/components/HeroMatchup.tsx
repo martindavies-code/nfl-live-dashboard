@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation, sanitizePatriotsName, isDarkLogoTeam } from '../utils/nflHelpers'
+import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation, sanitizePatriotsName, isDarkLogoTeam, shouldDisplayLastPlayText } from '../utils/nflHelpers'
 import { Flame, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check, Clock, Mic, Radio, CheckCircle2, Calendar } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
@@ -29,6 +29,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   const isMultiThreat = Boolean(totalThreats && totalThreats > 1)
   const [isCopied, setIsCopied] = useState(false)
   const [showScorigamiDetails, setShowScorigamiDetails] = useState(false)
+  const [fieldHasPlays, setFieldHasPlays] = useState<boolean>(false)
   const competition = event.competitions?.[0]
   if (!competition) return null
 
@@ -481,6 +482,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
             compact={Boolean(totalThreats && totalThreats > 1)}
             status={status}
             drivePlays={drivePlays}
+            onPlaysAvailable={setFieldHasPlays}
           />
         </div>
 
@@ -498,10 +500,10 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                     {isHalftime ? 'Halftime Intermission' : downAndDistance}
                   </span>
                 </div>
-                {situation?.lastPlay?.text && (!drivePlays || drivePlays.length === 0) && (
+                {shouldDisplayLastPlayText(situation?.lastPlay?.text, isLive, fieldHasPlays) && (
                   <p className="mt-2 text-xs text-slate-300 italic border-t border-white/[0.04] pt-1.5">
                     <span className="font-semibold text-slate-400 not-italic mr-1">Last Play:</span>
-                    {situation.lastPlay.text}
+                    {situation?.lastPlay?.text}
                   </p>
                 )}
               </div>

@@ -22,6 +22,7 @@ import {
   sanitizePatriotsInEvent,
   sanitizePatriotsInScoreboardData,
   isDarkLogoTeam,
+  shouldDisplayLastPlayText,
 } from './nflHelpers.ts'
 
 test('safeParseInt handles numbers, strings, dashes, nulls, and undefined', () => {
@@ -613,3 +614,24 @@ test('isDarkLogoTeam correctly identifies NY Jets by abbreviation or name for wh
   assert.equal(isDarkLogoTeam(undefined, undefined), false)
   assert.equal(isDarkLogoTeam('', ''), false)
 })
+
+test('shouldDisplayLastPlayText: displays last play only when live and NOT rendered in field drive stepper', () => {
+  const playText = '(Shotgun) P.Mahomes pass deep right to T.Kelce for 24 yards.'
+
+  // Case 1: Game is live and FieldDiagram has NO drive plays -> Show last play in panel
+  assert.equal(shouldDisplayLastPlayText(playText, true, false), true)
+
+  // Case 2: Game is live and FieldDiagram DOES have drive plays -> Suppress duplicate in panel
+  assert.equal(shouldDisplayLastPlayText(playText, true, true), false)
+
+  // Case 3: Game is pre-game or post-game (not live) -> Never show in live panel
+  assert.equal(shouldDisplayLastPlayText(playText, false, false), false)
+  assert.equal(shouldDisplayLastPlayText(playText, false, true), false)
+
+  // Case 4: No play text available -> Never show
+  assert.equal(shouldDisplayLastPlayText(undefined, true, false), false)
+  assert.equal(shouldDisplayLastPlayText(null, true, false), false)
+  assert.equal(shouldDisplayLastPlayText('', true, false), false)
+  assert.equal(shouldDisplayLastPlayText('   ', true, false), false)
+})
+

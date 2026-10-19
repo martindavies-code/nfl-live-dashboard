@@ -1,4 +1,4 @@
-import React, { useId, useState, useMemo, memo } from 'react'
+import React, { useId, useState, useMemo, useEffect, memo } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import type { NFLSituation, NFLCompetitor, NFLStatus, NFLDrivePlay } from '../types/nfl'
 import { sanitizeHexColor, getOffensiveDrive, isRedZoneSituation, isHalftimeSituation, formatDownAndDistance } from '../utils/nflHelpers'
@@ -13,6 +13,7 @@ interface FieldDiagramProps {
   status?: NFLStatus
   compact?: boolean
   drivePlays?: NFLDrivePlay[]
+  onPlaysAvailable?: (hasPlays: boolean) => void
 }
 
 export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
@@ -24,6 +25,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   status,
   compact = false,
   drivePlays,
+  onPlaysAvailable,
 }) => {
   const isCompact = compact || !isHero
   const uniqueId = useId().replace(/:/g, '')
@@ -140,6 +142,10 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
     }
     return []
   }, [drivePlays, cachedDrivePlays, hasSituation, gameState, yardLineClamped, direction, offensiveAbbr])
+
+  useEffect(() => {
+    onPlaysAvailable?.(effectiveDrivePlays.length > 0)
+  }, [effectiveDrivePlays.length, onPlaysAvailable])
 
   const activePlay = useMemo(() => {
     if (hoveredPlay) return hoveredPlay
@@ -947,7 +953,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               ) : (
                 <div className="flex items-center gap-1.5 text-slate-300 font-semibold text-xs">
                   <span className="text-amber-400">⚡</span>
-                  <span>Drive Trail ({effectiveDrivePlays.length} Plays)</span>
+                  <span>All Plays Overview ({effectiveDrivePlays.length})</span>
                 </div>
               )}
 
@@ -987,11 +993,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                   <span className="hidden sm:inline">All Plays</span>
                   <X className="h-3.5 w-3.5" />
                 </button>
-              ) : (
-                <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
-                  Step ◀ ▶
-                </span>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -1006,8 +1008,9 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 {activePlay.text || `${getPlayCategoryLabel(activePlay.category)} for ${activePlay.statYardage} yards.`}
               </p>
             ) : (
-              <p className="text-slate-400 italic text-[11px] sm:text-xs">
-                Click any play on the field or use ◀ ▶ to step through each play.
+              <p className="text-slate-200 text-[12px] sm:text-[13px] leading-relaxed select-text break-words">
+                <span className="text-amber-400 font-bold mr-1.5">Latest Play:</span>
+                {effectiveDrivePlays[effectiveDrivePlays.length - 1]?.text || situation?.lastPlay?.text || 'Viewing complete drive trail.'}
               </p>
             )}
           </div>

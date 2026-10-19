@@ -21,7 +21,7 @@ const argValue = (name, fallback) => {
   const i = args.indexOf(name)
   return i >= 0 && args[i + 1] !== undefined ? Number(args[i + 1]) : fallback
 }
-const WITHIN_HOURS = argValue('--within-hours', 48)
+const WITHIN_HOURS = argValue('--within-hours', 72)
 const WEEKS_AHEAD = Math.max(1, argValue('--weeks', 2))
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
 const KICKOFF_DRIFT_MS = 30 * 60 * 1000

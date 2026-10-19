@@ -154,7 +154,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
                 alt=""
                 className={`h-4 w-4 object-contain ${
                   isDarkLogoTeam(safeHomeComp.team?.abbreviation, safeHomeComp.team?.displayName)
-                    ? 'team-logo-dark-outline'
+                    ? 'team-logo-dark-outline-sm'
                     : 'filter drop-shadow-sm'
                 } shrink-0 hidden sm:inline`}
                 loading="lazy"
@@ -205,7 +205,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
                 alt=""
                 className={`h-4 w-4 object-contain ${
                   isDarkLogoTeam(safeAwayComp.team?.abbreviation, safeAwayComp.team?.displayName)
-                    ? 'team-logo-dark-outline'
+                    ? 'team-logo-dark-outline-sm'
                     : 'filter drop-shadow-sm'
                 } shrink-0 hidden sm:inline`}
                 loading="lazy"

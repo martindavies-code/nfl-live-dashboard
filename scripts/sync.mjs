@@ -10,6 +10,10 @@ function getOutput(cmd) {
 }
 
 try {
+  console.log('🧪 Running pre-sync automated verification (npm test & oxlint)...')
+  run('npm test')
+  run('npx oxlint')
+
   console.log('🔄 Checking repository status...')
   run('git add -A')
   
@@ -20,7 +24,7 @@ try {
   }
 
   const customMsg = process.argv.slice(2).join(' ').trim()
-  const commitMsg = customMsg || `feat: streamline field radar layout and component hierarchy (${new Date().toISOString().slice(0, 10)})`
+  const commitMsg = customMsg || `update: dashboard improvements and verified sync (${new Date().toISOString().slice(0, 10)})`
 
   console.log(`📦 Committing changes: "${commitMsg}"...`)
   run(`git commit -m "${commitMsg.replace(/"/g, '\\"')}"`)

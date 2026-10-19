@@ -971,9 +971,32 @@ export function reconcileScoreboardData(
  * Specifically, the New York Jets 2024 Gotham green scoreboard logo has no border,
  * while other NFL logos include native white outlines or accents.
  */
+const DARK_LOGO_ABBREVIATIONS = new Set(['NYJ'])
+const DARK_LOGO_NAMES = new Set(['jets', 'new york jets', 'ny jets'])
+
 export function isDarkLogoTeam(abbreviation?: string, teamName?: string): boolean {
-  if (!abbreviation && !teamName) return false
-  const abbr = (abbreviation || '').trim().toUpperCase()
-  const name = (teamName || '').toLowerCase()
-  return abbr === 'NYJ' || name.includes('jets')
+  if (abbreviation) {
+    const cleanAbbr = abbreviation.trim().toUpperCase()
+    if (DARK_LOGO_ABBREVIATIONS.has(cleanAbbr)) return true
+  }
+  if (teamName) {
+    const cleanName = teamName.trim().toLowerCase()
+    if (DARK_LOGO_NAMES.has(cleanName)) return true
+  }
+  return false
+}
+
+/**
+ * Determines whether the standalone "Last Play" description should be displayed in the
+ * Matchup Intelligence Panel. When FieldDiagram is actively rendering interactive drive plays,
+ * this returns false to eliminate redundant duplication below the field.
+ */
+export function shouldDisplayLastPlayText(
+  lastPlayText?: string | null,
+  isLive?: boolean,
+  hasFieldDrivePlays?: boolean
+): boolean {
+  if (!isLive) return false
+  if (!lastPlayText || typeof lastPlayText !== 'string' || lastPlayText.trim() === '') return false
+  return !hasFieldDrivePlays
 }
