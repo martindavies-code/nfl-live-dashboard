@@ -1000,3 +1000,22 @@ export function shouldDisplayLastPlayText(
   if (!lastPlayText || typeof lastPlayText !== 'string' || lastPlayText.trim() === '') return false
   return !hasFieldDrivePlays
 }
+
+/**
+ * Sanitizes single-line fields destined for clipboard sharing or external text serialization.
+ * Strips carriage returns, line feeds, and ASCII/Unicode control characters to prevent CRLF injection.
+ */
+export function sanitizeClipboardField(text?: string | null, fallback = ''): string {
+  if (!text || typeof text !== 'string') return fallback
+  let clean = ''
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i)
+    // Strip CR (\r), LF (\n), ASCII control characters (0-31), DEL (127), and C1 controls (128-159)
+    if (code === 10 || code === 13 || (code >= 0 && code <= 31) || (code >= 127 && code <= 159)) {
+      clean += ' '
+    } else {
+      clean += text[i]
+    }
+  }
+  return clean.replace(/\s+/g, ' ').trim() || fallback
+}

@@ -1,24 +1,50 @@
-import React, { useState } from 'react'
+import React, { useState, useId, useRef, useEffect, useMemo, memo } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation, sanitizePatriotsName, isDarkLogoTeam, shouldDisplayLastPlayText } from '../utils/nflHelpers'
-import { Flame, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check, Clock, Mic, Radio, CheckCircle2, Calendar } from 'lucide-react'
+import {
+  formatDownAndDistance,
+  getOffensiveDrive,
+  safeParseInt,
+  isRedZoneSituation,
+  isHalftimeSituation,
+  getWeekLabel,
+  formatLocalizedKickoff,
+  sanitizePatriotsAbbreviation,
+  sanitizePatriotsName,
+  isDarkLogoTeam,
+  shouldDisplayLastPlayText,
+  sanitizeClipboardField,
+} from '../utils/nflHelpers'
+import {
+  Flame,
+  MapPin,
+  Compass,
+  Sparkles,
+  Pause,
+  Trophy,
+  Share2,
+  Check,
+  Clock,
+  Mic,
+  Radio,
+  CheckCircle2,
+  Calendar,
+} from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
+import { sanitizeUrl, FALLBACK_LOGO } from '../utils/normalizer'
 
-interface HeroMatchupProps {
-  event: NFLEvent
-  autoRedZone?: boolean
-  onToggleAutoRedZone?: () => void
-  isAutoSelectedRedZone?: boolean
-  threatIndex?: number
-  totalThreats?: number
+export interface HeroMatchupProps {
+  readonly event: NFLEvent
+  readonly autoRedZone?: boolean
+  readonly onToggleAutoRedZone?: () => void
+  readonly isAutoSelectedRedZone?: boolean
+  readonly threatIndex?: number
+  readonly totalThreats?: number
 }
 
-const DEFAULT_NFL_LOGO = 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nfl.png'
-
-export const HeroMatchup: React.FC<HeroMatchupProps> = ({
+export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
   event,
   autoRedZone = true,
   onToggleAutoRedZone,
@@ -29,21 +55,37 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   const isMultiThreat = Boolean(totalThreats && totalThreats > 1)
   const [isCopied, setIsCopied] = useState(false)
   const [showScorigamiDetails, setShowScorigamiDetails] = useState(false)
-  const competition = event.competitions?.[0]
-  if (!competition) return null
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const reactId = useId().replace(/:/g, '')
 
-  const competitors = competition.competitors || []
+  // Clean up any pending clipboard reset timeout upon component unmount
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) {
+        clearTimeout(copyTimerRef.current)
+        copyTimerRef.current = null
+      }
+    }
+  }, [])
+
+  const competition = event?.competitions?.[0]
+  const competitors = competition?.competitors || []
   const homeComp = competitors.find((c) => c.homeAway === 'home') || competitors[0]
   const awayComp = competitors.find((c) => c.homeAway === 'away') || competitors[1]
 
-  const status = event.status || competition.status
+  const status = event?.status || competition?.status
   const state = status?.type?.state || 'pre'
   const isLive = state === 'in'
   const isFinal = state === 'post'
 
-  const situation = competition.situation
-  const drivePlays = event.drivePlays || competition.drives?.current?.plays
+  const situation = competition?.situation
+  const drivePlays = event?.drivePlays || competition?.drives?.current?.plays
   const hasFieldDrivePlays = Boolean(drivePlays && drivePlays.length > 0)
+
+  // Defensive extraction of clock, quarter period, and detail
+  const safePeriod = typeof status?.period === 'number' && Number.isFinite(status.period) ? status.period : 1
+  const safeClock = typeof status?.displayClock === 'string' && status.displayClock.trim() !== '' ? status.displayClock.trim() : '0:00'
+  const safeStatusDetail = status?.type?.detail || (isLive ? `Q${safePeriod} ${safeClock}` : isFinal ? 'Final' : 'Scheduled')
 
   // Check possession with helper (only active during live games)
   const { isHomePossession, isAwayPossession } = getOffensiveDrive(
@@ -54,64 +96,114 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   const isRedZone = isRedZoneSituation(situation, status, competitors)
   const isHalftime = isHalftimeSituation(status, situation)
 
-  const venueText = competition.venue
-    ? `${competition.venue.fullName}${
-        competition.venue.address?.city ? `, ${competition.venue.address.city}` : ''
-      }`
-    : ''
+  // Strictly clamp timeouts between 0 and 3
+  const rawHomeTimeouts = typeof situation?.homeTimeouts === 'number' && Number.isFinite(situation.homeTimeouts) ? situation.homeTimeouts : 3
+  const rawAwayTimeouts = typeof situation?.awayTimeouts === 'number' && Number.isFinite(situation.awayTimeouts) ? situation.awayTimeouts : 3
+  const homeTimeouts = Math.max(0, Math.min(3, Math.floor(rawHomeTimeouts)))
+  const awayTimeouts = Math.max(0, Math.min(3, Math.floor(rawAwayTimeouts)))
 
-  const homeTimeouts = typeof situation?.homeTimeouts === 'number' && Number.isFinite(situation.homeTimeouts) ? situation.homeTimeouts : 3
-  const awayTimeouts = typeof situation?.awayTimeouts === 'number' && Number.isFinite(situation.awayTimeouts) ? situation.awayTimeouts : 3
+  // Robust score parsing and display values
+  const rawHomeScore = homeComp?.score
+  const rawAwayScore = awayComp?.score
+  const homeScoreParsed = safeParseInt(rawHomeScore, 0)
+  const awayScoreParsed = safeParseInt(rawAwayScore, 0)
+  const homeScoreDisplay = isLive || isFinal ? (rawHomeScore != null && String(rawHomeScore).trim() !== '' ? String(rawHomeScore) : '0') : '—'
+  const awayScoreDisplay = isLive || isFinal ? (rawAwayScore != null && String(rawAwayScore).trim() !== '' ? String(rawAwayScore) : '0') : '—'
 
-  const downAndDistance = formatDownAndDistance(situation)
-  const formattedKickoff = formatLocalizedKickoff(event.date)
-  const broadcastDetails = getGameBroadcastDetails(event)
-
-  const isAwayWinner = isFinal && safeParseInt(awayComp?.score, 0) > safeParseInt(homeComp?.score, 0)
-  const isHomeWinner = isFinal && safeParseInt(homeComp?.score, 0) > safeParseInt(awayComp?.score, 0)
+  const isAwayWinner = isFinal && awayScoreParsed > homeScoreParsed
+  const isHomeWinner = isFinal && homeScoreParsed > awayScoreParsed
 
   // Derive true regulation seconds remaining for accurate scorigami probability
   const secondsLeft = getGameSecondsRemaining(status, state)
   const homeAbbr = sanitizePatriotsAbbreviation(homeComp?.team?.abbreviation) || 'Home'
   const awayAbbr = sanitizePatriotsAbbreviation(awayComp?.team?.abbreviation) || 'Away'
-  const scorigamiInfo = getScorigamiInfo(
-    safeParseInt(homeComp?.score, 0),
-    safeParseInt(awayComp?.score, 0),
-    secondsLeft,
-    state,
-    homeAbbr,
-    awayAbbr
-  )
+
+  // Memoize performance-heavy calculations unconditionally before any return
+  const scorigamiInfo = useMemo(() => {
+    return getScorigamiInfo(
+      homeScoreParsed,
+      awayScoreParsed,
+      secondsLeft,
+      state,
+      homeAbbr,
+      awayAbbr
+    )
+  }, [homeScoreParsed, awayScoreParsed, secondsLeft, state, homeAbbr, awayAbbr])
+
+  const broadcastDetails = useMemo(() => {
+    return getGameBroadcastDetails(event)
+  }, [event])
+
+  const venueText = useMemo(() => {
+    if (!competition?.venue) return ''
+    const name = competition.venue.fullName || ''
+    const city = competition.venue.address?.city ? `, ${competition.venue.address.city}` : ''
+    return `${name}${city}`.trim()
+  }, [competition])
+
+  const formattedKickoff = useMemo(() => {
+    return formatLocalizedKickoff(event?.date)
+  }, [event?.date])
+
+  const downAndDistance = useMemo(() => {
+    return formatDownAndDistance(situation)
+  }, [situation])
+
+  // Sanitized Logo URLs
+  const awayLogoUrl = useMemo(() => {
+    return sanitizeUrl(awayComp?.team?.logo, FALLBACK_LOGO)
+  }, [awayComp?.team?.logo])
+
+  const homeLogoUrl = useMemo(() => {
+    return sanitizeUrl(homeComp?.team?.logo, FALLBACK_LOGO)
+  }, [homeComp?.team?.logo])
 
   const handleCopySnapshot = async () => {
-    const awayName = sanitizePatriotsName(awayComp?.team?.displayName || awayAbbr)
-    const homeName = sanitizePatriotsName(homeComp?.team?.displayName || homeAbbr)
-    const awayScore = awayComp?.score ?? '-'
-    const homeScore = homeComp?.score ?? '-'
+    const awayName = sanitizeClipboardField(sanitizePatriotsName(awayComp?.team?.displayName || awayAbbr))
+    const homeName = sanitizeClipboardField(sanitizePatriotsName(homeComp?.team?.displayName || homeAbbr))
+    const awayScoreStr = sanitizeClipboardField(String(awayComp?.score ?? '-'))
+    const homeScoreStr = sanitizeClipboardField(String(homeComp?.score ?? '-'))
     const statusText = isHalftime
       ? 'At Halftime'
       : isLive
-      ? `Q${status?.period} ${status?.displayClock}`
+      ? `Q${safePeriod} ${safeClock}`
       : isFinal
-      ? (status?.type?.detail || 'Final')
-      : `Upcoming (${formattedKickoff})`
-    const playText = isLive && situation?.downDistanceText ? ` • ${situation.downDistanceText} at ${situation.possessionText || ''}` : ''
+      ? sanitizeClipboardField(safeStatusDetail)
+      : `Upcoming (${sanitizeClipboardField(formattedKickoff)})`
+    const playText = isLive && situation?.downDistanceText
+      ? ` • ${sanitizeClipboardField(situation.downDistanceText)} at ${sanitizeClipboardField(situation.possessionText || '')}`
+      : ''
     const rzText = isRedZone ? ' 🔥 RED ZONE' : ''
+    const usTv = sanitizeClipboardField(broadcastDetails.usTv, 'Check Local Listings')
+    const crew = sanitizeClipboardField(broadcastDetails.announcers.fullCrew, 'Network Broadcast Team')
 
-    const shareText = `🏈 NFL Score: ${awayName} (${awayScore}) @ ${homeName} (${homeScore}) [${statusText}${playText}${rzText}]\n📺 US TV: ${broadcastDetails.usTv}\n🎙️ Announcers: ${broadcastDetails.announcers.fullCrew}\nLive Command: https://martindavies-code.github.io/nfl-live-dashboard/`.replace(/\bNE\b/g, 'FNE')
+    const shareText = `🏈 NFL Score: ${awayName} (${awayScoreStr}) @ ${homeName} (${homeScoreStr}) [${statusText}${playText}${rzText}]\n📺 US TV: ${usTv}\n🎙️ Announcers: ${crew}\nLive Command: https://martindavies-code.github.io/nfl-live-dashboard/`.replace(/\bNE\b/g, 'FNE')
 
     try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         await navigator.clipboard.writeText(shareText)
         setIsCopied(true)
-        setTimeout(() => setIsCopied(false), 2500)
+        if (copyTimerRef.current) {
+          clearTimeout(copyTimerRef.current)
+        }
+        copyTimerRef.current = setTimeout(() => {
+          setIsCopied(false)
+          copyTimerRef.current = null
+        }, 2500)
       }
     } catch {
-      // Clipboard fallback
+      // Graceful fallback for clipboard permission rejections or headless environments
     }
   }
 
-  const headingId = `hero-matchup-heading-${event.id}`
+  const safeEventId = String(event?.id || reactId).replace(/[^a-zA-Z0-9_-]/g, '_')
+  const headingId = `hero-matchup-heading-${safeEventId}`
+
+  const awayDisplayName = awayComp?.team?.displayName || awayAbbr
+  const homeDisplayName = homeComp?.team?.displayName || homeAbbr
+
+  // Guard clause: placed after all unconditional hooks have executed
+  if (!competition) return null
 
   return (
     <section
@@ -128,11 +220,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
     >
       {/* Accessible Heading for Screen Readers */}
       <h2 id={headingId} className="sr-only">
-        {`Spotlight Matchup: ${awayComp?.team?.displayName || awayAbbr} at ${homeComp?.team?.displayName || homeAbbr}. ${
+        {`Spotlight Matchup: ${awayDisplayName} at ${homeDisplayName}. ${
           isLive
-            ? `Live in Quarter ${status.period} with ${status.displayClock} remaining`
+            ? `Live in Quarter ${safePeriod} with ${safeClock} remaining`
             : isFinal
-            ? (status?.type?.detail || 'Final')
+            ? safeStatusDetail
             : `Kickoff scheduled for ${formattedKickoff}`
         }`}
       </h2>
@@ -262,16 +354,16 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
               ) : isLive ? (
                 <>
                   <span className="font-mono text-xs font-bold text-white bg-slate-800/80 px-2 py-0.5 rounded whitespace-nowrap">
-                    <span className="sm:hidden">Q{status.period}</span>
-                    <span className="hidden sm:inline">Quarter {status.period}</span>
+                    <span className="sm:hidden">Q{safePeriod}</span>
+                    <span className="hidden sm:inline">Quarter {safePeriod}</span>
                   </span>
                   <span className="font-mono text-sm font-extrabold text-emerald-400 tabular-nums">
-                    {status.displayClock}
+                    {safeClock}
                   </span>
                 </>
               ) : isFinal ? (
                 <span className="font-mono text-xs font-bold text-slate-300 bg-slate-800/80 px-2 py-0.5 rounded">
-                  {status.type?.detail || 'Final'}
+                  {safeStatusDetail}
                 </span>
               ) : (
                 <span className="font-mono text-xs font-bold text-sky-300 bg-sky-950/80 px-2.5 py-1 rounded border border-sky-800/40 flex items-center gap-1.5">
@@ -296,7 +388,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
               <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
                 <div className="relative h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0">
                   <img
-                    src={awayComp?.team?.logo || DEFAULT_NFL_LOGO}
+                    src={awayLogoUrl}
                     alt={awayComp?.team?.displayName || 'Away Team'}
                     className={`h-full w-full object-contain ${
                       isDarkLogoTeam(awayComp?.team?.abbreviation, awayComp?.team?.displayName)
@@ -308,7 +400,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                     loading="eager"
                     onError={(e) => {
                       e.currentTarget.onerror = null
-                      e.currentTarget.src = DEFAULT_NFL_LOGO
+                      e.currentTarget.src = FALLBACK_LOGO
                     }}
                   />
                   {isLive && isAwayPossession && (
@@ -372,7 +464,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                     : 'text-slate-500 font-bold'
                   : 'text-white'
               }`}>
-                {isLive || isFinal ? (awayComp?.score ?? '0') : '—'}
+                {awayScoreDisplay}
               </span>
             </div>
 
@@ -381,7 +473,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
               <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
                 <div className="relative h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0">
                   <img
-                    src={homeComp?.team?.logo || DEFAULT_NFL_LOGO}
+                    src={homeLogoUrl}
                     alt={homeComp?.team?.displayName || 'Home Team'}
                     className={`h-full w-full object-contain ${
                       isDarkLogoTeam(homeComp?.team?.abbreviation, homeComp?.team?.displayName)
@@ -393,7 +485,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                     loading="eager"
                     onError={(e) => {
                       e.currentTarget.onerror = null
-                      e.currentTarget.src = DEFAULT_NFL_LOGO
+                      e.currentTarget.src = FALLBACK_LOGO
                     }}
                   />
                   {isLive && isHomePossession && (
@@ -457,7 +549,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                     : 'text-slate-500 font-bold'
                   : 'text-white'
               }`}>
-                {isLive || isFinal ? (homeComp?.score ?? '0') : '—'}
+                {homeScoreDisplay}
               </span>
             </div>
           </div>
@@ -473,9 +565,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
               isHalftime
                 ? 'At Halftime'
                 : isLive
-                ? `Quarter ${status?.period} ${status?.displayClock}`
+                ? `Quarter ${safePeriod} ${safeClock}`
                 : isFinal
-                ? (status?.type?.detail || 'Final')
+                ? safeStatusDetail
                 : `Kickoff: ${formattedKickoff}`
             }
             isHero={true}
@@ -485,7 +577,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
           />
         </div>
 
-        {/* Block 3: Matchup Intelligence Panel (Key Situation, Win Probability & Scorigami) - Kucharski Reason #4 & #2 Fix */}
+        {/* Block 3: Matchup Intelligence Panel (Key Situation, Win Probability & Scorigami) */}
         <div className={isMultiThreat ? "flex flex-col space-y-3" : "order-3 lg:order-2 col-span-12 lg:col-span-6 flex flex-col justify-between"}>
           <div className="rounded-xl border border-white/[0.08] bg-[#070c16]/90 p-4 space-y-3.5 shadow-sm">
             {/* Active Play Situation (Only shown during live games) */}
@@ -629,4 +721,5 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
       </div>
     </section>
   )
-}
+})
+HeroMatchup.displayName = 'HeroMatchup'
