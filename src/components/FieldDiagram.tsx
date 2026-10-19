@@ -14,6 +14,7 @@ interface FieldDiagramProps {
   compact?: boolean
   drivePlays?: NFLDrivePlay[]
   onPlaysAvailable?: (hasPlays: boolean) => void
+  isSimulation?: boolean
 }
 
 export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
@@ -26,6 +27,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
   compact = false,
   drivePlays,
   onPlaysAvailable,
+  isSimulation = false,
 }) => {
   const isCompact = compact || !isHero
   const uniqueId = useId().replace(/:/g, '')
@@ -137,11 +139,11 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
     if (cachedDrivePlays.length > 0) {
       return sanitizePlays(cachedDrivePlays)
     }
-    if (hasSituation && gameState === 'in' && yardLineClamped > 0 && yardLineClamped < 100) {
+    if (isSimulation && hasSituation && gameState === 'in' && yardLineClamped > 0 && yardLineClamped < 100) {
       return generateMockDrivePlays(yardLineClamped, direction, offensiveAbbr)
     }
     return []
-  }, [drivePlays, cachedDrivePlays, hasSituation, gameState, yardLineClamped, direction, offensiveAbbr])
+  }, [drivePlays, cachedDrivePlays, isSimulation, hasSituation, gameState, yardLineClamped, direction, offensiveAbbr])
 
   useEffect(() => {
     onPlaysAvailable?.(effectiveDrivePlays.length > 0)
@@ -976,9 +978,9 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
 
             {/* Right Side: Down/Distance & Dismiss Button */}
             <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-              {activePlay?.down && activePlay.distance && (
+              {Boolean(typeof activePlay?.down === 'number' && activePlay.down > 0 && typeof activePlay.distance === 'number') && (
                 <span className="hidden xs:inline-flex text-[10px] sm:text-[11px] font-bold text-slate-300 bg-white/[0.05] px-1.5 py-0.5 rounded border border-white/[0.08]">
-                  {activePlay.down === 1 ? '1st' : activePlay.down === 2 ? '2nd' : activePlay.down === 3 ? '3rd' : '4th'} & {activePlay.distance}
+                  {activePlay!.down === 1 ? '1st' : activePlay!.down === 2 ? '2nd' : activePlay!.down === 3 ? '3rd' : '4th'} & {activePlay!.distance === 0 ? 'Goal' : activePlay!.distance}
                 </span>
               )}
 

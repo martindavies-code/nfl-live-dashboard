@@ -4,7 +4,7 @@
  *
  * Compares the fact-checked registry (src/data/announcerRegistry.ts) with ESPN's live schedule and
  * FAILS (exit 1) when:
- *   - a game kicking off within --within-hours (default 48) has no verified crew yet
+ *   - a game kicking off within --within-hours (default 72) has no verified crew yet
  *   - a registry entry names a matchup that is not on ESPN's schedule for that week (typo / wrong week)
  *   - a registry entry's network disagrees with ESPN's listed network
  *   - a game's kickoff moved by > 30 min since the crew was verified (flex scheduling => re-verify)

@@ -63,10 +63,6 @@ const SOURCES_WEEK6 = {
   url: 'https://506sports.com/nfl.php?yr=2026&wk=6',
 }
 
-const SOURCES_WEEK7 = {
-  label: '506 Sports / Prime Video — NFL schedule and announcer pairings for Week 7',
-  url: 'https://506sports.com/nfl.php?yr=2026&wk=7',
-}
 
 export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
   // ---------------------------------------------------------------------------
@@ -423,22 +419,6 @@ export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
     playByPlay: 'Joe Buck', analysts: ['Troy Aikman'], sideline: ['Lisa Salters'],
     sources: [{ label: 'ESPN Monday Night Football official crew', url: 'https://www.espn.com/nfl' }],
     verifiedOn: '2026-10-13',
-  },
-  // ---------------------------------------------------------------------------
-  // 2026 — Week 7
-  // ---------------------------------------------------------------------------
-  {
-    season: 2026, week: 7, away: 'NE', home: 'CHI', kickoffUtc: '2026-10-23T00:15:00Z',
-    network: 'Amazon Prime Video',
-    playByPlay: 'Al Michaels', analysts: ['Kirk Herbstreit'], sideline: ['Kaylee Hartung'],
-    sources: [
-      SOURCES_WEEK7,
-      { label: 'Amazon Prime Video Thursday Night Football official crew', url: 'https://press.amazonmgmstudios.com' }
-    ],
-    verifiedOn: '2026-10-19',
-    ukTv: 'Sky Sports NFL',
-    ukTvShort: 'Sky Sports',
-    ukTvChannelNumber: 'Sky 407 • Virgin 507',
   },
 ]
 

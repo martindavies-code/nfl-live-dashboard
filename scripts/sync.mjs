@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { execSync } from 'node:child_process'
+import { execSync, execFileSync } from 'node:child_process'
 
 function run(cmd) {
   return execSync(cmd, { stdio: 'inherit' })
@@ -10,9 +10,11 @@ function getOutput(cmd) {
 }
 
 try {
-  console.log('🧪 Running pre-sync automated verification (npm test & oxlint)...')
+  console.log('🧪 Running pre-sync automated verification (npm test, oxlint, build, audit:announcers)...')
   run('npm test')
   run('npx oxlint')
+  run('npm run build')
+  run('npm run audit:announcers')
 
   console.log('🔄 Checking repository status...')
   run('git add -A')
@@ -27,7 +29,7 @@ try {
   const commitMsg = customMsg || `update: dashboard improvements and verified sync (${new Date().toISOString().slice(0, 10)})`
 
   console.log(`📦 Committing changes: "${commitMsg}"...`)
-  run(`git commit -m "${commitMsg.replace(/"/g, '\\"')}"`)
+  execFileSync('git', ['commit', '-m', commitMsg], { stdio: 'inherit' })
 
   console.log('🚀 Pushing to origin main...')
   run('git push origin main')
