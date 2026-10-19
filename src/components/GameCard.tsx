@@ -5,7 +5,6 @@ import { WinProbabilityBar } from './WinProbabilityBar'
 import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, formatLocalizedKickoff, getWeekLabel, sanitizePatriotsAbbreviation } from '../utils/nflHelpers'
 import { 
   Flame, 
-  Clock, 
   Activity,
   Maximize2,
   Sparkles,
@@ -14,6 +13,8 @@ import {
   Trophy,
   Mic,
   Check,
+  CheckCircle2,
+  Calendar,
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
@@ -108,6 +109,13 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const homeTimeouts = typeof situation?.homeTimeouts === 'number' && Number.isFinite(situation.homeTimeouts) ? situation.homeTimeouts : 3
   const awayTimeouts = typeof situation?.awayTimeouts === 'number' && Number.isFinite(situation.awayTimeouts) ? situation.awayTimeouts : 3
 
+  // Score comparison and winner detection for concluded games
+  const homeScoreNum = safeParseInt(homeComp?.score, -1)
+  const awayScoreNum = safeParseInt(awayComp?.score, -1)
+  const isHomeWinner = isFinal && homeScoreNum > awayScoreNum
+  const isAwayWinner = isFinal && awayScoreNum > homeScoreNum
+  const isTie = isFinal && homeScoreNum === awayScoreNum && homeScoreNum >= 0
+
   const fieldPanelId = `field-panel-${event.id}`
   const broadcastPanelId = `broadcast-panel-${event.id}`
   const scorigamiPanelId = `scorigami-panel-${event.id}`
@@ -135,7 +143,9 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           ? 'card-tier-halftime'
           : isLive
           ? 'card-tier-live'
-          : 'card-tier-dormant'
+          : isFinal
+          ? 'card-tier-final'
+          : 'card-tier-upcoming'
       }`}
     >
       {/* TOP ACCENT BAR FOR INSTANT PERIPHERAL SCANNING */}
@@ -143,7 +153,13 @@ export const GameCard: React.FC<GameCardProps> = memo(({
         <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 animate-pulse" />
       ) : isSpotlighted ? (
         <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 shadow-sm" />
-      ) : null}
+      ) : isLive ? (
+        <div className="h-1 w-full bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-500 animate-pulse" />
+      ) : isFinal ? (
+        <div className="h-1 w-full bg-slate-700/60" />
+      ) : (
+        <div className="h-1 w-full bg-gradient-to-r from-indigo-500/50 via-sky-500/40 to-transparent" />
+      )}
 
       {/* CARD HEADER */}
       <div className={`flex items-center justify-between border-b px-4 py-2.5 text-xs transition-colors ${
@@ -153,7 +169,11 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           ? 'border-rose-500/30 bg-[#12080c]'
           : isSpotlighted
           ? 'border-sky-500/30 bg-[#07111e]'
-          : 'border-white/[0.06] bg-[#070b14]'
+          : isLive
+          ? 'border-emerald-500/25 bg-[#081220]'
+          : isFinal
+          ? 'border-white/[0.05] bg-[#070a12]'
+          : 'border-indigo-500/20 bg-[#0a1020]'
       }`}>
         <div className="flex items-center gap-2">
           {event.season?.type === 3 && (
@@ -169,12 +189,13 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               LIVE
             </span>
           ) : isFinal ? (
-            <span className="rounded-md bg-slate-800 px-2.5 py-0.5 text-xs font-semibold text-slate-300">
-              FINAL
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/80 px-2.5 py-0.5 text-xs font-bold text-slate-300 shadow-sm">
+              <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+              FINAL{status?.type?.detail?.includes('OT') ? ' / OT' : ''}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 rounded-md bg-sky-950/60 px-2.5 py-0.5 text-xs font-medium text-sky-300 border border-sky-800/30">
-              <Clock className="h-3 w-3 text-sky-400" />
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-950/70 px-2.5 py-0.5 text-xs font-semibold text-indigo-300 border border-indigo-500/35 shadow-sm">
+              <Calendar className="h-3 w-3 text-indigo-400 shrink-0" />
               {formattedKickoff}
             </span>
           )}
@@ -193,7 +214,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             )
           )}
 
-          {isFinal && status.type?.detail && (
+          {isFinal && status.type?.detail && !status.type.detail.includes('Final') && (
             <span className="text-xs text-slate-400 font-medium">
               {status.type.detail}
             </span>
@@ -239,12 +260,14 @@ export const GameCard: React.FC<GameCardProps> = memo(({
       <div className="p-4 space-y-3">
         {/* Away Team */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="relative h-9 w-9 flex-shrink-0">
               <img
                 src={awayComp?.team?.logo || DEFAULT_NFL_LOGO}
                 alt={awayComp?.team?.displayName || 'Away Team'}
-                className="h-full w-full object-contain filter drop-shadow-sm"
+                className={`h-full w-full object-contain filter drop-shadow-sm transition-opacity ${
+                  isFinal && !isAwayWinner && !isTie ? 'opacity-65' : 'opacity-100'
+                }`}
                 loading="lazy"
                 onError={(e) => {
                   e.currentTarget.onerror = null
@@ -268,12 +291,25 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="font-bold text-sm text-white truncate">
+                <span className={`text-sm truncate ${
+                  isFinal
+                    ? isAwayWinner
+                      ? 'font-black text-white'
+                      : 'font-medium text-slate-400'
+                    : isLive
+                    ? 'font-bold text-white'
+                    : 'font-bold text-slate-200'
+                }`}>
                   {awayComp?.team?.displayName || awayComp?.team?.name}
                 </span>
                 <span className="font-mono text-xs text-slate-400 font-semibold shrink-0">
                   {awayComp?.team?.abbreviation === 'NE' ? 'FNE' : awayComp?.team?.abbreviation}
                 </span>
+                {isFinal && isAwayWinner && (
+                  <span className="inline-flex items-center text-[10px] font-black uppercase text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-1.5 py-0.2 rounded shrink-0 shadow-sm">
+                    WIN
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-400">
                 <span>{awayComp?.records?.[0]?.summary || '0-0'}</span>
@@ -293,8 +329,16 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </div>
           </div>
 
-          <span className="font-['Oswald'] text-2xl sm:text-3xl font-bold tracking-tight text-white tabular-nums shrink-0 ml-3">
-            {awayComp?.score ?? '-'}
+          <span className={`font-['Oswald'] text-2xl sm:text-3xl tracking-tight tabular-nums shrink-0 ml-3 ${
+            isFinal
+              ? isAwayWinner
+                ? 'font-black text-white'
+                : 'font-bold text-slate-500'
+              : isLive
+              ? 'font-bold text-white'
+              : 'font-bold text-slate-400'
+          }`}>
+            {isFinal || isLive ? (awayComp?.score ?? '-') : '—'}
           </span>
         </div>
 
@@ -305,7 +349,9 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               <img
                 src={homeComp?.team?.logo || DEFAULT_NFL_LOGO}
                 alt={homeComp?.team?.displayName || 'Home Team'}
-                className="h-full w-full object-contain filter drop-shadow-sm"
+                className={`h-full w-full object-contain filter drop-shadow-sm transition-opacity ${
+                  isFinal && !isHomeWinner && !isTie ? 'opacity-65' : 'opacity-100'
+                }`}
                 loading="lazy"
                 onError={(e) => {
                   e.currentTarget.onerror = null
@@ -329,12 +375,25 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="font-bold text-sm text-white truncate">
+                <span className={`text-sm truncate ${
+                  isFinal
+                    ? isHomeWinner
+                      ? 'font-black text-white'
+                      : 'font-medium text-slate-400'
+                    : isLive
+                    ? 'font-bold text-white'
+                    : 'font-bold text-slate-200'
+                }`}>
                   {homeComp?.team?.displayName || homeComp?.team?.name}
                 </span>
                 <span className="font-mono text-xs text-slate-400 font-semibold shrink-0">
                   {homeComp?.team?.abbreviation === 'NE' ? 'FNE' : homeComp?.team?.abbreviation}
                 </span>
+                {isFinal && isHomeWinner && (
+                  <span className="inline-flex items-center text-[10px] font-black uppercase text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-1.5 py-0.2 rounded shrink-0 shadow-sm">
+                    WIN
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-400">
                 <span>{homeComp?.records?.[0]?.summary || '0-0'}</span>
@@ -354,8 +413,16 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </div>
           </div>
 
-          <span className="font-['Oswald'] text-2xl sm:text-3xl font-bold tracking-tight text-white tabular-nums shrink-0 ml-3">
-            {homeComp?.score ?? '-'}
+          <span className={`font-['Oswald'] text-2xl sm:text-3xl tracking-tight tabular-nums shrink-0 ml-3 ${
+            isFinal
+              ? isHomeWinner
+                ? 'font-black text-white'
+                : 'font-bold text-slate-500'
+              : isLive
+              ? 'font-bold text-white'
+              : 'font-bold text-slate-400'
+          }`}>
+            {isFinal || isLive ? (homeComp?.score ?? '-') : '—'}
           </span>
         </div>
       </div>
@@ -474,7 +541,13 @@ export const GameCard: React.FC<GameCardProps> = memo(({
       </div>
 
       {/* Progressive Disclosure Action Toolbar (Anchored at Bottom Edge) */}
-      <div className="border-t border-white/[0.06] bg-[#070b14]/80 px-3.5 py-2 mt-auto">
+      <div className={`border-t px-3.5 py-2 mt-auto transition-colors ${
+        isFinal
+          ? 'border-white/[0.04] bg-[#070a14]/90'
+          : isLive
+          ? 'border-emerald-500/15 bg-[#09101e]/90'
+          : 'border-white/[0.06] bg-[#070b14]/80'
+      }`}>
         <div className="flex items-center justify-between gap-1 text-xs">
           {/* Radar Tab */}
           <button

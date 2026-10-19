@@ -67,10 +67,27 @@ export function getMatchupPowerScore(event: NFLEvent): number {
 }
 
 /**
+ * Extracts the kickoff timestamp in milliseconds from an NFLEvent.
+ */
+export function getEventKickoffMs(ev: NFLEvent): number {
+  const comp = ev.competitions?.[0]
+  const rawDate = ev.date || comp?.date
+  if (!rawDate) return Infinity
+  const ms = new Date(rawDate).getTime()
+  return Number.isNaN(ms) ? Infinity : ms
+}
+
+/**
  * Resolves the spotlighted game according to rules:
  * 1. NY Giants (NYG) if they are currently live and NOT at halftime.
- * 2. Otherwise: The best matchup by power ranking.
- *    (Prioritizes live active games > live halftime games > upcoming pre-game > completed post-game)
+ * 2. If there are other games currently in progress:
+ *    Default to the best live matchup by power ranking (two highest ranked live teams).
+ * 3. If there are NO current games in progress:
+ *    Default to the next game to take place (earliest kickoff time).
+ *    If several games are scheduled to take place at the same time next,
+ *    default to the two highest ranked teams (best matchup by power ranking).
+ * 4. If all games in the slate have completed:
+ *    Default to the best matchup by power ranking.
  */
 export function getBestMatchupByPowerRanking(events: NFLEvent[]): NFLEvent | null {
   if (!Array.isArray(events) || events.length === 0) return null
@@ -93,12 +110,11 @@ export function getBestMatchupByPowerRanking(events: NFLEvent[]): NFLEvent | nul
     return nygLiveGame
   }
 
-  // 2. Otherwise: Find the best matchup by power ranking.
-  // Group games by state so live active games take priority over pregame/postgame
+  // 2. Group games by state
   const liveActiveGames: NFLEvent[] = []
   const liveHalftimeGames: NFLEvent[] = []
   const preGames: NFLEvent[] = []
-  const otherGames: NFLEvent[] = []
+  const postGames: NFLEvent[] = []
 
   for (const ev of events) {
     const comp = ev.competitions?.[0]
@@ -114,21 +130,43 @@ export function getBestMatchupByPowerRanking(events: NFLEvent[]): NFLEvent | nul
     } else if (state === 'pre') {
       preGames.push(ev)
     } else {
-      otherGames.push(ev)
+      postGames.push(ev)
     }
   }
 
-  const pool =
-    liveActiveGames.length > 0
-      ? liveActiveGames
-      : liveHalftimeGames.length > 0
-      ? liveHalftimeGames
-      : preGames.length > 0
-      ? preGames
-      : otherGames.length > 0
-      ? otherGames
-      : events
+  // 3. If games are currently in progress, spotlight the highest ranked live matchup
+  if (liveActiveGames.length > 0) {
+    const sorted = [...liveActiveGames].sort((a, b) => getMatchupPowerScore(a) - getMatchupPowerScore(b))
+    return sorted[0]
+  }
 
-  const sorted = [...pool].sort((a, b) => getMatchupPowerScore(a) - getMatchupPowerScore(b))
-  return sorted[0] || events[0]
+  if (liveHalftimeGames.length > 0) {
+    const sorted = [...liveHalftimeGames].sort((a, b) => getMatchupPowerScore(a) - getMatchupPowerScore(b))
+    return sorted[0]
+  }
+
+  // 4. If no current games in progress, default to the next game to take place (earliest kickoff time)
+  if (preGames.length > 0) {
+    const earliestKickoff = Math.min(...preGames.map(getEventKickoffMs))
+
+    // If several games are scheduled to take place at the same time next (within 15 minutes window):
+    const nextGamesToTakePlace = Number.isFinite(earliestKickoff)
+      ? preGames.filter((ev) => {
+          const time = getEventKickoffMs(ev)
+          return Math.abs(time - earliestKickoff) <= 15 * 60 * 1000
+        })
+      : [...preGames]
+
+    // Sort among the next games by power ranking (two highest ranked teams)
+    nextGamesToTakePlace.sort((a, b) => getMatchupPowerScore(a) - getMatchupPowerScore(b))
+    return nextGamesToTakePlace[0]
+  }
+
+  // 5. If all games in the slate have completed, spotlight the best matchup by power ranking
+  if (postGames.length > 0) {
+    const sorted = [...postGames].sort((a, b) => getMatchupPowerScore(a) - getMatchupPowerScore(b))
+    return sorted[0]
+  }
+
+  return events[0]
 }

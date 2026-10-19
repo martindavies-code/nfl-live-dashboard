@@ -7,9 +7,10 @@ import {
 } from './powerRankings.ts'
 
 function mockGame(awayAbbr, homeAbbr, options = {}) {
-  const { state = 'in', isHalftime = false, id = `${awayAbbr}-${homeAbbr}` } = options
+  const { state = 'in', isHalftime = false, id = `${awayAbbr}-${homeAbbr}`, date } = options
   return {
     id,
+    date,
     name: `${awayAbbr} at ${homeAbbr}`,
     status: {
       type: {
@@ -20,6 +21,7 @@ function mockGame(awayAbbr, homeAbbr, options = {}) {
     },
     competitions: [
       {
+        date,
         status: {
           type: { state },
         },
@@ -88,7 +90,7 @@ test('Power Rankings: If NYG is not live, spotlight best matchup by power rankin
   assert.equal(spotlight?.id, 'kc-buf', 'Premier live matchup must be spotlighted when NYG is not live')
 })
 
-test('Power Rankings: Pre-game week spotlights best matchup by power ranking', () => {
+test('Power Rankings: Pre-game week spotlights best matchup by power ranking when dates are identical', () => {
   const game1 = mockGame('KC', 'BAL', { state: 'pre', id: 'kc-bal' }) // 1 + 3 = 4
   const game2 = mockGame('JAX', 'TEN', { state: 'pre', id: 'jax-ten' }) // 27 + 31 = 58
   const game3 = mockGame('PHI', 'SF', { state: 'pre', id: 'phi-sf' }) // 5 + 6 = 11
@@ -96,3 +98,44 @@ test('Power Rankings: Pre-game week spotlights best matchup by power ranking', (
   const spotlight = getBestMatchupByPowerRanking([game2, game3, game1])
   assert.equal(spotlight?.id, 'kc-bal', 'Best matchup by power ranking in pregame week must be spotlighted')
 })
+
+test('Power Rankings: When no games are in progress, default to the next game to take place', () => {
+  // Monday Night Game (earliest upcoming game)
+  const mondayGame = mockGame('DAL', 'GB', {
+    state: 'pre',
+    id: 'dal-gb',
+    date: '2026-10-19T00:20:00Z',
+  }) // DAL (18) vs GB (7) = 25.07
+  // Tuesday Night Game (later, but higher power ranked teams)
+  const tuesdayGame = mockGame('WSH', 'SF', {
+    state: 'pre',
+    id: 'wsh-sf',
+    date: '2026-10-20T00:15:00Z',
+  }) // WSH (10) vs SF (6) = 16.06
+
+  const spotlight = getBestMatchupByPowerRanking([tuesdayGame, mondayGame])
+  assert.equal(spotlight?.id, 'dal-gb', 'Must spotlight Monday game because it is the next game to take place')
+})
+
+test('Power Rankings: If multiple games are scheduled at the same time next, spotlight highest ranked teams', () => {
+  const sundaySlot = '2026-10-18T17:00:00Z'
+  const earlyHighRank = mockGame('KC', 'BAL', {
+    state: 'pre',
+    id: 'kc-bal-early',
+    date: sundaySlot,
+  }) // 1 + 3 = 4
+  const earlyLowRank = mockGame('CAR', 'TEN', {
+    state: 'pre',
+    id: 'car-ten-early',
+    date: sundaySlot,
+  }) // 32 + 31 = 63
+  const lateGame = mockGame('DET', 'SF', {
+    state: 'pre',
+    id: 'det-sf-late',
+    date: '2026-10-18T20:25:00Z',
+  }) // 2 + 6 = 8 (even higher than low early, but later)
+
+  const spotlight = getBestMatchupByPowerRanking([lateGame, earlyLowRank, earlyHighRank])
+  assert.equal(spotlight?.id, 'kc-bal-early', 'Must spotlight the highest ranked teams among the games kicking off next')
+})
+

@@ -3,7 +3,7 @@ import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
 import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation, sanitizePatriotsName } from '../utils/nflHelpers'
-import { Flame, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check, Clock, Mic, Radio } from 'lucide-react'
+import { Flame, MapPin, Compass, Sparkles, Pause, Trophy, Share2, Check, Clock, Mic, Radio, CheckCircle2, Calendar } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
 
@@ -66,6 +66,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
   const formattedKickoff = formatLocalizedKickoff(event.date)
   const broadcastDetails = getGameBroadcastDetails(event)
 
+  const isAwayWinner = isFinal && safeParseInt(awayComp?.score, 0) > safeParseInt(homeComp?.score, 0)
+  const isHomeWinner = isFinal && safeParseInt(homeComp?.score, 0) > safeParseInt(awayComp?.score, 0)
+
   // Derive true regulation seconds remaining for accurate scorigami probability
   const secondsLeft = getGameSecondsRemaining(status, state)
   const homeAbbr = sanitizePatriotsAbbreviation(homeComp?.team?.abbreviation) || 'Home'
@@ -114,6 +117,10 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
       className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
         isRedZone
           ? 'card-tier-hero-redzone'
+          : isFinal
+          ? 'card-tier-hero-final'
+          : !isLive
+          ? 'card-tier-hero-upcoming'
           : 'card-tier-hero'
       }`}
       aria-labelledby={headingId}
@@ -132,13 +139,17 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
       {/* Top Accent Bar */}
       {isRedZone ? (
         <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 animate-pulse" />
+      ) : isFinal ? (
+        <div className="h-1.5 w-full bg-slate-700/60" />
+      ) : !isLive ? (
+        <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500/50 via-sky-500/40 to-transparent" />
       ) : (
         <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500" />
       )}
 
       {/* Editorial Spotlight Banner */}
       <div className={`flex items-center justify-between gap-2 border-b px-3.5 sm:px-5 py-2.5 sm:py-3 transition-colors ${
-        isRedZone ? 'border-rose-500/20 bg-[#12080d]' : 'border-white/[0.08] bg-[#090e18]'
+        isRedZone ? 'border-rose-500/20 bg-[#12080d]' : isFinal ? 'border-slate-800/60 bg-[#090e18]' : !isLive ? 'border-indigo-500/20 bg-[#0c1426]' : 'border-white/[0.08] bg-[#090e18]'
       }`}>
         <div className="flex items-center gap-2 min-w-0">
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-sky-500/20 px-2.5 py-1 text-xs font-bold text-sky-300 border border-sky-500/40 shrink-0">
@@ -176,12 +187,13 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
               <span>LIVE IN PROGRESS</span>
             </span>
           ) : isFinal ? (
-            <span className="rounded-md bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-300 shrink-0">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/60 px-2.5 py-1 text-xs font-semibold text-slate-300 shrink-0">
+              <CheckCircle2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
               FINAL RECAP
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-950 px-2 sm:px-2.5 py-1 text-xs font-semibold text-sky-300 border border-sky-800/40 shrink-0 truncate">
-              <Clock className="h-3.5 w-3.5 text-sky-400 shrink-0" />
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-950/80 px-2 sm:px-2.5 py-1 text-xs font-semibold text-indigo-300 border border-indigo-800/50 shrink-0 truncate">
+              <Calendar className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
               <span className="truncate">KICKOFF: {formattedKickoff.toUpperCase()}</span>
             </span>
           )}
@@ -285,7 +297,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                   <img
                     src={awayComp?.team?.logo || DEFAULT_NFL_LOGO}
                     alt={awayComp?.team?.displayName || 'Away Team'}
-                    className="h-full w-full object-contain filter drop-shadow-md"
+                    className={`h-full w-full object-contain filter drop-shadow-md ${
+                      isFinal && !isAwayWinner ? 'opacity-65' : ''
+                    }`}
                     loading="eager"
                     onError={(e) => {
                       e.currentTarget.onerror = null
@@ -309,12 +323,24 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                    <span className="text-base sm:text-xl font-black text-white tracking-tight leading-tight">
+                    <span className={`text-base sm:text-xl font-black tracking-tight leading-tight ${
+                      isFinal
+                        ? isAwayWinner
+                          ? 'text-white'
+                          : 'text-slate-400 font-medium'
+                        : 'text-white'
+                    }`}>
                       {awayComp?.team?.displayName || awayComp?.team?.name}
                     </span>
                     <span className="font-mono text-xs text-slate-400 font-bold shrink-0">
                       {sanitizePatriotsAbbreviation(awayComp?.team?.abbreviation)}
                     </span>
+                    {isAwayWinner && (
+                      <span className="inline-flex items-center gap-1 rounded bg-emerald-950/80 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/40 shadow-sm shrink-0">
+                        <Check className="h-3 w-3 text-emerald-400" />
+                        WIN
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
                     <span>{awayComp?.records?.[0]?.summary || '0-0'}</span>
@@ -334,8 +360,14 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                 </div>
               </div>
 
-              <span className="font-['Oswald'] text-3xl sm:text-5xl font-bold tracking-tight text-white tabular-nums shrink-0 ml-3">
-                {awayComp?.score ?? '-'}
+              <span className={`font-['Oswald'] text-3xl sm:text-5xl font-bold tracking-tight tabular-nums shrink-0 ml-3 ${
+                isFinal
+                  ? isAwayWinner
+                    ? 'text-white font-black'
+                    : 'text-slate-500 font-bold'
+                  : 'text-white'
+              }`}>
+                {isLive || isFinal ? (awayComp?.score ?? '0') : '—'}
               </span>
             </div>
 
@@ -346,7 +378,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                   <img
                     src={homeComp?.team?.logo || DEFAULT_NFL_LOGO}
                     alt={homeComp?.team?.displayName || 'Home Team'}
-                    className="h-full w-full object-contain filter drop-shadow-md"
+                    className={`h-full w-full object-contain filter drop-shadow-md ${
+                      isFinal && !isHomeWinner ? 'opacity-65' : ''
+                    }`}
                     loading="eager"
                     onError={(e) => {
                       e.currentTarget.onerror = null
@@ -370,12 +404,24 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                    <span className="text-base sm:text-xl font-black text-white tracking-tight leading-tight">
+                    <span className={`text-base sm:text-xl font-black tracking-tight leading-tight ${
+                      isFinal
+                        ? isHomeWinner
+                          ? 'text-white'
+                          : 'text-slate-400 font-medium'
+                        : 'text-white'
+                    }`}>
                       {homeComp?.team?.displayName || homeComp?.team?.name}
                     </span>
                     <span className="font-mono text-xs text-slate-400 font-bold shrink-0">
                       {sanitizePatriotsAbbreviation(homeComp?.team?.abbreviation)}
                     </span>
+                    {isHomeWinner && (
+                      <span className="inline-flex items-center gap-1 rounded bg-emerald-950/80 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/40 shadow-sm shrink-0">
+                        <Check className="h-3 w-3 text-emerald-400" />
+                        WIN
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
                     <span>{homeComp?.records?.[0]?.summary || '0-0'}</span>
@@ -395,8 +441,14 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = ({
                 </div>
               </div>
 
-              <span className="font-['Oswald'] text-3xl sm:text-5xl font-bold tracking-tight text-white tabular-nums shrink-0 ml-3">
-                {homeComp?.score ?? '-'}
+              <span className={`font-['Oswald'] text-3xl sm:text-5xl font-bold tracking-tight tabular-nums shrink-0 ml-3 ${
+                isFinal
+                  ? isHomeWinner
+                    ? 'text-white font-black'
+                    : 'text-slate-500 font-bold'
+                  : 'text-white'
+              }`}>
+                {isLive || isFinal ? (homeComp?.score ?? '0') : '—'}
               </span>
             </div>
           </div>
