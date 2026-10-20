@@ -24,3 +24,7 @@ dist-ssr
 *.sln
 *.sw?
 test_*.png
+screenshots/
+*-screenshot*.png
+*.png.tmp
+scratch/

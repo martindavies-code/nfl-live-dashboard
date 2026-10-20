@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { execSync, execFileSync } from 'node:child_process'
+import fs from 'node:fs'
 
 function run(cmd) {
   return execSync(cmd, { stdio: 'inherit' })
@@ -15,6 +16,14 @@ try {
   run('npx oxlint')
   run('npm run build')
   run('npm run audit:announcers')
+
+  // Clean up all testing screenshots and temp files after test runs
+  if (fs.existsSync('screenshots')) {
+    fs.rmSync('screenshots', { recursive: true, force: true })
+  }
+  for (const f of ['test_headless_chrome.png', 'test.png']) {
+    if (fs.existsSync(f)) fs.rmSync(f, { force: true })
+  }
 
   console.log('🔄 Checking repository status...')
   run('git add -A')
