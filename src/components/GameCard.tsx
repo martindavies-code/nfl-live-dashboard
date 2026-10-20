@@ -22,7 +22,7 @@ import { getGameBroadcastDetails } from '../utils/broadcastInfo'
 interface GameCardProps {
   event: NFLEvent
   isSpotlighted?: boolean
-  onSpotlight?: () => void
+  onSpotlight?: (id?: string) => void
   showField?: boolean
   globalExpandedTab?: 'radar' | 'broadcast' | 'scorigami' | null
   onToggleAllRadars?: () => void
@@ -124,11 +124,12 @@ export const GameCard: React.FC<GameCardProps> = memo(({
 
   return (
     <article
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '0 280px' }}
       onClick={(e) => {
         // Prevent card spotlight click if an interactive element was clicked
         if ((e.target as HTMLElement).closest('button, [role="button"], a, input')) return
         if (onSpotlight && !isSpotlighted) {
-          onSpotlight()
+          onSpotlight(event.id)
         }
       }}
       aria-label={cardAriaLabel}
@@ -243,7 +244,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                onSpotlight()
+                onSpotlight(event.id)
               }}
               className="flex items-center gap-1 rounded-md bg-white/[0.06] hover:bg-sky-500 hover:text-white px-2 py-0.5 text-xs font-semibold text-slate-300 transition-colors border border-white/[0.08] cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400"
               title="Spotlight this matchup at the top"

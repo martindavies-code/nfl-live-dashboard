@@ -32,9 +32,76 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { playRedZoneSound, playScoreChime, playTactileClick } from '../utils/audioFeedback'
-import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
-import { DataSourcesModal } from './DataSourcesModal'
 import { getBestMatchupByPowerRanking } from '../utils/powerRankings'
+
+const KeyboardShortcutsModal = React.lazy(() =>
+  import('./KeyboardShortcutsModal').then((m) => ({ default: m.KeyboardShortcutsModal }))
+)
+const DataSourcesModal = React.lazy(() =>
+  import('./DataSourcesModal').then((m) => ({ default: m.DataSourcesModal }))
+)
+
+interface AutoSyncTickerProps {
+  liveCount: number
+  isRefreshing: boolean
+  onRefreshTrigger: () => void
+}
+
+const AutoSyncTicker: React.FC<AutoSyncTickerProps> = React.memo(({
+  liveCount,
+  isRefreshing,
+  onRefreshTrigger,
+}) => {
+  const [countdown, setCountdown] = useState<number>(10)
+  const [prevIsRefreshing, setPrevIsRefreshing] = useState<boolean>(isRefreshing)
+  const triggerRef = useRef(onRefreshTrigger)
+
+  if (isRefreshing !== prevIsRefreshing) {
+    setPrevIsRefreshing(isRefreshing)
+    if (isRefreshing) {
+      setCountdown(10)
+    }
+  }
+
+  useEffect(() => {
+    triggerRef.current = onRefreshTrigger
+  }, [onRefreshTrigger])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          triggerRef.current()
+          return 10
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div
+      className="hidden xl:flex h-9 items-center gap-2 rounded-lg bg-[#111927] border border-white/[0.08] px-3 text-xs select-none"
+      aria-hidden="true"
+    >
+      <div className="relative flex h-2 w-2 items-center justify-center">
+        {liveCount > 0 && (
+          <span className="absolute h-full w-full rounded-full bg-rose-500 opacity-75 animate-ping" />
+        )}
+        <span
+          className={`h-2 w-2 rounded-full ${
+            liveCount > 0 ? 'bg-rose-500' : 'bg-emerald-500'
+          }`}
+        />
+      </div>
+      <span className="text-slate-300 font-mono text-[11px] tabular-nums">
+        Sync in <strong className="text-white">{countdown}s</strong>
+      </span>
+    </div>
+  )
+})
 
 export const Dashboard: React.FC = () => {
   const [data, setData] = useState<NFLScoreboardData | null>(null)
@@ -43,7 +110,6 @@ export const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<GameFilter>('all')
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [countdown, setCountdown] = useState<number>(10)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [selectedHeroId, setSelectedHeroId] = useState<string | null>(() => {
     try {
@@ -178,7 +244,6 @@ export const Dashboard: React.FC = () => {
       }
 
       setLastUpdated(new Date())
-      setCountdown(10)
     } catch (err: unknown) {
       const isAbort = err instanceof Error && err.name === 'AbortError'
       if (!isAbort) {
@@ -210,10 +275,33 @@ export const Dashboard: React.FC = () => {
     [liveSeasonType, liveWeek, isMuted, loadData, handleSetSpotlight]
   )
 
+  const handleCardSpotlight = useCallback(
+    (id?: string) => {
+      if (!id) return
+      setSelectedHeroId((prev) => {
+        const next = prev === id ? null : id
+        handleSetSpotlight(next)
+        return next
+      })
+      setAutoRedZoneSpotlight(false)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    },
+    [handleSetSpotlight]
+  )
+
+  const handleToggleRadar = useCallback(() => {
+    setGlobalExpandedTab((prev) => (prev === 'radar' ? null : 'radar'))
+  }, [])
+
   // Keep loadDataRef in sync with the latest loadData so stable event listeners always call the current version
   useEffect(() => {
     loadDataRef.current = loadData
   })
+
+  // Memoized auto-refresh handler preventing ticker memo invalidation
+  const handleAutoRefresh = useCallback(() => {
+    loadDataRef.current?.(false)
+  }, [])
 
   // Polling setup with Page Visibility awareness (battery & network preservation)
   // Uses loadDataRef so intervals and event listeners remain stable without thrashing
@@ -223,31 +311,17 @@ export const Dashboard: React.FC = () => {
     })
 
     let pollInterval: ReturnType<typeof setInterval> | null = null
-    let tickInterval: ReturnType<typeof setInterval> | null = null
 
     const startTimers = () => {
       if (pollInterval) clearInterval(pollInterval)
-      if (tickInterval) clearInterval(tickInterval)
-
-      // Reset countdown when timers (re)start so tick and poll are always aligned
-      setCountdown(10)
-
       pollInterval = setInterval(() => {
         loadDataRef.current?.()
-        setCountdown(10)
       }, 10000)
-
-      // Tick fires every second; countdown never drifts below 1 before poll resets it
-      tickInterval = setInterval(() => {
-        setCountdown((prev) => (prev > 1 ? prev - 1 : 1))
-      }, 1000)
     }
 
     const stopTimers = () => {
       if (pollInterval) clearInterval(pollInterval)
-      if (tickInterval) clearInterval(tickInterval)
       pollInterval = null
-      tickInterval = null
     }
 
     startTimers()
@@ -542,7 +616,6 @@ export const Dashboard: React.FC = () => {
         setSrAnnouncement('Filter changed: Showing upcoming games')
       } else if (e.key.toLowerCase() === 'r') {
         e.preventDefault()
-        setCountdown(10)
         playTactileClick(isMuted)
         loadData(true)
       } else if (e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'd') {
@@ -808,29 +881,15 @@ export const Dashboard: React.FC = () => {
               </button>
 
               {/* Polling countdown badge (Desktop wide ticker) */}
-              <div
-                className="hidden xl:flex h-9 items-center gap-2 rounded-lg bg-[#111927] border border-white/[0.08] px-3 text-xs select-none"
-                aria-hidden="true"
-              >
-                <div className="relative flex h-2 w-2 items-center justify-center">
-                  {liveCount > 0 && (
-                    <span className="absolute h-full w-full rounded-full bg-rose-500 opacity-75 animate-ping" />
-                  )}
-                  <span
-                    className={`h-2 w-2 rounded-full ${
-                      liveCount > 0 ? 'bg-rose-500' : 'bg-emerald-500'
-                    }`}
-                  />
-                </div>
-                <span className="text-slate-300 font-mono text-[11px] tabular-nums">
-                  Sync in <strong className="text-white">{countdown}s</strong>
-                </span>
-              </div>
+              <AutoSyncTicker
+                liveCount={liveCount}
+                isRefreshing={isRefreshing}
+                onRefreshTrigger={handleAutoRefresh}
+              />
 
               {/* Manual Refresh Button */}
               <button
                 onClick={() => {
-                  setCountdown(10)
                   loadData(true)
                 }}
                 disabled={isRefreshing}
@@ -1229,18 +1288,9 @@ export const Dashboard: React.FC = () => {
                   key={event.id}
                   event={event}
                   isSpotlighted={spotlightIds.has(event.id)}
-                  onSpotlight={() => {
-                    if (selectedHeroId === event.id) {
-                      // Clicking on already spotlighted game clears custom pin and restores dynamic NYG / Power ranking
-                      handleSetSpotlight(null)
-                    } else {
-                      handleSetSpotlight(event.id)
-                    }
-                    setAutoRedZoneSpotlight(false)
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                  }}
+                  onSpotlight={handleCardSpotlight}
                   globalExpandedTab={globalExpandedTab}
-                  onToggleAllRadars={() => setGlobalExpandedTab((prev) => prev === 'radar' ? null : 'radar')}
+                  onToggleAllRadars={handleToggleRadar}
                 />
               ))}
             </div>
@@ -1257,26 +1307,31 @@ export const Dashboard: React.FC = () => {
       </footer>
 
       {/* Keyboard Shortcuts & Accessibility Modal */}
-      <KeyboardShortcutsModal
-        isOpen={isShortcutsOpen}
-        onClose={() => setIsShortcutsOpen(false)}
-      />
+      {isShortcutsOpen && (
+        <React.Suspense fallback={null}>
+          <KeyboardShortcutsModal
+            isOpen={isShortcutsOpen}
+            onClose={() => setIsShortcutsOpen(false)}
+          />
+        </React.Suspense>
+      )}
 
       {/* Redundant Live Data Sources Modal */}
-      <DataSourcesModal
-        isOpen={isSourcesModalOpen}
-        onClose={() => setIsSourcesModalOpen(false)}
-        activeSourceId={activeSource.id}
-        activeSourceName={activeSource.name}
-        responseTimeMs={activeSource.responseTimeMs}
-        isCached={activeSource.isCached}
-        cachedTimestamp={activeSource.cachedTimestamp}
-        onRefresh={() => {
-          setCountdown(10)
-          loadData(true)
-        }}
-        isRefreshing={isRefreshing}
-      />
+      {isSourcesModalOpen && (
+        <React.Suspense fallback={null}>
+          <DataSourcesModal
+            isOpen={isSourcesModalOpen}
+            onClose={() => setIsSourcesModalOpen(false)}
+            activeSourceId={activeSource.id}
+            activeSourceName={activeSource.name}
+            responseTimeMs={activeSource.responseTimeMs}
+            isCached={activeSource.isCached}
+            cachedTimestamp={activeSource.cachedTimestamp}
+            onRefresh={() => loadData(true)}
+            isRefreshing={isRefreshing}
+          />
+        </React.Suspense>
+      )}
     </div>
   )
 }
