@@ -262,8 +262,34 @@ async function runAudit(options = {}) {
     console.log(`[10/14] Testing Mobile Portrait Viewport - Google Pixel 6 (393x851)...`)
     await page.setViewport({ width: 393, height: 851, isMobile: true, hasTouch: true })
     await page.evaluate(() => window.scrollTo(0, 0))
-    await new Promise((r) => setTimeout(r, 600))
     await saveShot(page, '10-mobile-portrait-hero.png')
+
+    // 9b. Mobile Portrait Viewport on Upcoming Week (Week 12)
+    console.log(`[10b/14] Testing Mobile Portrait Viewport - Upcoming Week 12 Matchup...`)
+    const weekBtnMob = await page.$('button[aria-haspopup="dialog"]')
+    if (weekBtnMob) {
+      await weekBtnMob.click()
+      await new Promise((r) => setTimeout(r, 400))
+      await page.evaluate(() => {
+        const btns = Array.from(document.querySelectorAll('button'))
+        const w12 = btns.find((b) => b.textContent?.trim() === 'W12' || b.textContent?.includes('Week 12'))
+        w12?.click()
+      })
+      await new Promise((r) => setTimeout(r, 800))
+      await page.evaluate(() => {
+        const hero = document.querySelector('section[aria-labelledby="hero-matchup-heading"]')
+        if (hero) hero.scrollIntoView({ behavior: 'instant', block: 'start' })
+      })
+      await new Promise((r) => setTimeout(r, 500))
+      await saveShot(page, '10b-mobile-upcoming-hero.png')
+
+      await page.evaluate(() => {
+        const winProb = document.querySelector('div[aria-label*="Win probability"]')
+        if (winProb) winProb.scrollIntoView({ behavior: 'instant', block: 'center' })
+      })
+      await new Promise((r) => setTimeout(r, 500))
+      await saveShot(page, '10c-mobile-winprob.png')
+    }
 
     // 10. Mobile Field Radar with Play Text Close-up
     console.log(`[11/14] Capturing Mobile Field Radar close-up...`)

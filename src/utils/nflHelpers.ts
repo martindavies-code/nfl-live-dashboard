@@ -471,9 +471,9 @@ export function formatLocalizedKickoff(
     }
 
     const timeOptions: Intl.DateTimeFormatOptions = {
-      hour: 'numeric',
+      hour: '2-digit',
       minute: '2-digit',
-      hour12: true,
+      hourCycle: 'h23',
       timeZoneName: 'short',
     }
     if (timeZone) {
@@ -482,8 +482,7 @@ export function formatLocalizedKickoff(
 
     const weekdayStr = d.toLocaleDateString(undefined, weekdayOptions)
     let timeStr = d.toLocaleTimeString(undefined, timeOptions)
-    // Standardize uppercase for AM/PM if present (e.g. "6:00 PM BST" or "1:00 PM EDT")
-    timeStr = timeStr.replace(/\b([ap]m)\b/gi, (m) => m.toUpperCase())
+    timeStr = timeStr.replace(/\b(GMT|UTC)[+-]0+(?::?0+)?\b/g, '$1')
 
     return `${weekdayStr} ${timeStr}`
   } catch {
@@ -1001,21 +1000,15 @@ export function shouldDisplayLastPlayText(
   return !hasFieldDrivePlays
 }
 
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHAR_REGEX = /[\x00-\x1F\x7F-\x9F]+/g
+
 /**
  * Sanitizes single-line fields destined for clipboard sharing or external text serialization.
  * Strips carriage returns, line feeds, and ASCII/Unicode control characters to prevent CRLF injection.
  */
 export function sanitizeClipboardField(text?: string | null, fallback = ''): string {
   if (!text || typeof text !== 'string') return fallback
-  let clean = ''
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i)
-    // Strip CR (\r), LF (\n), ASCII control characters (0-31), DEL (127), and C1 controls (128-159)
-    if (code === 10 || code === 13 || (code >= 0 && code <= 31) || (code >= 127 && code <= 159)) {
-      clean += ' '
-    } else {
-      clean += text[i]
-    }
-  }
-  return clean.replace(/\s+/g, ' ').trim() || fallback
+  return text.replace(CONTROL_CHAR_REGEX, ' ').replace(/\s+/g, ' ').trim() || fallback
 }
+

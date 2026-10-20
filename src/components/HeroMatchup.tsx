@@ -275,9 +275,10 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               AT HALFTIME
             </span>
           ) : isLive ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-500/20 px-2 sm:px-2.5 py-1 text-xs font-bold text-rose-300 border border-rose-500/30 shrink-0">
-              <Radio className="h-3.5 w-3.5 animate-pulse" />
-              <span>LIVE IN PROGRESS</span>
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-500/20 px-2 sm:px-2.5 py-1 text-xs font-bold text-rose-300 border border-rose-500/30 min-w-0">
+              <Radio className="h-3.5 w-3.5 animate-pulse shrink-0" />
+              <span className="hidden xs:inline">LIVE IN PROGRESS</span>
+              <span className="xs:hidden">LIVE</span>
             </span>
           ) : isFinal ? (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/60 px-2.5 py-1 text-xs font-semibold text-slate-300 shrink-0">
@@ -285,9 +286,10 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               FINAL RECAP
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-950/80 px-2 sm:px-2.5 py-1 text-xs font-semibold text-indigo-300 border border-indigo-800/50 shrink-0 truncate">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-950/80 px-2 sm:px-2.5 py-1 text-xs font-semibold text-indigo-300 border border-indigo-800/50 min-w-0">
               <Calendar className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
-              <span className="truncate">KICKOFF: {formattedKickoff.toUpperCase()}</span>
+              <span className="hidden xs:inline">UPCOMING KICKOFF</span>
+              <span className="xs:hidden">UPCOMING</span>
             </span>
           )}
         </div>
@@ -338,8 +340,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
       {/* Hero Content: Mobile First Hierarchy (Teams -> Field Radar -> Situation) & Desktop Balanced Grid */}
       <div className={
         isMultiThreat
-          ? "flex flex-col gap-4 p-4"
-          : "grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 p-4 sm:p-6"
+          ? "flex flex-col gap-4 p-3.5 sm:p-4"
+          : "grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 p-3.5 sm:p-6"
       }>
         {/* Block 1: Teams & Scores (Top-Left on Desktop, 6 columns) */}
         <div className={isMultiThreat ? "flex flex-col space-y-3" : "order-1 lg:order-1 col-span-12 lg:col-span-6 flex flex-col space-y-4 sm:space-y-6"}>
@@ -579,7 +581,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
 
         {/* Block 3: Matchup Intelligence Panel (Key Situation, Win Probability & Scorigami) */}
         <div className={isMultiThreat ? "flex flex-col space-y-3" : "order-3 lg:order-2 col-span-12 lg:col-span-6 flex flex-col justify-between"}>
-          <div className="rounded-xl border border-white/[0.08] bg-[#070c16]/90 p-4 space-y-3.5 shadow-sm">
+          <div className="rounded-xl border border-white/[0.08] bg-[#070c16]/90 p-3 sm:p-4 space-y-3 sm:space-y-3.5 shadow-sm">
             {/* Active Play Situation (Only shown during live games) */}
             {isLive && (
               <div className="border-b border-white/[0.06] pb-3">

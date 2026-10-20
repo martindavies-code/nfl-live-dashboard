@@ -420,6 +420,27 @@ export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
     sources: [{ label: 'ESPN Monday Night Football official crew', url: 'https://www.espn.com/nfl' }],
     verifiedOn: '2026-10-13',
   },
+  {
+    season: 2026, week: 7, away: 'NE', home: 'CHI', kickoffUtc: '2026-10-23T00:15Z',
+    network: 'Amazon Prime Video',
+    playByPlay: 'Al Michaels', analysts: ['Kirk Herbstreit'], sideline: ['Kaylee Hartung'],
+    sources: [{ label: 'Amazon Prime Video Thursday Night Football official crew', url: 'https://www.amazon.com/tnf' }],
+    verifiedOn: '2026-10-20',
+  },
+  {
+    season: 2026, week: 7, away: 'KC', home: 'SEA', kickoffUtc: '2026-10-26T00:20Z',
+    network: 'NBC',
+    playByPlay: 'Mike Tirico', analysts: ['Cris Collinsworth'], sideline: ['Melissa Stark'],
+    sources: [{ label: 'NBC Sports Sunday Night Football official crew', url: 'https://www.nbcsports.com/nfl/sunday-night-football' }],
+    verifiedOn: '2026-10-20',
+  },
+  {
+    season: 2026, week: 7, away: 'DAL', home: 'PHI', kickoffUtc: '2026-10-27T00:15Z',
+    network: 'ESPN / ABC',
+    playByPlay: 'Joe Buck', analysts: ['Troy Aikman'], sideline: ['Lisa Salters'],
+    sources: [{ label: 'ESPN Monday Night Football official crew', url: 'https://www.espn.com/nfl' }],
+    verifiedOn: '2026-10-20',
+  },
 ]
 
 /** ESPN abbreviations vary from the UI's sanitised ones (the Patriots display as `FNE`). */

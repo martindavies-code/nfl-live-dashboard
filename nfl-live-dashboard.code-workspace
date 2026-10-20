@@ -1,0 +1,13 @@
+{
+  "settings": {},
+  "folders": [
+    {
+      "path": ".",
+      "name": "nfl-live-dashboard"
+    },
+    {
+      "path": "../nba-live-dashboard",
+      "name": "nba-live-dashboard"
+    }
+  ]
+}

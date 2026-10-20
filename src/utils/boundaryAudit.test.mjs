@@ -18,23 +18,25 @@ test('Boundary Audit: formatLocalizedKickoff handles all date inputs and timezon
   // Valid ISO strings in Europe/London (Summer BST & Winter GMT)
   const bstResult = formatLocalizedKickoff('2026-10-04T17:00:00Z', 'Europe/London')
   assert.ok(bstResult.includes('Sun'), `Expected Sun in ${bstResult}`)
-  assert.ok(bstResult.includes('6:00 PM'), `Expected 6:00 PM in ${bstResult}`)
+  assert.ok(bstResult.includes('18:00'), `Expected 18:00 in ${bstResult}`)
   assert.ok(bstResult.includes('BST') || bstResult.includes('GMT+1'), `Expected BST in ${bstResult}`)
 
   const gmtResult = formatLocalizedKickoff('2026-12-13T18:00:00Z', 'Europe/London')
   assert.ok(gmtResult.includes('Sun'), `Expected Sun in ${gmtResult}`)
-  assert.ok(gmtResult.includes('6:00 PM'), `Expected 6:00 PM in ${gmtResult}`)
+  assert.ok(gmtResult.includes('18:00'), `Expected 18:00 in ${gmtResult}`)
   assert.ok(gmtResult.includes('GMT'), `Expected GMT in ${gmtResult}`)
+  assert.equal(gmtResult.includes('GMT+0'), false, `Expected no GMT+0 in ${gmtResult}`)
+  assert.equal(gmtResult.includes('GMT+00'), false, `Expected no GMT+00 in ${gmtResult}`)
 
   // Valid ISO strings in America/New_York (Eastern Time)
   const nyResult = formatLocalizedKickoff('2026-10-04T17:00:00Z', 'America/New_York')
   assert.ok(nyResult.includes('Sun'), `Expected Sun in ${nyResult}`)
-  assert.ok(nyResult.includes('1:00 PM'), `Expected 1:00 PM in ${nyResult}`)
+  assert.ok(nyResult.includes('13:00'), `Expected 13:00 in ${nyResult}`)
 
   // Valid ISO strings in America/Los_Angeles (Pacific Time)
   const laResult = formatLocalizedKickoff('2026-10-04T17:00:00Z', 'America/Los_Angeles')
   assert.ok(laResult.includes('Sun'), `Expected Sun in ${laResult}`)
-  assert.ok(laResult.includes('10:00 AM'), `Expected 10:00 AM in ${laResult}`)
+  assert.ok(laResult.includes('10:00'), `Expected 10:00 in ${laResult}`)
 
   // Default host/browser environment localization (without explicit timezone param)
   const defaultResult = formatLocalizedKickoff('2026-10-04T17:00:00Z')
@@ -44,7 +46,7 @@ test('Boundary Audit: formatLocalizedKickoff handles all date inputs and timezon
   const dateObj = new Date('2026-09-10T00:20:00Z')
   const dateObjResult = formatLocalizedKickoff(dateObj, 'Europe/London')
   assert.ok(dateObjResult.includes('Thu'), `Expected Thu in ${dateObjResult}`)
-  assert.ok(dateObjResult.includes('1:20 AM'), `Expected 1:20 AM in ${dateObjResult}`)
+  assert.ok(dateObjResult.includes('01:20'), `Expected 01:20 in ${dateObjResult}`)
 })
 
 test('Boundary Audit: FieldDiagram Play Direction Arrow & Badges Mathematical Invariants', () => {

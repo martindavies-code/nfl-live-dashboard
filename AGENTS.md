@@ -1,5 +1,9 @@
 # Agent Instructions & Project Rules
 
+## File Changes & Execution (MANDATORY)
+- **Always accept and apply all changes to files automatically**: Proactively apply all modifications to files directly. Never ask for permission or confirmation before making edits, updating files, or running verification steps.
+- **Always keep GitHub Pages up to date**: The user only uses the live GitHub deployment. Always sync and push verified changes to `origin main` after completing any fixes, features, or updates so the deployed site is always the very latest.
+
 ## Weekly NFL Broadcast Announcer Verification Routine (MANDATORY)
 Ahead of every NFL weekend slate (specifically on Thursday or Friday mornings):
 1. **Never guess or carry over crews from memory or previous weeks**:

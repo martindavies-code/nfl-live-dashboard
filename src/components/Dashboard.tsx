@@ -742,8 +742,16 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Context & Polling Status */}
             <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+              {/* Switcher to NBA Dashboard */}
+              <a
+                href="https://martindavies-code.github.io/nba-live-dashboard/"
+                className="hidden md:flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-[#111927] text-slate-300 border border-white/[0.08] hover:text-white hover:border-orange-500/50 transition-all focus:outline-none focus:ring-2 focus:ring-orange-400"
+                title="Switch to NBA Live Command Center"
+              >
+                <span>🏀</span>
+                <span>NBA Command</span>
+              </a>
 
               {/* Sound Cues Toggle */}
               <button
