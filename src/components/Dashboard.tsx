@@ -4,7 +4,6 @@ import { WeekSelector } from './WeekSelector'
 import {
   isRedZoneSituation,
   isHalftimeSituation,
-  getSeasonPhaseDescription,
   getWeekLabel,
   getNextWeek,
   getPrevWeek,
@@ -712,97 +711,105 @@ export const Dashboard: React.FC = () => {
       {/* HEADER: Sleek, Purposeful, Zero Redundant Clutter */}
       <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#090d16]/90 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12">
-          <div className="flex min-h-[56px] py-2 sm:py-0 sm:h-16 items-center justify-between gap-2 sm:gap-4">
-            {/* Logo & Season Context */}
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div
-                className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-800 shadow-md ring-1 ring-white/20 select-none"
-                aria-hidden="true"
-              >
-                <span className="text-base sm:text-xl">🏈</span>
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <h1 className="font-['Oswald'] font-bold text-sm sm:text-xl tracking-wide text-white uppercase truncate shrink-0">
-                    <span className="sm:hidden">NFL</span>
+          <div className="flex h-16 items-center justify-between gap-3 sm:gap-4">
+            {/* Logo, Brand & Season Context */}
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                <div
+                  className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-700 to-indigo-900 shadow-lg shadow-indigo-950/40 ring-1 ring-white/20 select-none"
+                  aria-hidden="true"
+                >
+                  <span className="text-base sm:text-xl">🏈</span>
+                </div>
+                <div>
+                  <h1 className="font-['Oswald'] font-bold text-base sm:text-xl tracking-wider text-white uppercase leading-none">
+                    <span className="sm:hidden">NFL Command</span>
                     <span className="hidden sm:inline">NFL Live Command</span>
                   </h1>
-                  <WeekSelector
-                    currentSeasonType={selectedSeasonType}
-                    currentWeek={selectedWeek}
-                    liveSeasonType={liveSeasonType}
-                    liveWeek={liveWeek}
-                    seasonYear={seasonYear}
-                    onSelectWeek={handleSelectWeek}
-                  />
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium tracking-normal mt-1 hidden xs:block">
+                    <span className="hidden md:inline">{seasonYear} Season • </span>Real-Time Field Tracker
+                  </p>
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-slate-400 truncate hidden xs:block">
-                  <span className="hidden md:inline">{getSeasonPhaseDescription(selectedSeasonType, seasonYear, selectedWeek)} • </span>Real-Time Field Tracker
-                </p>
               </div>
+
+              {/* Vertical Divider */}
+              <div className="hidden sm:block h-6 w-px bg-white/10 shrink-0" aria-hidden="true" />
+
+              {/* Week Navigation */}
+              <WeekSelector
+                currentSeasonType={selectedSeasonType}
+                currentWeek={selectedWeek}
+                liveSeasonType={liveSeasonType}
+                liveWeek={liveWeek}
+                seasonYear={seasonYear}
+                onSelectWeek={handleSelectWeek}
+              />
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-              {/* Switcher to NBA Dashboard */}
-              <a
-                href="https://martindavies-code.github.io/nba-live-dashboard/"
-                className="hidden md:flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-[#111927] text-slate-300 border border-white/[0.08] hover:text-white hover:border-orange-500/50 transition-all focus:outline-none focus:ring-2 focus:ring-orange-400"
-                title="Switch to NBA Live Command Center"
-              >
-                <span>🏀</span>
-                <span>NBA Command</span>
-              </a>
-
+            {/* Right-Side Telemetry & Action Controls */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               {/* Sound Cues Toggle */}
               <button
                 onClick={toggleMute}
-                className={`flex min-h-[38px] min-w-[38px] sm:min-h-[44px] sm:min-w-[44px] items-center justify-center rounded-lg p-2 sm:px-2.5 sm:py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                className={`flex h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 text-xs font-semibold transition-all border focus:outline-none focus:ring-2 focus:ring-sky-400 ${
                   !isMuted
-                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
-                    : 'bg-[#111927] text-slate-400 border border-white/[0.08] hover:text-white'
+                    ? 'bg-sky-500/15 text-sky-300 border-sky-500/40 hover:bg-sky-500/25'
+                    : 'bg-[#111927] text-slate-400 border-white/[0.08] hover:text-white hover:bg-[#162032]'
                 }`}
                 title="Toggle Audio Feedback Cues (Shortcut: M)"
                 aria-pressed={!isMuted}
                 aria-label={isMuted ? "Sound Cues Muted. Click to unmute." : "Sound Cues Active. Click to mute."}
               >
                 {isMuted ? <VolumeX className="h-4 w-4 text-slate-400" /> : <Volume2 className="h-4 w-4 text-sky-400" />}
-                <span className="sr-only sm:not-sr-only sm:ml-1 hidden xl:inline">
+                <span className="hidden xl:inline">
                   {isMuted ? 'Muted' : 'Audio On'}
                 </span>
               </button>
 
-              {/* Keyboard Shortcuts Help Button (Desktop only with keyboard) */}
+              {/* Keyboard Shortcuts Help Button */}
               <button
                 onClick={() => setIsShortcutsOpen(true)}
-                className="hidden lg:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-[#111927] hover:bg-[#162032] border border-white/[0.08] px-2.5 py-1.5 text-xs font-semibold text-slate-300 transition-all hover:text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="hidden lg:flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#111927] hover:bg-[#162032] border border-white/[0.08] px-2.5 sm:px-3 text-xs font-semibold text-slate-300 transition-all hover:text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
                 title="Keyboard Shortcuts & Accessibility Info (Shortcut: ?)"
                 aria-label="Open Keyboard Shortcuts and Accessibility Guide"
               >
                 <Keyboard className="h-4 w-4 text-indigo-400" />
-                <span className="sr-only sm:not-sr-only sm:ml-1 hidden xl:inline">Help (?)</span>
+                <span className="hidden xl:inline">Help (?)</span>
               </button>
 
               {/* Active Live Data Feed & Redundancy Inspector */}
               <button
                 onClick={() => setIsSourcesModalOpen(true)}
-                className={`hidden lg:flex min-h-[44px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                className={`hidden md:flex h-9 items-center gap-1.5 rounded-lg px-2.5 sm:px-3 text-xs font-semibold transition-all border focus:outline-none focus:ring-2 focus:ring-sky-400 ${
                   activeSource.isCached
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    : 'bg-emerald-950/40 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-900/40'
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+                    : 'bg-emerald-950/40 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/50'
                 }`}
                 title={`Active Feed: ${activeSource.name}${activeSource.responseTimeMs ? ` (${activeSource.responseTimeMs}ms)` : ''}. Click to inspect all 5 redundant real sources.`}
                 aria-label={`Active Data Source: ${activeSource.name}. Click to view redundant sources.`}
               >
-                <Server className="h-3.5 w-3.5 text-emerald-400" />
+                <Server className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                 <span className="font-mono text-[11px]">
-                  {activeSource.isCached ? 'Offline Cache' : activeSource.name.replace('ESPN ', '')}
-                  {activeSource.responseTimeMs > 0 && !activeSource.isCached ? ` • ${activeSource.responseTimeMs}ms` : ''}
+                  {activeSource.isCached
+                    ? 'Offline Cache'
+                    : activeSource.name.includes('Fastly')
+                    ? 'Fastly CDN'
+                    : activeSource.name.includes('Akamai')
+                    ? 'Akamai Edge'
+                    : activeSource.name.includes('Web API')
+                    ? 'ESPN API'
+                    : activeSource.name.replace(/^ESPN\s+/, '').replace(/\s*\(.*\)/, '') || 'Live Feed'}
                 </span>
+                {activeSource.responseTimeMs > 0 && !activeSource.isCached && (
+                  <span className="font-mono text-[10px] text-emerald-400/70">
+                    • {activeSource.responseTimeMs}ms
+                  </span>
+                )}
               </button>
 
               {/* Polling countdown badge (Desktop wide ticker) */}
               <div
-                className="hidden xl:flex min-h-[44px] items-center gap-2 rounded-lg bg-[#111927] border border-white/[0.08] px-3 py-1.5 text-xs select-none"
+                className="hidden xl:flex h-9 items-center gap-2 rounded-lg bg-[#111927] border border-white/[0.08] px-3 text-xs select-none"
                 aria-hidden="true"
               >
                 <div className="relative flex h-2 w-2 items-center justify-center">
@@ -827,7 +834,7 @@ export const Dashboard: React.FC = () => {
                   loadData(true)
                 }}
                 disabled={isRefreshing}
-                className="flex min-h-[40px] min-w-[40px] sm:min-h-[44px] items-center justify-center sm:justify-start gap-1.5 rounded-lg bg-[#162032] hover:bg-[#1e2c45] p-2 sm:px-3 sm:py-1.5 text-xs font-semibold text-slate-200 transition-all border border-white/[0.08] active:scale-95 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#162032] hover:bg-[#1e2c45] px-2.5 sm:px-3 text-xs font-semibold text-slate-200 transition-all border border-white/[0.08] active:scale-95 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-sky-400"
                 title="Force refresh live scoreboard"
                 aria-label="Refresh scoreboard data"
               >
