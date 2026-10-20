@@ -55,6 +55,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
   const isMultiThreat = Boolean(totalThreats && totalThreats > 1)
   const [isCopied, setIsCopied] = useState(false)
   const [showScorigamiDetails, setShowScorigamiDetails] = useState(false)
+  const [showFinalField, setShowFinalField] = useState(false)
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reactId = useId().replace(/:/g, '')
 
@@ -117,6 +118,15 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
   const secondsLeft = getGameSecondsRemaining(status, state)
   const homeAbbr = sanitizePatriotsAbbreviation(homeComp?.team?.abbreviation) || 'Home'
   const awayAbbr = sanitizePatriotsAbbreviation(awayComp?.team?.abbreviation) || 'Away'
+
+  const awayLinescores = awayComp?.linescores || []
+  const homeLinescores = homeComp?.linescores || []
+  const hasLineScores = awayLinescores.length > 0 || homeLinescores.length > 0
+  const lineScorePeriods = Math.max(awayLinescores.length, homeLinescores.length, 4)
+  const scoreDiff = Math.abs(homeScoreParsed - awayScoreParsed)
+  const isOvertime = status?.type?.detail?.includes('OT') || lineScorePeriods > 4
+  const winnerComp = isHomeWinner ? homeComp : isAwayWinner ? awayComp : null
+  const loserComp = isHomeWinner ? awayComp : isAwayWinner ? homeComp : null
 
   // Memoize performance-heavy calculations unconditionally before any return
   const scorigamiInfo = useMemo(() => {
@@ -247,7 +257,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
         <div className="flex items-center gap-2 min-w-0">
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-sky-500/20 px-2.5 py-1 text-xs font-bold text-sky-300 border border-sky-500/40 shrink-0">
             <Compass className="h-3.5 w-3.5" />
-            SPOTLIGHT RADAR
+            SPOTLIGHT MATCHUP
           </span>
 
           {event.season?.type === 3 && (
@@ -557,26 +567,159 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
           </div>
         </div>
 
-        {/* Block 2: Full Dynamic 100-Yard Field Radar (Immediately below scores on mobile, Full-Width 12-Columns across Bottom on Desktop) */}
+        {/* Block 2: Game State Specific Visualization (Kucharski Reason #3 Fix) */}
+        {/* When Game is FINAL: Show Executive Box Score & Scoring Progression Table (with optional Field Radar toggle) */}
+        {/* When Game is LIVE or PRE: Show Full 100-Yard Field Radar */}
         <div className={isMultiThreat ? "flex flex-col justify-center" : "order-2 lg:order-3 col-span-12 flex flex-col justify-center"}>
-          <FieldDiagram
-            situation={situation}
-            competitors={competitors}
-            gameState={state}
-            gameStatusDetail={
-              isHalftime
-                ? 'At Halftime'
-                : isLive
-                ? `Quarter ${safePeriod} ${safeClock}`
-                : isFinal
-                ? safeStatusDetail
-                : `Kickoff: ${formattedKickoff}`
-            }
-            isHero={true}
-            compact={Boolean(totalThreats && totalThreats > 1)}
-            status={status}
-            drivePlays={drivePlays}
-          />
+          {isFinal ? (
+            <div className="rounded-xl border border-white/[0.08] bg-[#070c16]/95 p-3.5 sm:p-5 shadow-inner">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3 mb-3.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 rounded-md bg-white/[0.06] px-2 py-0.5 text-xs font-bold text-slate-200 border border-white/[0.08]">
+                    <span>📊</span>
+                    <span>Quarter-by-Quarter Scoring Breakdown</span>
+                  </span>
+                  {winnerComp && loserComp && (
+                    <span className="text-xs text-slate-300 hidden sm:inline">
+                      • <strong className="text-white font-bold">{winnerComp.team?.displayName || winnerComp.team?.name}</strong> won by {scoreDiff} {scoreDiff === 1 ? 'pt' : 'pts'}{isOvertime ? ' (OT)' : ''}
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowFinalField((prev) => !prev)}
+                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400"
+                  aria-expanded={showFinalField}
+                  aria-label={showFinalField ? "Hide field radar" : "Show field radar"}
+                >
+                  <Compass className="h-3.5 w-3.5 text-sky-400" />
+                  <span>{showFinalField ? 'Hide Field Radar' : 'View Field Radar'}</span>
+                </button>
+              </div>
+
+              {/* High-Density Line Score Table */}
+              <div className="overflow-x-auto -mx-1 px-1">
+                <table className="w-full text-left text-xs tabular-nums border-collapse" aria-label="Game quarter scoring table">
+                  <thead>
+                    <tr className="border-b border-white/[0.08] text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                      <th scope="col" className="py-2 pr-3 font-semibold text-slate-300">Team</th>
+                      {Array.from({ length: lineScorePeriods }).map((_, idx) => (
+                        <th key={`period-header-${idx}`} scope="col" className="py-2 px-2.5 text-center font-bold">
+                          {idx < 4 ? `Q${idx + 1}` : idx === 4 ? 'OT' : `OT${idx - 3}`}
+                        </th>
+                      ))}
+                      <th scope="col" className="py-2 pl-3 text-right font-black text-white">FINAL</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {/* Away Team Row */}
+                    <tr className={isAwayWinner ? "bg-white/[0.02]" : ""}>
+                      <td className="py-2.5 pr-3 font-bold text-white whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={awayLogoUrl}
+                            alt=""
+                            className="h-5 w-5 object-contain shrink-0"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
+                          />
+                          <span className={isAwayWinner ? "text-white font-black" : "text-slate-400 font-medium"}>
+                            {awayAbbr}
+                          </span>
+                          {isAwayWinner && (
+                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 px-1 py-0.2 rounded border border-emerald-500/40">
+                              WIN
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      {Array.from({ length: lineScorePeriods }).map((_, idx) => (
+                        <td key={`away-period-${idx}`} className="py-2.5 px-2.5 text-center font-mono text-slate-300 font-semibold">
+                          {awayLinescores[idx]?.value ?? (hasLineScores ? 0 : '—')}
+                        </td>
+                      ))}
+                      <td className={`py-2.5 pl-3 text-right font-['Oswald'] text-lg sm:text-xl font-bold tabular-nums ${
+                        isAwayWinner ? 'text-white font-black' : 'text-slate-500'
+                      }`}>
+                        {awayScoreDisplay}
+                      </td>
+                    </tr>
+
+                    {/* Home Team Row */}
+                    <tr className={isHomeWinner ? "bg-white/[0.02]" : ""}>
+                      <td className="py-2.5 pr-3 font-bold text-white whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={homeLogoUrl}
+                            alt=""
+                            className="h-5 w-5 object-contain shrink-0"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
+                          />
+                          <span className={isHomeWinner ? "text-white font-black" : "text-slate-400 font-medium"}>
+                            {homeAbbr}
+                          </span>
+                          {isHomeWinner && (
+                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 px-1 py-0.2 rounded border border-emerald-500/40">
+                              WIN
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      {Array.from({ length: lineScorePeriods }).map((_, idx) => (
+                        <td key={`home-period-${idx}`} className="py-2.5 px-2.5 text-center font-mono text-slate-300 font-semibold">
+                          {homeLinescores[idx]?.value ?? (hasLineScores ? 0 : '—')}
+                        </td>
+                      ))}
+                      <td className={`py-2.5 pl-3 text-right font-['Oswald'] text-lg sm:text-xl font-bold tabular-nums ${
+                        isHomeWinner ? 'text-white font-black' : 'text-slate-500'
+                      }`}>
+                        {homeScoreDisplay}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* On-Demand Field Diagram Toggle for Final Games */}
+              {showFinalField && (
+                <div className="mt-4 pt-4 border-t border-white/[0.06]">
+                  <FieldDiagram
+                    situation={situation}
+                    competitors={competitors}
+                    gameState={state}
+                    gameStatusDetail={safeStatusDetail}
+                    isHero={true}
+                    compact={false}
+                    status={status}
+                    drivePlays={drivePlays}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <FieldDiagram
+              situation={situation}
+              competitors={competitors}
+              gameState={state}
+              gameStatusDetail={
+                isHalftime
+                  ? 'At Halftime'
+                  : isLive
+                  ? `Quarter ${safePeriod} ${safeClock}`
+                  : `Kickoff: ${formattedKickoff}`
+              }
+              isHero={true}
+              compact={Boolean(totalThreats && totalThreats > 1)}
+              status={status}
+              drivePlays={drivePlays}
+            />
+          )}
         </div>
 
         {/* Block 3: Matchup Intelligence Panel (Key Situation, Win Probability & Scorigami) */}

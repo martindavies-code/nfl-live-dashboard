@@ -71,8 +71,23 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
     return getDiff(a) - getDiff(b)
   })[0]
 
-  // Find the primary storyline game: 4th quarter thriller > red zone threat > closest live > premier upcoming
-  const primeAlertEvent = fourthQuarterThrillers[0] || redZoneEvents[0] || closestLiveGame || liveEvents[0] || upcomingEvents[0] || finalEvents[0]
+  // Find closest final game for retrospective recap narrative (prioritizing OT or 1-score nail-biters)
+  const closestFinalGame = finalEvents.slice().sort((a, b) => {
+    const getDiff = (ev: NFLEvent) => {
+      const comp = ev.competitions?.[0]
+      const h = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
+      const aw = parseInt(comp?.competitors?.find((c) => c.homeAway === 'away')?.score || '0', 10)
+      return Math.abs(h - aw)
+    }
+    const aIsOT = (a.status?.type?.detail || a.competitions?.[0]?.status?.type?.detail || '').includes('OT')
+    const bIsOT = (b.status?.type?.detail || b.competitions?.[0]?.status?.type?.detail || '').includes('OT')
+    if (aIsOT && !bIsOT) return -1
+    if (!aIsOT && bIsOT) return 1
+    return getDiff(a) - getDiff(b)
+  })[0]
+
+  // Find the primary storyline game: 4th quarter thriller > red zone threat > closest live > closest final > upcoming
+  const primeAlertEvent = fourthQuarterThrillers[0] || redZoneEvents[0] || closestLiveGame || liveEvents[0] || closestFinalGame || upcomingEvents[0] || finalEvents[0]
   const primeComp = primeAlertEvent?.competitions?.[0]
   const primeHome = primeComp?.competitors?.find((c) => c.homeAway === 'home')
   const primeAway = primeComp?.competitors?.find((c) => c.homeAway === 'away')
@@ -88,7 +103,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-sky-400/50 to-transparent" />
 
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Narrative Orientation (Kucharski Reason #1: Answer the core question immediately) */}
+        {/* Narrative Orientation (Kucharski Reason #1 & #7: Answer the core question immediately, no redundant duplication) */}
         <div className="space-y-1.5 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-xs font-bold text-sky-300 uppercase tracking-wider">
@@ -96,7 +111,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
               SLATE BRIEFING
             </span>
             <span className="text-xs text-slate-400 font-semibold">
-              {weekLabel} • {events.length} Matchups
+              {weekLabel} Slate Overview
             </span>
           </div>
 
@@ -122,14 +137,23 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
             ) : upcomingEvents.length > 0 ? (
               <span>Upcoming Slate: Next Kickoff at {formatLocalizedKickoff(upcomingEvents[0]?.date)}</span>
             ) : (
-              <span>{weekLabel} Complete: All {finalEvents.length} Games Final</span>
+              <span className="flex items-center gap-1.5 text-slate-200">
+                <span>🏆</span>
+                <span>
+                  {closestFinalGame && (closestFinalGame.status?.type?.detail || '').includes('OT')
+                    ? `${weekLabel} Final • OT Thriller: ${primeAwayAbbr} vs ${primeHomeAbbr}`
+                    : `${weekLabel} Final • All ${finalEvents.length} Games Concluded`}
+                </span>
+              </span>
             )}
           </h2>
 
           {/* Prime Storyline Callout */}
           {primeAlertEvent && (
             <p className="text-xs text-slate-300 flex items-center gap-1.5 flex-wrap">
-              <span className="font-semibold text-slate-400">Headline Action:</span>
+              <span className="font-semibold text-slate-400">
+                {finalEvents.length === events.length && events.length > 0 ? 'Story of the Slate:' : 'Headline Action:'}
+              </span>
               <span className="text-white font-medium">
                 {primeAwayAbbr} ({primeAway?.score ?? '-'}) @ {primeHomeAbbr} ({primeHome?.score ?? '-'})
               </span>
@@ -142,7 +166,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
               ) : upcomingEvents.includes(primeAlertEvent) ? (
                 <span className="text-sky-300 font-medium">• Kickoff {formatLocalizedKickoff(primeAlertEvent.date)}</span>
               ) : (
-                <span className="text-slate-400 font-medium">• Final: {primeAlertEvent.status?.type?.detail || 'Completed'}</span>
+                <span className="text-slate-300 font-medium">• Final: {primeAlertEvent.status?.type?.detail || 'Completed'}</span>
               )}
               {onSpotlightEvent && (
                 <button
@@ -220,8 +244,9 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
           >
             <Compass className="h-3.5 w-3.5 text-slate-400" />
             <span>
-              <span className="sm:hidden">All</span>
-              <span className="hidden sm:inline">All Games</span> ({events.length})
+              <span className="sm:hidden">{finalEvents.length === events.length ? 'Final' : 'All'}</span>
+              <span className="hidden sm:inline">{finalEvents.length === events.length ? 'All Results' : 'All Games'}</span>
+              {finalEvents.length !== events.length && ` (${events.length})`}
             </span>
           </button>
         </div>

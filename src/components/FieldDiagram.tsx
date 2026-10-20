@@ -1028,6 +1028,11 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 <span>⏸️</span>
                 <span>AT HALFTIME</span>
               </span>
+            ) : gameState === 'post' ? (
+              <span className="flex items-center gap-1.5 text-slate-300 font-semibold">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                <span>{gameStatusDetail || 'Final'}</span>
+              </span>
             ) : hasSituation ? (
               <span className="flex items-center gap-1.5 min-w-0">
                 <span className="h-1.5 w-1.5 rounded-full bg-sky-400 shrink-0" />
@@ -1053,28 +1058,41 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 </span>
               </div>
             )}
-            {isRegularPlay && (
-              <span className="text-slate-400 text-[10px] hidden sm:inline">
-                {isGoalToGo ? 'Goal to Go' : `Target: +${distance}y`}
-              </span>
+            {gameState !== 'post' && (
+              <>
+                {isRegularPlay && (
+                  <span className="text-slate-400 text-[10px] hidden sm:inline">
+                    {isGoalToGo ? 'Goal to Go' : `Target: +${distance}y`}
+                  </span>
+                )}
+                <span className="text-[10px] font-bold text-amber-400 tracking-wider">
+                  {direction === 'right' ? `${offensiveAbbr} ➔` : `◀ ${offensiveAbbr}`}
+                </span>
+              </>
             )}
-            <span className="text-[10px] font-bold text-amber-400 tracking-wider">
-              {direction === 'right' ? `${offensiveAbbr} ➔` : `◀ ${offensiveAbbr}`}
-            </span>
           </div>
         </div>
       ) : (
         <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-white/[0.06] bg-[#080d16] px-3.5 py-2 text-xs text-slate-400">
           <div className="flex items-center gap-2.5 sm:gap-4 flex-wrap">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-sm bg-sky-400 shrink-0" />
-              <strong className="text-slate-300">Scrimmage:</strong> {isHalftime ? 'At Halftime' : hasSituation ? losLabel : '50 YD'}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-sm bg-yellow-400 shrink-0" />
-              <strong className="text-slate-300">Target Line:</strong>{' '}
-              {isHalftime ? '2nd Half Kickoff' : isRegularPlay ? firstDownLabel : hasSituation ? 'Kickoff / PAT' : '10 Yds'}
-            </span>
+            {gameState === 'post' ? (
+              <span className="flex items-center gap-1.5 text-slate-300 font-semibold">
+                <span className="h-2 w-2 rounded-sm bg-emerald-400 shrink-0" />
+                <span>Final Result Confirmed</span>
+              </span>
+            ) : (
+              <>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-sm bg-sky-400 shrink-0" />
+                  <strong className="text-slate-300">Scrimmage:</strong> {isHalftime ? 'At Halftime' : hasSituation ? losLabel : 'Kickoff'}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-sm bg-yellow-400 shrink-0" />
+                  <strong className="text-slate-300">Target Line:</strong>{' '}
+                  {isHalftime ? '2nd Half Kickoff' : isRegularPlay ? firstDownLabel : hasSituation ? 'Kickoff / PAT' : 'First Down'}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Color-Coded Play Trail Legend matching user doodle */}
