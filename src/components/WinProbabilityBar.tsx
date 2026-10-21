@@ -2,7 +2,7 @@ import React, { memo } from 'react'
 import type { NFLCompetitor, NFLSituation, NFLStatus, NFLOdds } from '../types/nfl'
 import { resolveContrastingTeamColors, sanitizePatriotsAbbreviation, isDarkLogoTeam } from '../utils/nflHelpers'
 import { calculateWinProbability } from '../utils/winProbability'
-import { Activity, TrendingUp } from 'lucide-react'
+import { Activity, Scale, TrendingUp } from 'lucide-react'
 
 interface WinProbabilityBarProps {
   homeWinPercentage?: number | null
@@ -57,9 +57,12 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
     awayPct,
     isHomeFavored,
     isAwayFavored,
-    spreadPct,
     favoredName,
     modelSource,
+    handicap,
+    overUnder,
+    overUnderText,
+    formattedOdds,
   } = calculateWinProbability({
     homeWinPercentage,
     awayWinPercentage,
@@ -126,6 +129,14 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
           {/* 50% baseline center tick */}
           <div className="absolute top-0 bottom-0 left-1/2 w-0.5 -translate-x-1/2 bg-white/40 pointer-events-none" />
         </div>
+
+        {/* Compact pre-game handicap and total strip if available */}
+        {formattedOdds && (
+          <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mt-1.5 px-0.5">
+            <span className="text-slate-300 font-semibold">{handicap || ''}</span>
+            <span className="text-slate-400">{overUnderText || ''}</span>
+          </div>
+        )}
       </div>
     )
   }
@@ -309,18 +320,40 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
         <span className="absolute right-0 text-slate-400 font-semibold">{awayAbbr}</span>
       </div>
 
-      {/* Favored / Projected Insight Strip */}
+      {/* Pre-Game Betting Handicap / Over-Under or Projected Insight Strip */}
       <div className="mt-2 flex items-center justify-between gap-1.5 text-[11px] sm:text-xs text-slate-300 border-t border-white/[0.06] pt-1.5">
-        <div className="truncate min-w-0 mr-1 flex items-center gap-1">
-          {isHomeFavored || isAwayFavored ? (
+        <div className="truncate min-w-0 mr-1 flex items-center gap-1.5">
+          {formattedOdds ? (
+            <span className="flex items-center gap-1.5 truncate text-[11px] sm:text-xs" title={`Pre-Game Betting Odds: ${formattedOdds}`}>
+              <Scale className="h-3.5 w-3.5 text-sky-400 shrink-0" />
+              {handicap && (
+                <span className="inline-flex items-center gap-1 shrink-0">
+                  <span className="text-slate-400 font-medium hidden xs:inline">Line</span>
+                  <strong className="font-mono font-bold text-white tracking-wide">
+                    {handicap}
+                  </strong>
+                </span>
+              )}
+              {handicap && overUnder && (
+                <span className="text-slate-500 font-bold shrink-0">•</span>
+              )}
+              {overUnder && (
+                <span className="inline-flex items-center gap-1 shrink-0">
+                  <span className="text-slate-400 font-medium hidden xs:inline">Total</span>
+                  <strong className="font-mono font-bold text-slate-200 tracking-wide">
+                    {overUnderText || `O/U ${overUnder}`}
+                  </strong>
+                </span>
+              )}
+            </span>
+          ) : isHomeFavored || isAwayFavored ? (
             <span className="flex items-center gap-1 truncate text-[11px] sm:text-xs">
               <TrendingUp className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+              <span className="text-slate-400 font-medium shrink-0">Projected:</span>
               <strong className="text-white font-bold truncate">
                 <span className="hidden sm:inline">{favoredName}</span>
                 <span className="sm:hidden">{favoredAbbr}</span>
               </strong>
-              <span className="font-mono font-black text-emerald-400 shrink-0">+{spreadPct}%</span>
-              <span className="text-slate-400 shrink-0">edge</span>
             </span>
           ) : (
             <span className="text-slate-400 font-medium truncate text-[11px] sm:text-xs">Even matchup (50/50)</span>

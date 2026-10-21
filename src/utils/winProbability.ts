@@ -1,10 +1,6 @@
 import type { NFLCompetitor, NFLSituation, NFLStatus, NFLOdds } from '../types/nfl'
-import { safeParseInt, isHalftimeSituation } from './nflHelpers.ts'
+import { safeParseInt, isHalftimeSituation, sanitizePatriotsName, sanitizePatriotsAbbreviation } from './nflHelpers.ts'
 
-/**
- * Standard Normal Cumulative Distribution Function (Abramowitz & Stegun 7.1.26)
- * Accurate to within 1.5e-7 across all real numbers.
- */
 /**
  * Standard Normal Cumulative Distribution Function (Abramowitz & Stegun 7.1.26)
  * Accurate to within 1.5e-7 across all real numbers.
@@ -46,6 +42,104 @@ function moneylineToImplied(mlVal?: string | number | null): number | null {
 }
 
 /**
+ * Parsed pre-game betting odds information.
+ */
+export interface BettingOddsInfo {
+  handicap: string | null         // e.g. "CHI -2.5", "NYG -3", "EVEN"
+  overUnder: string | null        // e.g. "O/U 48.5"
+  overUnderValue: number | null   // e.g. 48.5
+  formattedSummary: string | null // e.g. "CHI -2.5 • O/U 48.5"
+  provider: string | null         // e.g. "DraftKings"
+}
+
+/**
+ * Resolves pre-game betting handicap (e.g. "CHI -2.5", "NYG -3", "EVEN") and
+ * Over/Under points total (e.g. "O/U 48.5") from official ESPN odds telemetry.
+ * Hardened against missing fields, non-primitive values, and sanitizes Patriots to "FNE".
+ */
+export function getBettingOddsInfo(
+  odds?: NFLOdds[] | null,
+  homeAbbr: string = 'HOME',
+  awayAbbr: string = 'AWAY'
+): BettingOddsInfo {
+  if (!Array.isArray(odds) || odds.length === 0 || !odds[0] || typeof odds[0] !== 'object') {
+    return {
+      handicap: null,
+      overUnder: null,
+      overUnderValue: null,
+      formattedSummary: null,
+      provider: null,
+    }
+  }
+
+  const primaryOdds = odds[0]
+  let handicap: string | null = null
+  let overUnderValue: number | null = null
+  let overUnder: string | null = null
+
+  // 1. Resolve Handicap / Spread
+  const rawDetails = typeof primaryOdds.details === 'string' ? primaryOdds.details.trim() : ''
+  if (rawDetails) {
+    const lower = rawDetails.toLowerCase()
+    if (lower === 'even' || lower === 'pk' || lower === 'pick' || lower === "pick'em") {
+      handicap = 'EVEN'
+    } else {
+      handicap = sanitizePatriotsName(rawDetails)
+    }
+  } else if (typeof primaryOdds.spread === 'number' && Number.isFinite(primaryOdds.spread)) {
+    const spread = primaryOdds.spread
+    if (spread === 0) {
+      handicap = 'EVEN'
+    } else {
+      const spreadAbs = Math.abs(spread)
+      const spreadStr = spreadAbs % 1 === 0 ? spreadAbs.toFixed(0) : spreadAbs.toFixed(1)
+      if (spread < 0) {
+        handicap = `${homeAbbr} -${spreadStr}`
+      } else {
+        handicap = `${awayAbbr} -${spreadStr}`
+      }
+    }
+  }
+
+  // 2. Resolve Over/Under Points Total
+  if (typeof primaryOdds.overUnder === 'number' && Number.isFinite(primaryOdds.overUnder) && primaryOdds.overUnder > 0) {
+    overUnderValue = primaryOdds.overUnder
+    overUnder = `O/U ${primaryOdds.overUnder}`
+  } else if (typeof primaryOdds.overUnder === 'string') {
+    const parsed = parseFloat(primaryOdds.overUnder)
+    if (Number.isFinite(parsed) && parsed > 0) {
+      overUnderValue = parsed
+      overUnder = `O/U ${parsed}`
+    }
+  }
+
+  // 3. Resolve Provider
+  const provider = primaryOdds.provider?.name || primaryOdds.provider?.displayName || null
+
+  // 4. Resolve Formatted Summary
+  let formattedSummary: string | null = null
+  if (handicap && overUnder) {
+    if (handicap.toLowerCase().includes('o/u') || handicap.toLowerCase().includes('total')) {
+      formattedSummary = handicap
+    } else {
+      formattedSummary = `${handicap} • ${overUnder}`
+    }
+  } else if (handicap) {
+    formattedSummary = handicap
+  } else if (overUnder) {
+    formattedSummary = overUnder
+  }
+
+  return {
+    handicap,
+    overUnder,
+    overUnderValue,
+    formattedSummary,
+    provider,
+  }
+}
+
+/**
  * Result of the high-precision NFL win probability engine.
  */
 export interface CalculatedWinProbability {
@@ -56,6 +150,10 @@ export interface CalculatedWinProbability {
   spreadPct: string // Absolute differential e.g. "35.4"
   favoredName: string
   modelSource: 'ESPN FPI' | 'Vegas Moneyline' | 'Vegas Spread' | 'Pregame Projection' | 'Live Analytic Model' | 'Final'
+  handicap?: string | null
+  overUnder?: number | null
+  overUnderText?: string | null
+  formattedOdds?: string | null
 }
 
 interface CalculateOptions {
@@ -92,43 +190,43 @@ export function calculateWinProbability({
   const awayScore = safeParseInt(awayCompetitor?.score, 0)
   const rawHomeAbbr = homeCompetitor?.team?.abbreviation || 'HOME'
   const rawAwayAbbr = awayCompetitor?.team?.abbreviation || 'AWAY'
-  const homeAbbr = rawHomeAbbr === 'NE' ? 'FNE' : rawHomeAbbr
-  const awayAbbr = rawAwayAbbr === 'NE' ? 'FNE' : rawAwayAbbr
-  const homeName = homeCompetitor?.team?.displayName || homeAbbr
-  const awayName = awayCompetitor?.team?.displayName || awayAbbr
+  const homeAbbr = sanitizePatriotsAbbreviation(rawHomeAbbr) || 'HOME'
+  const awayAbbr = sanitizePatriotsAbbreviation(rawAwayAbbr) || 'AWAY'
+  const homeName = sanitizePatriotsName(homeCompetitor?.team?.displayName || homeAbbr)
+  const awayName = sanitizePatriotsName(awayCompetitor?.team?.displayName || awayAbbr)
+
+  const bettingOdds = getBettingOddsInfo(odds, homeAbbr, awayAbbr)
+
+  const makeResult = (
+    homePct: number,
+    awayPct: number,
+    isHomeFavored: boolean,
+    isAwayFavored: boolean,
+    spreadPct: string,
+    favoredName: string,
+    modelSource: CalculatedWinProbability['modelSource']
+  ): CalculatedWinProbability => ({
+    homePct,
+    awayPct,
+    isHomeFavored,
+    isAwayFavored,
+    spreadPct,
+    favoredName,
+    modelSource,
+    handicap: bettingOdds.handicap,
+    overUnder: bettingOdds.overUnderValue,
+    overUnderText: bettingOdds.overUnder,
+    formattedOdds: bettingOdds.formattedSummary,
+  })
 
   // 1. POST-GAME FINAL RESOLUTION
   if (gameState === 'post') {
     if (homeScore > awayScore) {
-      return {
-        homePct: 100,
-        awayPct: 0,
-        isHomeFavored: true,
-        isAwayFavored: false,
-        spreadPct: '100.0',
-        favoredName: homeName,
-        modelSource: 'Final',
-      }
+      return makeResult(100, 0, true, false, '100.0', homeName, 'Final')
     } else if (awayScore > homeScore) {
-      return {
-        homePct: 0,
-        awayPct: 100,
-        isHomeFavored: false,
-        isAwayFavored: true,
-        spreadPct: '100.0',
-        favoredName: awayName,
-        modelSource: 'Final',
-      }
+      return makeResult(0, 100, false, true, '100.0', awayName, 'Final')
     } else {
-      return {
-        homePct: 50,
-        awayPct: 50,
-        isHomeFavored: false,
-        isAwayFavored: false,
-        spreadPct: '0.0',
-        favoredName: 'Tied',
-        modelSource: 'Final',
-      }
+      return makeResult(50, 50, false, false, '0.0', 'Tied', 'Final')
     }
   }
 
@@ -157,15 +255,15 @@ export function calculateWinProbability({
     const isHome = homePct > awayPct
     const isAway = awayPct > homePct
 
-    return {
+    return makeResult(
       homePct,
       awayPct,
-      isHomeFavored: isHome,
-      isAwayFavored: isAway,
-      spreadPct: Math.abs(homePct - awayPct).toFixed(1),
-      favoredName: isHome ? homeName : isAway ? awayName : 'Even',
-      modelSource: 'ESPN FPI',
-    }
+      isHome,
+      isAway,
+      Math.abs(homePct - awayPct).toFixed(1),
+      isHome ? homeName : isAway ? awayName : 'Even',
+      'ESPN FPI'
+    )
   }
 
   // 3. PRE-GAME MATCHUPS: Vegas Market Consensus (DraftKings / ESPN Bet)
@@ -185,15 +283,15 @@ export function calculateWinProbability({
       const isHome = homePct > awayPct
       const isAway = awayPct > homePct
 
-      return {
+      return makeResult(
         homePct,
         awayPct,
-        isHomeFavored: isHome,
-        isAwayFavored: isAway,
-        spreadPct: Math.abs(homePct - awayPct).toFixed(1),
-        favoredName: isHome ? homeName : isAway ? awayName : 'Even',
-        modelSource: 'Vegas Moneyline',
-      }
+        isHome,
+        isAway,
+        Math.abs(homePct - awayPct).toFixed(1),
+        isHome ? homeName : isAway ? awayName : 'Even',
+        'Vegas Moneyline'
+      )
     }
 
     // Attempt B: Point Spread via Normal CDF (NFL σ ≈ 13.45 pts)
@@ -208,15 +306,15 @@ export function calculateWinProbability({
       const isHome = homePct > awayPct
       const isAway = awayPct > homePct
 
-      return {
+      return makeResult(
         homePct,
         awayPct,
-        isHomeFavored: isHome,
-        isAwayFavored: isAway,
-        spreadPct: Math.abs(homePct - awayPct).toFixed(1),
-        favoredName: isHome ? homeName : isAway ? awayName : 'Even',
-        modelSource: 'Vegas Spread',
-      }
+        isHome,
+        isAway,
+        Math.abs(homePct - awayPct).toFixed(1),
+        isHome ? homeName : isAway ? awayName : 'Even',
+        'Vegas Spread'
+      )
     }
   }
 
@@ -224,15 +322,7 @@ export function calculateWinProbability({
   if (gameState === 'pre') {
     const homePct = 53.5
     const awayPct = 46.5
-    return {
-      homePct,
-      awayPct,
-      isHomeFavored: true,
-      isAwayFavored: false,
-      spreadPct: '7.0',
-      favoredName: homeName,
-      modelSource: 'Pregame Projection',
-    }
+    return makeResult(homePct, awayPct, true, false, '7.0', homeName, 'Pregame Projection')
   }
 
   // 4. IN-GAME HIGH-PRECISION DYNAMIC ANALYTIC MODEL
@@ -299,13 +389,13 @@ export function calculateWinProbability({
   const isHome = homePct > awayPct
   const isAway = awayPct > homePct
 
-  return {
+  return makeResult(
     homePct,
     awayPct,
-    isHomeFavored: isHome,
-    isAwayFavored: isAway,
-    spreadPct: Math.abs(homePct - awayPct).toFixed(1),
-    favoredName: isHome ? homeName : isAway ? awayName : 'Even',
-    modelSource: 'Live Analytic Model',
-  }
+    isHome,
+    isAway,
+    Math.abs(homePct - awayPct).toFixed(1),
+    isHome ? homeName : isAway ? awayName : 'Even',
+    'Live Analytic Model'
+  )
 }

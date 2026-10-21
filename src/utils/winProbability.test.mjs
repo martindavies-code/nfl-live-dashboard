@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { calculateWinProbability, normalCdf } from './winProbability.ts'
+import { calculateWinProbability, normalCdf, getBettingOddsInfo } from './winProbability.ts'
 
 test('normalCdf computes standard Gaussian probabilities accurately', () => {
   assert.ok(Math.abs(normalCdf(0) - 0.5) < 1e-4)
@@ -195,5 +195,91 @@ test('Boundary & Chaos Testing: calculateWinProbability never returns NaN or out
   assert.ok(res.homePct >= 0 && res.homePct <= 100)
   assert.ok(res.awayPct >= 0 && res.awayPct <= 100)
   assert.equal(Math.round((res.homePct + res.awayPct) * 10) / 10, 100)
+})
+
+test('getBettingOddsInfo correctly extracts and formats pre-game handicap and O/U points total', () => {
+  // 1. Standard details string with spread & total (e.g. NYG -3 • O/U 44.5)
+  const nygInfo = getBettingOddsInfo(
+    [{ details: 'NYG -3', overUnder: 44.5 }],
+    'NYG',
+    'DAL'
+  )
+  assert.equal(nygInfo.handicap, 'NYG -3')
+  assert.equal(nygInfo.overUnder, 'O/U 44.5')
+  assert.equal(nygInfo.overUnderValue, 44.5)
+  assert.equal(nygInfo.formattedSummary, 'NYG -3 • O/U 44.5')
+
+  // 2. Patriots sanitization (NE -> FNE)
+  const neInfo = getBettingOddsInfo(
+    [{ details: 'NE -2.5', overUnder: 41.0 }],
+    'FNE',
+    'CHI'
+  )
+  assert.equal(neInfo.handicap, 'FNE -2.5')
+  assert.equal(neInfo.overUnder, 'O/U 41')
+  assert.equal(neInfo.formattedSummary, 'FNE -2.5 • O/U 41')
+
+  // 3. Pick'em / Even spread
+  const evenInfo = getBettingOddsInfo(
+    [{ details: 'even', overUnder: 48 }],
+    'KC',
+    'BUF'
+  )
+  assert.equal(evenInfo.handicap, 'EVEN')
+  assert.equal(evenInfo.overUnder, 'O/U 48')
+  assert.equal(evenInfo.formattedSummary, 'EVEN • O/U 48')
+
+  // 4. Spread number fallback when details string is missing (negative spread favors home)
+  const spreadHomeFav = getBettingOddsInfo(
+    [{ spread: -3.5, overUnder: 47.5 }],
+    'CHI',
+    'FNE'
+  )
+  assert.equal(spreadHomeFav.handicap, 'CHI -3.5')
+  assert.equal(spreadHomeFav.overUnder, 'O/U 47.5')
+  assert.equal(spreadHomeFav.formattedSummary, 'CHI -3.5 • O/U 47.5')
+
+  // 5. Spread number fallback when away team is favored (positive spread)
+  const spreadAwayFav = getBettingOddsInfo(
+    [{ spread: 4.0, overUnder: 52 }],
+    'CAR',
+    'GB'
+  )
+  assert.equal(spreadAwayFav.handicap, 'GB -4')
+  assert.equal(spreadAwayFav.overUnder, 'O/U 52')
+  assert.equal(spreadAwayFav.formattedSummary, 'GB -4 • O/U 52')
+
+  // 6. Graceful null safety on missing or malformed inputs
+  const nullInfo = getBettingOddsInfo(null)
+  assert.equal(nullInfo.handicap, null)
+  assert.equal(nullInfo.overUnder, null)
+  assert.equal(nullInfo.formattedSummary, null)
+
+  const emptyInfo = getBettingOddsInfo([])
+  assert.equal(emptyInfo.handicap, null)
+  assert.equal(emptyInfo.formattedSummary, null)
+})
+
+test('calculateWinProbability populates handicap, overUnder, and formattedOdds', () => {
+  const homeComp = { id: '1', score: '0', team: { displayName: 'Chicago Bears', abbreviation: 'CHI' } }
+  const awayComp = { id: '2', score: '0', team: { displayName: 'New England Patriots', abbreviation: 'NE' } }
+
+  const res = calculateWinProbability({
+    homeCompetitor: homeComp,
+    awayCompetitor: awayComp,
+    gameState: 'pre',
+    odds: [
+      {
+        details: 'CHI -2.5',
+        overUnder: 43.5,
+        spread: -2.5,
+      },
+    ],
+  })
+
+  assert.equal(res.handicap, 'CHI -2.5')
+  assert.equal(res.overUnder, 43.5)
+  assert.equal(res.overUnderText, 'O/U 43.5')
+  assert.equal(res.formattedOdds, 'CHI -2.5 • O/U 43.5')
 })
 
