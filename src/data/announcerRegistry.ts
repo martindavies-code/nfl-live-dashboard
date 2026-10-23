@@ -63,6 +63,11 @@ const SOURCES_WEEK6 = {
   url: 'https://506sports.com/nfl.php?yr=2026&wk=6',
 }
 
+const SOURCES_WEEK7 = {
+  label: '506 Sports / 210 Sports Blog — NFL schedule and announcer pairings for Week 7',
+  url: 'https://506sports.com/nfl.php?yr=2026&wk=7',
+}
+
 
 export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
   // ---------------------------------------------------------------------------
@@ -426,6 +431,91 @@ export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
     playByPlay: 'Al Michaels', analysts: ['Kirk Herbstreit'], sideline: ['Kaylee Hartung'],
     sources: [{ label: 'Amazon Prime Video Thursday Night Football official crew', url: 'https://www.amazon.com/tnf' }],
     verifiedOn: '2026-10-20',
+  },
+  {
+    season: 2026, week: 7, away: 'PIT', home: 'NO', kickoffUtc: '2026-10-25T13:30:00Z',
+    network: 'NFL Network',
+    playByPlay: 'Dave Pasch', analysts: ['Kurt Warner', 'Jason Kelce'], sideline: ['Molly McGrath', 'Peter Schrager'],
+    sources: [
+      SOURCES_WEEK7,
+      { label: 'NFL International Series Paris Official Announcement', url: 'https://www.neworleanssaints.com' },
+    ],
+    verifiedOn: '2026-10-23',
+    ukTv: 'Sky Sports NFL',
+    ukTvShort: 'Sky Sports',
+    ukRadio: 'talkSPORT 2 (Full Live Match Commentary)',
+    ukRadioShort: 'talkSPORT 2',
+    ukRadioFrequency: 'DAB Digital Radio • talkSPORT App',
+  },
+  {
+    season: 2026, week: 7, away: 'SF', home: 'ATL', kickoffUtc: '2026-10-25T17:00:00Z',
+    network: 'FOX',
+    playByPlay: 'Kenny Albert', analysts: ['Greg Olsen'], sideline: ['Pam Oliver'],
+    sources: [SOURCES_WEEK7],
+    verifiedOn: '2026-10-23',
+  },
+  {
+    season: 2026, week: 7, away: 'CLE', home: 'TEN', kickoffUtc: '2026-10-25T17:00:00Z',
+    network: 'CBS',
+    playByPlay: 'Andrew Catalon', analysts: ['Logan Ryan'], sideline: ['AJ Ross'],
+    sources: [SOURCES_WEEK7],
+    verifiedOn: '2026-10-23',
+  },
+  {
+    season: 2026, week: 7, away: 'IND', home: 'MIN', kickoffUtc: '2026-10-25T17:00:00Z',
+    network: 'CBS',
+    playByPlay: 'Ian Eagle', analysts: ['Ross Tucker'], sideline: ['Evan Washburn'],
+    sources: [SOURCES_WEEK7],
+    verifiedOn: '2026-10-23',
+  },
+  {
+    season: 2026, week: 7, away: 'MIA', home: 'NYJ', kickoffUtc: '2026-10-25T17:00:00Z',
+    network: 'CBS',
+    playByPlay: 'Spero Dedes', analysts: ['Adam Archuleta'], sideline: ['Aditi Kinkhabwala'],
+    sources: [SOURCES_WEEK7],
+    verifiedOn: '2026-10-23',
+  },
+  {
+    season: 2026, week: 7, away: 'TB', home: 'CAR', kickoffUtc: '2026-10-25T17:00:00Z',
+    network: 'FOX',
+    playByPlay: 'Kevin Kugler', analysts: ['Daryl Johnston'], sideline: ['Allison Williams'],
+    sources: [SOURCES_WEEK7],
+    verifiedOn: '2026-10-23',
+  },
+  {
+    season: 2026, week: 7, away: 'CIN', home: 'BAL', kickoffUtc: '2026-10-25T17:00:00Z',
+    network: 'CBS',
+    playByPlay: 'Jim Nantz', analysts: ['J.J. Watt'], sideline: ['Tracy Wolfson'],
+    sources: [SOURCES_WEEK7],
+    verifiedOn: '2026-10-23',
+  },
+  {
+    season: 2026, week: 7, away: 'NYG', home: 'HOU', kickoffUtc: '2026-10-25T17:00:00Z',
+    network: 'FOX',
+    playByPlay: 'Adam Amin', analysts: ['Drew Brees'], sideline: ['Kristina Pink'],
+    sources: [SOURCES_WEEK7],
+    verifiedOn: '2026-10-23',
+  },
+  {
+    season: 2026, week: 7, away: 'DEN', home: 'ARI', kickoffUtc: '2026-10-25T20:05:00Z',
+    network: 'CBS',
+    playByPlay: 'Kevin Harlan', analysts: ['Trent Green'], sideline: ['Melanie Collins'],
+    sources: [SOURCES_WEEK7],
+    verifiedOn: '2026-10-23',
+  },
+  {
+    season: 2026, week: 7, away: 'GB', home: 'DET', kickoffUtc: '2026-10-25T20:25:00Z',
+    network: 'FOX',
+    playByPlay: 'Kevin Burkhardt', analysts: ['Tom Brady'], sideline: ['Erin Andrews', 'Tom Rinaldi'],
+    sources: [SOURCES_WEEK7],
+    verifiedOn: '2026-10-23',
+  },
+  {
+    season: 2026, week: 7, away: 'LAR', home: 'LV', kickoffUtc: '2026-10-25T20:25:00Z',
+    network: 'FOX',
+    playByPlay: 'Chris Myers', analysts: ['Jonathan Vilma'], sideline: ['Megan Olivi'],
+    sources: [SOURCES_WEEK7],
+    verifiedOn: '2026-10-23',
   },
   {
     season: 2026, week: 7, away: 'KC', home: 'SEA', kickoffUtc: '2026-10-26T00:20Z',
