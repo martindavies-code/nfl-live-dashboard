@@ -595,7 +595,7 @@ test('sanitizePatriotsInEvent and sanitizePatriotsInScoreboardData sanitize all 
   assert.equal(cleanScoreboard.events[0].competitions[0].competitors[1].team.abbreviation, 'FNE')
 })
 
-test('isDarkLogoTeam correctly identifies NY Jets by abbreviation or name for white outline enhancement', () => {
+test('isDarkLogoTeam correctly identifies NY Jets, NY Giants, and LA Rams by abbreviation or name for white outline enhancement', () => {
   // Positive matches (Jets)
   assert.equal(isDarkLogoTeam('NYJ'), true)
   assert.equal(isDarkLogoTeam('nyj'), true)
@@ -603,6 +603,25 @@ test('isDarkLogoTeam correctly identifies NY Jets by abbreviation or name for wh
   assert.equal(isDarkLogoTeam(undefined, 'New York Jets'), true)
   assert.equal(isDarkLogoTeam(undefined, 'Jets'), true)
   assert.equal(isDarkLogoTeam('NYJ', 'New York Jets'), true)
+
+  // Positive matches (New York Giants)
+  assert.equal(isDarkLogoTeam('NYG'), true)
+  assert.equal(isDarkLogoTeam('nyg'), true)
+  assert.equal(isDarkLogoTeam(' NYG '), true)
+  assert.equal(isDarkLogoTeam(undefined, 'New York Giants'), true)
+  assert.equal(isDarkLogoTeam(undefined, 'Giants'), true)
+  assert.equal(isDarkLogoTeam('NYG', 'New York Giants'), true)
+
+  // Positive matches (Los Angeles Rams)
+  assert.equal(isDarkLogoTeam('LAR'), true)
+  assert.equal(isDarkLogoTeam('lar'), true)
+  assert.equal(isDarkLogoTeam('LA'), true)
+  assert.equal(isDarkLogoTeam('la'), true)
+  assert.equal(isDarkLogoTeam(' LAR '), true)
+  assert.equal(isDarkLogoTeam(undefined, 'Los Angeles Rams'), true)
+  assert.equal(isDarkLogoTeam(undefined, 'LA Rams'), true)
+  assert.equal(isDarkLogoTeam(undefined, 'Rams'), true)
+  assert.equal(isDarkLogoTeam('LAR', 'Los Angeles Rams'), true)
 
   // Negative matches (Other NFL teams that have native outlines/contrast)
   assert.equal(isDarkLogoTeam('BUF', 'Buffalo Bills'), false)

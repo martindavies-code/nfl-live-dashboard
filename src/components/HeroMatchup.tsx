@@ -619,7 +619,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                           <img
                             src={awayLogoUrl}
                             alt=""
-                            className="h-5 w-5 object-contain shrink-0"
+                            className={`h-5 w-5 object-contain shrink-0 ${
+                              isDarkLogoTeam(awayComp?.team?.abbreviation, awayComp?.team?.displayName)
+                                ? 'team-logo-dark-outline-sm'
+                                : 'filter drop-shadow-sm'
+                            }`}
                             loading="lazy"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'
@@ -654,7 +658,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                           <img
                             src={homeLogoUrl}
                             alt=""
-                            className="h-5 w-5 object-contain shrink-0"
+                            className={`h-5 w-5 object-contain shrink-0 ${
+                              isDarkLogoTeam(homeComp?.team?.abbreviation, homeComp?.team?.displayName)
+                                ? 'team-logo-dark-outline-sm'
+                                : 'filter drop-shadow-sm'
+                            }`}
                             loading="lazy"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'

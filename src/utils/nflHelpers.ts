@@ -964,11 +964,22 @@ export function reconcileScoreboardData(
 /**
  * Determines whether a team's logo lacks an authentic white outline on ESPN's CDN
  * and requires a crisp white silhouette outline to ensure optimal contrast against dark backgrounds.
- * Specifically, the New York Jets 2024 Gotham green scoreboard logo has no border,
+ * Specifically, the New York Giants (dark navy 'ny'), Los Angeles Rams (dark royal blue 'LA'),
+ * and New York Jets (Gotham green) scoreboard logos have no built-in border,
  * while other NFL logos include native white outlines or accents.
  */
-const DARK_LOGO_ABBREVIATIONS = new Set(['NYJ'])
-const DARK_LOGO_NAMES = new Set(['jets', 'new york jets', 'ny jets'])
+const DARK_LOGO_ABBREVIATIONS = new Set(['NYJ', 'NYG', 'LAR', 'LA'])
+const DARK_LOGO_NAMES = new Set([
+  'jets',
+  'new york jets',
+  'ny jets',
+  'giants',
+  'new york giants',
+  'ny giants',
+  'rams',
+  'los angeles rams',
+  'la rams',
+])
 
 export function isDarkLogoTeam(abbreviation?: string, teamName?: string): boolean {
   if (abbreviation) {
@@ -978,6 +989,7 @@ export function isDarkLogoTeam(abbreviation?: string, teamName?: string): boolea
   if (teamName) {
     const cleanName = teamName.trim().toLowerCase()
     if (DARK_LOGO_NAMES.has(cleanName)) return true
+    if (cleanName.includes('giants') || cleanName.includes('rams') || cleanName.includes('jets')) return true
   }
   return false
 }

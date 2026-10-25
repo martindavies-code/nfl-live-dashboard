@@ -145,13 +145,14 @@
   outline-offset: 2px !important;
 }
 
-/* Enhanced visibility for dark team logos (e.g. New York Jets 2024 logo) on dark dashboard backgrounds */
+/* Enhanced visibility for dark team logos (e.g. New York Giants, LA Rams, NY Jets) on dark dashboard backgrounds */
 .team-logo-dark-outline {
-  filter: drop-shadow(1px 0 0 #ffffff) drop-shadow(-1px 0 0 #ffffff) drop-shadow(0 1px 0 #ffffff) drop-shadow(0 -1px 0 #ffffff) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(1px 0 0 #ffffff) drop-shadow(-1px 0 0 #ffffff) drop-shadow(0 1px 0 #ffffff) drop-shadow(0 -1px 0 #ffffff) drop-shadow(0 0 2px rgba(255, 255, 255, 0.85)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
 }
 
 .team-logo-dark-outline-sm {
-  filter: drop-shadow(1px 0 0 #ffffff) drop-shadow(-1px 0 0 #ffffff) drop-shadow(0 1px 0 #ffffff) drop-shadow(0 -1px 0 #ffffff) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(1px 0 0 #ffffff) drop-shadow(-1px 0 0 #ffffff) drop-shadow(0 1px 0 #ffffff) drop-shadow(0 -1px 0 #ffffff) drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.8)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
 }
+
 
 
