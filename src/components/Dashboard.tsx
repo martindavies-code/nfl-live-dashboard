@@ -757,11 +757,11 @@ export const Dashboard: React.FC = () => {
       {activeSource.isCached && (
         <aside
           role="alert"
-          className="bg-amber-950/90 border-b border-amber-500/40 text-amber-200 px-4 py-2 text-xs flex items-center justify-between shadow-md"
+          className="bg-amber-950/90 border-b border-amber-500/40 text-amber-200 px-3 sm:px-4 py-2 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-md"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <Database className="h-4 w-4 text-amber-400 shrink-0" />
-            <span>
+            <span className="leading-snug">
               <strong>Offline Resiliency Active:</strong> Displaying verified real NFL scoreboard data from {activeSource.name}
               {activeSource.cachedTimestamp && ` (recorded at ${new Date(activeSource.cachedTimestamp).toLocaleTimeString()})`}.
             </span>
@@ -769,7 +769,7 @@ export const Dashboard: React.FC = () => {
           <button
             onClick={() => loadData(true)}
             disabled={isRefreshing}
-            className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[11px] transition-colors shrink-0 disabled:opacity-50"
+            className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[11px] transition-colors shrink-0 disabled:opacity-50 self-start sm:self-auto"
           >
             {isRefreshing ? 'Reconnecting...' : 'Retry Live Feeds'}
           </button>
@@ -789,40 +789,43 @@ export const Dashboard: React.FC = () => {
 
       {/* HEADER: Sleek, Purposeful, Zero Redundant Clutter */}
       <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#0b0f19]/90 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12">
-          <div className="flex h-16 items-center justify-between gap-3 sm:gap-4">
-            {/* Logo, Brand & Season Context */}
+        <div className="mx-auto max-w-7xl px-3 sm:px-8 lg:px-12">
+          {/* Main Bar: Brand on Left, Action Controls on Right */}
+          <div className="flex h-14 sm:h-16 items-center justify-between gap-2.5 sm:gap-4">
+            {/* Logo, Brand & Desktop Week Navigation */}
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-              <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 <div
-                  className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-700 to-indigo-900 shadow-lg shadow-indigo-950/40 ring-1 ring-white/20 select-none"
+                  className="flex h-8.5 w-8.5 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-700 to-indigo-900 shadow-lg shadow-indigo-950/40 ring-1 ring-white/20 select-none"
                   aria-hidden="true"
                 >
-                  <span className="text-base sm:text-xl">🏈</span>
+                  <span className="text-sm sm:text-xl">🏈</span>
                 </div>
-                <div>
-                  <h1 className="font-bold text-base sm:text-xl tracking-tight text-white uppercase leading-none">
+                <div className="min-w-0">
+                  <h1 className="font-bold text-sm sm:text-xl tracking-tight text-white uppercase leading-none whitespace-nowrap">
                     <span className="sm:hidden">NFL Command</span>
                     <span className="hidden sm:inline">NFL Live Command</span>
                   </h1>
-                  <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium tracking-normal mt-1 hidden xs:block">
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium tracking-normal mt-0.5 hidden xs:block whitespace-nowrap">
                     <span className="hidden md:inline">{seasonYear} Season • </span>Real-Time Field Tracker
                   </p>
                 </div>
               </div>
 
-              {/* Vertical Divider */}
+              {/* Vertical Divider (Desktop Only) */}
               <div className="hidden sm:block h-6 w-px bg-white/10 shrink-0" aria-hidden="true" />
 
-              {/* Week Navigation */}
-              <WeekSelector
-                currentSeasonType={selectedSeasonType}
-                currentWeek={selectedWeek}
-                liveSeasonType={liveSeasonType}
-                liveWeek={liveWeek}
-                seasonYear={seasonYear}
-                onSelectWeek={handleSelectWeek}
-              />
+              {/* Week Navigation (Inlined on Desktop) */}
+              <div className="hidden sm:flex items-center">
+                <WeekSelector
+                  currentSeasonType={selectedSeasonType}
+                  currentWeek={selectedWeek}
+                  liveSeasonType={liveSeasonType}
+                  liveWeek={liveWeek}
+                  seasonYear={seasonYear}
+                  onSelectWeek={handleSelectWeek}
+                />
+              </div>
             </div>
 
             {/* Right-Side Telemetry & Action Controls */}
@@ -830,7 +833,7 @@ export const Dashboard: React.FC = () => {
               {/* Sound Cues Toggle */}
               <button
                 onClick={toggleMute}
-                className={`flex h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 text-xs font-semibold transition-all border focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                className={`flex h-8.5 sm:h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 text-xs font-semibold transition-all border focus:outline-none focus:ring-2 focus:ring-sky-400 ${
                   !isMuted
                     ? 'bg-sky-500/15 text-sky-300 border-sky-500/40 hover:bg-sky-500/25'
                     : 'bg-[#111927] text-slate-400 border-white/[0.08] hover:text-white hover:bg-[#162032]'
@@ -899,7 +902,7 @@ export const Dashboard: React.FC = () => {
                   loadData(true)
                 }}
                 disabled={isRefreshing}
-                className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#162032] hover:bg-[#1e2c45] px-2.5 sm:px-3 text-xs font-semibold text-slate-200 transition-all border border-white/[0.08] active:scale-95 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="flex h-8.5 sm:h-9 items-center justify-center gap-1.5 rounded-lg bg-[#162032] hover:bg-[#1e2c45] px-2.5 sm:px-3 text-xs font-semibold text-slate-200 transition-all border border-white/[0.08] active:scale-95 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-sky-400"
                 title="Force refresh live scoreboard"
                 aria-label="Refresh scoreboard data"
               >
@@ -911,6 +914,18 @@ export const Dashboard: React.FC = () => {
                 <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
+          </div>
+
+          {/* Mobile Dedicated Week Navigation Bar (< sm screens only) */}
+          <div className="sm:hidden flex items-center justify-center pb-2.5 pt-0.5 border-t border-white/[0.05]">
+            <WeekSelector
+              currentSeasonType={selectedSeasonType}
+              currentWeek={selectedWeek}
+              liveSeasonType={liveSeasonType}
+              liveWeek={liveWeek}
+              seasonYear={seasonYear}
+              onSelectWeek={handleSelectWeek}
+            />
           </div>
         </div>
       </header>
@@ -1204,7 +1219,7 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Search Bar */}
-              <div className="relative min-w-[180px] sm:min-w-[200px]" role="search">
+              <div className="relative w-full sm:w-auto min-w-0 sm:min-w-[200px] flex-1 sm:flex-initial" role="search">
                 <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"

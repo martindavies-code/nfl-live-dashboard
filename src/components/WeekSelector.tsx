@@ -154,10 +154,10 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
           onClick={handleReturnToLive}
           title="Jump directly to current live week (Shortcut: 0 or W)"
           aria-label={`Jump back to Live Week ${liveWeek}`}
-          className="ml-2 hidden sm:flex h-9 items-center gap-1.5 rounded-lg bg-red-500/15 border border-red-500/40 px-2.5 text-[11px] font-bold text-red-300 hover:bg-red-500/25 transition-all hover:border-red-400/60 focus:outline-none focus:ring-2 focus:ring-red-400 animate-pulse"
+          className="ml-1.5 sm:ml-2 flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-red-500/15 border border-red-500/40 px-2 sm:px-2.5 text-[11px] font-bold text-red-300 hover:bg-red-500/25 transition-all hover:border-red-400/60 focus:outline-none focus:ring-2 focus:ring-red-400 animate-pulse"
         >
           <Radio className="h-3 w-3 text-red-400 shrink-0" />
-          <span>Live: W{liveWeek}</span>
+          <span className="whitespace-nowrap">Live: W{liveWeek}</span>
         </button>
       )}
 
@@ -168,7 +168,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
           role="dialog"
           aria-modal="true"
           aria-label="Select NFL Week or Playoff Round"
-          className="absolute left-0 top-full mt-2 z-50 w-[340px] sm:w-[380px] rounded-xl bg-[#0d1422] border border-white/[0.15] shadow-2xl p-4 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0 top-full mt-2 z-50 w-[calc(100vw-28px)] max-w-[360px] sm:w-[380px] rounded-xl bg-[#0d1422] border border-white/[0.15] shadow-2xl p-3.5 sm:p-4 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
         >
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
