@@ -25,6 +25,8 @@ import {
   shouldDisplayLastPlayText,
   formatKickoffCountdown,
   parseWinLossRecord,
+  isGameFinished,
+  sortEventsFinishedLast,
 } from './nflHelpers.ts'
 
 test('safeParseInt handles numbers, strings, dashes, nulls, and undefined', () => {
@@ -712,5 +714,89 @@ test('parseWinLossRecord safely parses records and computes win percentage strin
   assert.equal(tieRecord.summary, '10-6-1')
   assert.equal(tieRecord.winPctString, '.618')
 })
+
+test('isGameFinished accurately identifies finished games across all ESPN status formats', () => {
+  // Negative cases
+  assert.equal(isGameFinished(null), false)
+  assert.equal(isGameFinished(undefined), false)
+  assert.equal(isGameFinished({}), false)
+  assert.equal(isGameFinished({ status: { type: { state: 'pre', completed: false } } }), false)
+  assert.equal(isGameFinished({ status: { type: { state: 'in', completed: false } } }), false)
+  assert.equal(isGameFinished({ competitions: [{ status: { type: { state: 'in', completed: false } } }] }), false)
+
+  // Positive cases: state 'post'
+  assert.equal(isGameFinished({ status: { type: { state: 'post' } } }), true)
+  assert.equal(isGameFinished({ competitions: [{ status: { type: { state: 'post' } } }] }), true)
+
+  // Positive cases: completed flag
+  assert.equal(isGameFinished({ status: { type: { completed: true } } }), true)
+  assert.equal(isGameFinished({ competitions: [{ status: { type: { completed: true } } }] }), true)
+
+  // Positive cases: status name
+  assert.equal(isGameFinished({ status: { type: { name: 'STATUS_FINAL' } } }), true)
+  assert.equal(isGameFinished({ status: { type: { name: 'STATUS_FINAL_OVERTIME' } } }), true)
+
+  // Positive cases: detail text
+  assert.equal(isGameFinished({ status: { type: { detail: 'Final' } } }), true)
+  assert.equal(isGameFinished({ status: { type: { detail: 'Final/OT' } } }), true)
+  assert.equal(isGameFinished({ competitions: [{ status: { type: { detail: 'Final (OT)' } } }] }), true)
+})
+
+test('sortEventsFinishedLast ensures finished games are always listed last on that week', () => {
+  // Edge cases
+  assert.deepEqual(sortEventsFinishedLast(null), [])
+  assert.deepEqual(sortEventsFinishedLast(undefined), [])
+  assert.deepEqual(sortEventsFinishedLast([]), [])
+
+  const singleGame = [{ id: '1', status: { type: { state: 'in' } } }]
+  assert.deepEqual(sortEventsFinishedLast(singleGame), singleGame)
+
+  // Mixed games in typical NFL weekly slate order:
+  // 1. Thursday night game (already finished)
+  // 2. Sunday 9:30 AM London game (already finished)
+  // 3. Sunday 1:00 PM game A (currently live)
+  // 4. Sunday 1:00 PM game B (currently live)
+  // 5. Sunday 4:25 PM game (upcoming)
+  // 6. Monday Night Football (upcoming)
+  const tnfFinished = { id: 'tnf-final', status: { type: { state: 'post', completed: true, detail: 'Final' } } }
+  const londonFinished = { id: 'london-final', status: { type: { state: 'post', completed: true, detail: 'Final/OT' } } }
+  const sunLiveA = { id: 'sun-live-a', status: { type: { state: 'in', completed: false, detail: 'Q3 08:42' } } }
+  const sunLiveB = { id: 'sun-live-b', status: { type: { state: 'in', completed: false, detail: 'Q4 02:15' } } }
+  const sunUpcoming = { id: 'sun-upcoming', status: { type: { state: 'pre', completed: false, detail: '4:25 PM' } } }
+  const mnfUpcoming = { id: 'mnf-upcoming', status: { type: { state: 'pre', completed: false, detail: 'Mon 8:15 PM' } } }
+
+  const weeklySlate = [
+    tnfFinished,
+    londonFinished,
+    sunLiveA,
+    sunLiveB,
+    sunUpcoming,
+    mnfUpcoming,
+  ]
+
+  const sorted = sortEventsFinishedLast(weeklySlate)
+
+  // Non-finished games must come first, in their original relative order
+  assert.equal(sorted[0].id, 'sun-live-a')
+  assert.equal(sorted[1].id, 'sun-live-b')
+  assert.equal(sorted[2].id, 'sun-upcoming')
+  assert.equal(sorted[3].id, 'mnf-upcoming')
+
+  // Finished games must be listed last, preserving their original relative order
+  assert.equal(sorted[4].id, 'tnf-final')
+  assert.equal(sorted[5].id, 'london-final')
+  assert.equal(sorted.length, 6)
+
+  // When all games are finished (past week)
+  const allFinal = [tnfFinished, londonFinished]
+  const sortedAllFinal = sortEventsFinishedLast(allFinal)
+  assert.deepEqual(sortedAllFinal.map((g) => g.id), ['tnf-final', 'london-final'])
+
+  // When all games are upcoming (future week)
+  const allUpcoming = [sunUpcoming, mnfUpcoming]
+  const sortedAllUpcoming = sortEventsFinishedLast(allUpcoming)
+  assert.deepEqual(sortedAllUpcoming.map((g) => g.id), ['sun-upcoming', 'mnf-upcoming'])
+})
+
 
 

@@ -450,6 +450,62 @@ export function isHalftimeSituation(
 }
 
 /**
+ * Rigorously verifies whether an NFL game has finished (completed/final).
+ * Evaluates event-level and competition-level status flags, state attributes,
+ * and canonical NFL final status naming conventions.
+ */
+export function isGameFinished(event: NFLEvent | null | undefined): boolean {
+  if (!event) return false
+  const comp = event.competitions?.[0]
+  const status = event.status || comp?.status
+  const compStatus = comp?.status
+
+  if (status?.type?.completed || compStatus?.type?.completed) {
+    return true
+  }
+
+  const state = status?.type?.state || compStatus?.type?.state
+  if (state === 'post') {
+    return true
+  }
+
+  const name = (status?.type?.name || compStatus?.type?.name || '').toUpperCase()
+  if (name === 'STATUS_FINAL' || name === 'STATUS_FINAL_OVERTIME' || name === 'STATUS_POST_GAME') {
+    return true
+  }
+
+  const detail = (
+    status?.type?.detail ||
+    compStatus?.type?.detail ||
+    status?.type?.shortDetail ||
+    compStatus?.type?.shortDetail ||
+    status?.type?.description ||
+    compStatus?.type?.description ||
+    ''
+  ).toLowerCase().trim()
+
+  if (detail === 'final' || detail.startsWith('final/') || detail.startsWith('final /') || detail.includes('final (ot)')) {
+    return true
+  }
+
+  return false
+}
+
+/**
+ * Sorts NFL events for a slate/week so that games that have finished
+ * are always listed last, while preserving the relative chronological order
+ * among non-finished (live and upcoming) games and among finished games.
+ */
+export function sortEventsFinishedLast(events: NFLEvent[]): NFLEvent[] {
+  if (!Array.isArray(events) || events.length <= 1) return events ? [...events] : []
+  return [...events].sort((a, b) => {
+    const aFin = isGameFinished(a) ? 1 : 0
+    const bFin = isGameFinished(b) ? 1 : 0
+    return aFin - bFin
+  })
+}
+
+/**
  * Localizes NFL kickoff dates and times to the browsing user's local timezone.
  * Supports optional timezone override (e.g. for testing or explicit user preference).
  * Guarantees resilience against null, undefined, and invalid ISO timestamps.

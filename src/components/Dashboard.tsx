@@ -9,6 +9,8 @@ import {
   getPrevWeek,
   sanitizePatriotsInEvent,
   reconcileScoreboardData,
+  isGameFinished,
+  sortEventsFinishedLast,
 } from '../utils/nflHelpers'
 import { fetchNFLScoreboard, fetchEventDrivePlays, type ScoreboardQueryParams } from '../services/espnApi'
 import { HeroMatchup } from './HeroMatchup'
@@ -347,7 +349,8 @@ export const Dashboard: React.FC = () => {
   }, [])
 
   const events = useMemo(() => {
-    return (data?.events || []).map(sanitizePatriotsInEvent)
+    const rawEvents = (data?.events || []).map(sanitizePatriotsInEvent)
+    return sortEventsFinishedLast(rawEvents)
   }, [data])
 
   // Sanitized filtered and searched events (memoized against events, filter, and searchQuery)
@@ -357,18 +360,19 @@ export const Dashboard: React.FC = () => {
     return events.filter((ev) => {
       const comp = ev.competitions?.[0]
       const state = ev.status?.type?.state || comp?.status?.type?.state || 'pre'
+      const isFinished = isGameFinished(ev)
 
-      if (filter === 'live' && state !== 'in') return false
+      if (filter === 'live' && (state !== 'in' || isFinished)) return false
       if (filter === 'redzone') {
         const isRz = isRedZoneSituation(comp?.situation, ev.status || comp?.status, comp?.competitors || [])
-        if (!isRz) return false
+        if (!isRz || isFinished) return false
       }
       if (filter === 'halftime') {
         const isHalf = isHalftimeSituation(ev.status || comp?.status, comp?.situation)
-        if (!isHalf) return false
+        if (!isHalf || isFinished) return false
       }
-      if (filter === 'upcoming' && state !== 'pre') return false
-      if (filter === 'final' && state !== 'post') return false
+      if (filter === 'upcoming' && (state !== 'pre' || isFinished)) return false
+      if (filter === 'final' && !isFinished) return false
 
       if (cleanQuery) {
         const home = comp?.competitors?.find((c) => c.homeAway === 'home')
@@ -721,9 +725,14 @@ export const Dashboard: React.FC = () => {
     for (const e of events) {
       const comp = e.competitions?.[0]
       const state = e.status?.type?.state || comp?.status?.type?.state
-      if (state === 'in') live++
-      if (state === 'pre') up++
-      if (state === 'post') fin++
+      const isFinished = isGameFinished(e)
+      if (isFinished) {
+        fin++
+      } else if (state === 'in') {
+        live++
+      } else if (state === 'pre') {
+        up++
+      }
 
       if (isRedZoneSituation(comp?.situation, e.status || comp?.status, comp?.competitors || [])) {
         rz++
