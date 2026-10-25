@@ -27,7 +27,35 @@ export interface RedundantSource {
   enabledForEnv?: (isLocalDev: boolean) => boolean
 }
 
+export class NFLApiError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'NFLApiError'
+  }
+}
+
+export class NFLNetworkError extends NFLApiError {
+  public readonly sourcesAttempted: string[]
+
+  constructor(message: string, sourcesAttempted: string[] = []) {
+    super(message)
+    this.name = 'NFLNetworkError'
+    this.sourcesAttempted = sourcesAttempted
+  }
+}
+
+export class NFLValidationError extends NFLApiError {
+  constructor(message: string) {
+    super(message)
+    this.name = 'NFLValidationError'
+  }
+}
+
 let _lastCacheWriteTime = 0
+
+export function _resetCacheWriteTimeForTesting(): void {
+  _lastCacheWriteTime = 0
+}
 
 /**
  * 5 Redundant Real-Time NFL Data Sources & Mirrors.
@@ -260,8 +288,9 @@ export async function fetchNFLScoreboard(
   }
 
   // Never return fake or made-up data — throw genuine transparent error
-  throw new Error(
-    `Unable to connect to live NFL scoreboard across all ${sourcesToTry.length} redundant sources: [${sourcesToTry.map((s) => s.shortName).join(', ')}]. No verified real cache available.`
+  throw new NFLNetworkError(
+    `Unable to connect to live NFL scoreboard across all ${sourcesToTry.length} redundant sources: [${sourcesToTry.map((s) => s.shortName).join(', ')}]. No verified real cache available.`,
+    sourcesToTry.map((s) => s.shortName)
   )
 }
 
@@ -271,7 +300,8 @@ export async function fetchNFLScoreboard(
  */
 export async function fetchEventDrivePlays(
   eventId: string,
-  externalSignal?: AbortSignal
+  externalSignal?: AbortSignal,
+  timeoutMs = 4000
 ): Promise<NFLDrivePlay[]> {
   if (!eventId) return []
 
@@ -290,8 +320,22 @@ export async function fetchEventDrivePlays(
   )
 
   for (const url of urlsToTry) {
+    if (externalSignal?.aborted) return []
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+    }, timeoutMs)
+
+    const abortHandler = () => {
+      controller.abort()
+    }
+    if (externalSignal) {
+      externalSignal.addEventListener('abort', abortHandler, { once: true })
+    }
+
     try {
-      const res = await fetch(url, { signal: externalSignal })
+      const res = await fetch(url, { signal: controller.signal })
       if (!res.ok) continue
       const json = await res.json()
       const currentPlays = json?.drives?.current?.plays
@@ -310,7 +354,15 @@ export async function fetchEventDrivePlays(
         }
       }
     } catch {
+      if (externalSignal?.aborted) {
+        return []
+      }
       // Try next mirror
+    } finally {
+      clearTimeout(timeoutId)
+      if (externalSignal) {
+        externalSignal.removeEventListener('abort', abortHandler)
+      }
     }
   }
 

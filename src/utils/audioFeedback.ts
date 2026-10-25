@@ -9,6 +9,12 @@ let masterGain: GainNode | null = null
 let activeNodesCount = 0
 const MAX_CONCURRENT_NODES = 8
 
+export function _resetAudioContextForTesting(): void {
+  audioCtx = null
+  masterGain = null
+  activeNodesCount = 0
+}
+
 function getAudioContext(): { ctx: AudioContext; master: GainNode } | null {
   if (typeof window === 'undefined') return null
   try {
@@ -27,12 +33,7 @@ function getAudioContext(): { ctx: AudioContext; master: GainNode } | null {
       audioCtx.resume().catch(() => {})
     }
 
-    if (!masterGain) {
-      masterGain = audioCtx.createGain()
-      masterGain.connect(audioCtx.destination)
-    }
-
-    return { ctx: audioCtx, master: masterGain }
+    return masterGain ? { ctx: audioCtx, master: masterGain } : null
   } catch {
     return null
   }

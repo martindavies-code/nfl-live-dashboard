@@ -464,10 +464,11 @@ export const Dashboard: React.FC = () => {
     if (!heroId || heroState !== 'in') return
 
     let isMounted = true
+    const abortCtrl = new AbortController()
     const reqId = (latestDriveFetchIdRef.current[heroId] || 0) + 1
     latestDriveFetchIdRef.current[heroId] = reqId
 
-    fetchEventDrivePlays(heroId).then((plays) => {
+    fetchEventDrivePlays(heroId, abortCtrl.signal).then((plays) => {
       if (!isMounted || latestDriveFetchIdRef.current[heroId] !== reqId) return
       if (plays.length === 0) return
 
@@ -500,6 +501,7 @@ export const Dashboard: React.FC = () => {
 
     return () => {
       isMounted = false
+      abortCtrl.abort()
     }
   }, [heroId, heroState, heroYardLine, heroDown])
 
@@ -554,12 +556,17 @@ export const Dashboard: React.FC = () => {
 
     prevRedZoneSetRef.current = currentRzSet
 
+    let timerId: ReturnType<typeof setTimeout> | null = null
     if (newRzFound) {
       playRedZoneSound(isMuted)
-      setTimeout(() => setSrAnnouncement(rzAnnouncement), 0)
+      timerId = setTimeout(() => setSrAnnouncement(rzAnnouncement), 0)
     } else if (newScoreFound) {
       playScoreChime(isMuted)
-      setTimeout(() => setSrAnnouncement(scoreAnnouncement), 0)
+      timerId = setTimeout(() => setSrAnnouncement(scoreAnnouncement), 0)
+    }
+
+    return () => {
+      if (timerId) clearTimeout(timerId)
     }
   }, [data, isMuted])
 

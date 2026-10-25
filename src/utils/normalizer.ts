@@ -102,20 +102,14 @@ function decodeAllEntities(str: string): string {
 
   // Decode hex entities: &#x61; or &#x61
   decoded = decoded.replace(/&#x([0-9a-f]+);?/gi, (_, hex) => {
-    try {
-      return String.fromCharCode(parseInt(hex, 16))
-    } catch {
-      return ''
-    }
+    const code = parseInt(hex, 16)
+    return Number.isFinite(code) && code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : ''
   })
 
   // Decode decimal entities: &#97; or &#97
   decoded = decoded.replace(/&#([0-9]+);?/g, (_, dec) => {
-    try {
-      return String.fromCharCode(parseInt(dec, 10))
-    } catch {
-      return ''
-    }
+    const code = parseInt(dec, 10)
+    return Number.isFinite(code) && code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : ''
   })
 
   // Decode named entities

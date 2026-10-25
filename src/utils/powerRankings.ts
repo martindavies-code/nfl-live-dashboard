@@ -129,7 +129,7 @@ export function getBestMatchupByPowerRanking(events: NFLEvent[]): NFLEvent | nul
       }
     } else if (state === 'pre') {
       preGames.push(ev)
-    } else {
+    } else if (state === 'post') {
       postGames.push(ev)
     }
   }

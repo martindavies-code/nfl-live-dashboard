@@ -644,7 +644,7 @@ export function sanitizePatriotsName(name: string | undefined | null): string {
 
   let result = name.replace(
     /\b(the\s+)?(New\s+E[nN]gland\s+Patriots|Patriots|Pats)\b/gi,
-    (match, thePrefix, term) => {
+    (_match, thePrefix, term) => {
       const lower = term.toLowerCase()
       if (lower.startsWith('new')) {
         const isCapN = term.includes('ENgland')
@@ -654,10 +654,7 @@ export function sanitizePatriotsName(name: string | undefined | null): string {
       if (lower === 'patriots') {
         return thePrefix ? 'the Fucking Patriots' : 'Fucking Patriots'
       }
-      if (lower === 'pats') {
-        return thePrefix ? 'the Fucking Pats' : 'Fucking Pats'
-      }
-      return match
+      return thePrefix ? 'the Fucking Pats' : 'Fucking Pats'
     }
   )
 
