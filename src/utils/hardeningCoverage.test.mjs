@@ -1264,6 +1264,410 @@ test('reconcileScoreboardData enforces monotonic invariants across game states a
   assert.equal(playsWithTimeout[0].id, 'p-valid')
 })
 
+// 19. Hardening: Deep Edge-Case & Error Branch Coverage
+test('Hardening: audioFeedback error recovery, disconnect failures, and AudioContext states', async () => {
+  const { playRedZoneSound, playScoreChime, playTactileClick, _resetAudioContextForTesting } = await import(
+    './audioFeedback.ts'
+  )
+  const originalWindow = globalThis.window
+
+  try {
+    // A. AudioContext in suspended state whose resume() rejects (triggers .catch(() => {}))
+    _resetAudioContextForTesting()
+    class RejectingAudioContext {
+      state = 'suspended'
+      currentTime = 0
+      destination = {}
+      createGain() {
+        return {
+          gain: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
+          connect: () => {},
+          disconnect: () => {
+            throw new Error('Disconnect fault')
+          },
+        }
+      }
+      createOscillator() {
+        return {
+          type: 'sine',
+          frequency: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
+          connect: () => {},
+          disconnect: () => {
+            throw new Error('Disconnect fault')
+          },
+          start: () => {},
+          stop: function () {
+            if (this.onended) this.onended()
+          },
+        }
+      }
+      async resume() {
+        throw new Error('Autoplay policy prevented resume')
+      }
+      async close() {
+        this.state = 'closed'
+      }
+    }
+
+    globalThis.window = {
+      AudioContext: RejectingAudioContext,
+    }
+
+    playRedZoneSound(false)
+    playScoreChime(false)
+    playTactileClick(false)
+
+    // B. AudioContext closed state triggers re-instantiation
+    const instance = new RejectingAudioContext()
+    instance.state = 'closed'
+    globalThis.window = {
+      AudioContext: class {
+        state = 'running'
+        currentTime = 0
+        destination = {}
+        createGain() {
+          return {
+            gain: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
+            connect: () => {},
+            disconnect: () => {},
+          }
+        }
+        createOscillator() {
+          return {
+            type: 'sine',
+            frequency: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
+            connect: () => {},
+            disconnect: () => {},
+            start: () => {},
+            stop: function () {
+              if (this.onended) this.onended()
+            },
+          }
+        }
+      },
+    }
+    playRedZoneSound(false)
+
+    // C. Neither AudioContext nor webkitAudioContext is supported
+    _resetAudioContextForTesting()
+    globalThis.window = {}
+    playRedZoneSound(false)
+    playScoreChime(false)
+    playTactileClick(false)
+  } finally {
+    _resetAudioContextForTesting()
+    globalThis.window = originalWindow
+  }
+})
+
+test('Hardening: broadcastInfo US network fallback for Amazon Prime and unverified windows', async () => {
+  const { getGameBroadcastDetails } = await import('./broadcastInfo.ts')
+
+  // A. Amazon Prime in upperNet when unverified
+  const primeEvent = {
+    id: 'ev-prime-test',
+    date: '2026-10-22T20:15:00Z',
+    competitions: [
+      {
+        broadcasts: [{ names: ['PRIME VIDEO'] }],
+        competitors: [
+          { homeAway: 'home', team: { abbreviation: 'JAX' } },
+          { homeAway: 'away', team: { abbreviation: 'TEN' } },
+        ],
+      },
+    ],
+  }
+  const primeInfo = getGameBroadcastDetails(primeEvent)
+  assert.equal(primeInfo.usTv, 'Amazon Prime Video')
+
+  // B. Thursday Night Football window (unspecified network, Thu 23:00 UK)
+  const tnfEvent = {
+    id: 'ev-tnf-test',
+    date: '2026-10-29T23:30:00Z',
+    competitions: [
+      {
+        broadcasts: [{ names: [] }],
+        competitors: [
+          { homeAway: 'home', team: { abbreviation: 'SEA' } },
+          { homeAway: 'away', team: { abbreviation: 'LAR' } },
+        ],
+      },
+    ],
+  }
+  const tnfInfo = getGameBroadcastDetails(tnfEvent)
+  assert.equal(tnfInfo.usTv, 'Amazon Prime Video')
+
+  // C. Invalid date causing DateTimeFormat exception
+  const invalidDateEvent = {
+    id: 'ev-inv-date',
+    date: 'invalid-date-string-that-throws',
+    competitions: [
+      {
+        competitors: [
+          { homeAway: 'home', team: { abbreviation: 'DAL' } },
+          { homeAway: 'away', team: { abbreviation: 'PHI' } },
+        ],
+      },
+    ],
+  }
+  const invInfo = getGameBroadcastDetails(invalidDateEvent)
+  assert.ok(invInfo.usTv)
+})
+
+test('Hardening: winProbability getBettingOddsInfo formatting when overUnder is present without handicap', async () => {
+  const { getBettingOddsInfo } = await import('./winProbability.ts')
+
+  const odds = [
+    {
+      overUnder: 48.5,
+      provider: { name: 'DraftKings' },
+    },
+  ]
+  const oddsInfo = getBettingOddsInfo(odds)
+  assert.equal(oddsInfo.overUnder, 'O/U 48.5')
+  assert.equal(oddsInfo.handicap, null)
+  assert.equal(oddsInfo.formattedSummary, 'O/U 48.5')
+})
+
+test('Hardening: normalizer.ts URL directional controls and situational goal-to-go branches', async () => {
+  const { sanitizeUrl, normalizeNFLEvent } = await import('./normalizer.ts')
+
+  // 1. sanitizeUrl blocks LTR/RTL and directional override controls
+  assert.equal(sanitizeUrl('https://example.com/logo\u200E.png'), 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nfl.png')
+  assert.equal(sanitizeUrl('https://example.com/logo\u202A.png'), 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nfl.png')
+
+  // 2. normalizeNFLEvent goal-to-go when driving left
+  const drivingLeftGoal = {
+    id: 'ev-goal-left',
+    status: { type: { state: 'in' }, period: 2, displayClock: '5:00' },
+    competitions: [
+      {
+        competitors: [
+          { id: '1', homeAway: 'home', score: '10', team: { abbreviation: 'KC' } },
+          { id: '2', homeAway: 'away', score: '7', team: { abbreviation: 'LAC' } },
+        ],
+        situation: {
+          possession: '2', // Away has ball, drives left
+          down: 1,
+          distance: 5,
+          yardLine: 4,     // yardLine - distance <= 0 -> isGoalToGo true
+          downDistanceText: '',
+          possessionText: 'KC 4',
+          lastPlay: {
+            probability: {
+              homeWinPercentage: 0.55,
+              awayWinPercentage: 0.45,
+            },
+          },
+        },
+      },
+    ],
+  }
+  const normGoal = normalizeNFLEvent(drivingLeftGoal)
+  assert.equal(normGoal.situation.isGoalToGo, true)
+  assert.equal(normGoal.situation.formattedText, '1st & Goal at KC 4')
+  assert.equal(normGoal.situation.homeWinPct, 55)
+  assert.equal(normGoal.situation.awayWinPct, 45)
+
+  // 3. normalizeNFLEvent: down <= 0 without downDistanceText yields 'Kickoff / PAT'
+  const kickoffSit = {
+    id: 'ev-kickoff',
+    status: { type: { state: 'in' }, period: 1, displayClock: '15:00' },
+    competitions: [
+      {
+        competitors: [
+          { id: '1', homeAway: 'home', score: '0', team: { abbreviation: 'FNE' } },
+          { id: '2', homeAway: 'away', score: '0', team: { abbreviation: 'MIA' } },
+        ],
+        situation: {
+          down: 0,
+          distance: 0,
+          yardLine: 35,
+          downDistanceText: '',
+          possessionText: 'NE 35',
+        },
+      },
+    ],
+  }
+  const normKickoff = normalizeNFLEvent(kickoffSit)
+  assert.equal(normKickoff.situation.formattedText, 'Kickoff / PAT')
+
+  // 4. normalizeNFLEvent: away team is FNE with possessionText 'NE 20'
+  const awayPatriotsSit = {
+    id: 'ev-away-pats',
+    status: { type: { state: 'in' }, period: 1, displayClock: '12:00' },
+    competitions: [
+      {
+        competitors: [
+          { id: '1', homeAway: 'home', score: '0', team: { abbreviation: 'BUF' } },
+          { id: '2', homeAway: 'away', score: '0', team: { abbreviation: 'FNE' } },
+        ],
+        situation: {
+          down: 2,
+          distance: 8,
+          yardLine: 20,
+          possessionText: 'NE 20',
+        },
+      },
+    ],
+  }
+  const normAwayPats = normalizeNFLEvent(awayPatriotsSit)
+  assert.equal(normAwayPats.situation.direction, 'left')
+})
+
+test('Hardening: scorigami.ts regulation blowout and novel score whenScenario narratives', async () => {
+  const { getScorigamiInfo } = await import('./scorigami.ts')
+
+  // 1. Live game with 2 seconds left and common score: No realistic Scorigami path remaining
+  const commonBlowout = getScorigamiInfo(35, 14, 2, 'in', 'KC', 'LAC')
+  assert.equal(commonBlowout.isCurrentScorigami, false)
+  assert.ok(commonBlowout.whenScenario.includes('No realistic Scorigami path') || commonBlowout.chanceLabel === '< 0.1%')
+
+  // 2. Pre-game scorigami scenario
+  const pregame = getScorigamiInfo(0, 0, 3600, 'pre', 'GB', 'CHI')
+  assert.equal(pregame.isCurrentScorigami, false)
+  assert.ok(pregame.whenScenario.includes('Pre-game projection'))
+})
+
+test('Hardening: nflHelpers resolveContrastingTeamColors and reconcileScoreboardData deep edge branches', async () => {
+  const { resolveContrastingTeamColors, reconcileScoreboardData } = await import('./nflHelpers.ts')
+
+  // 1. Contrasting colors: Green hue (75-159)
+  const eaglesComp = { team: { color: '004c54', alternateColor: '004c54' } } // Eagles Midnight Green
+  const jetsComp = { team: { color: '125740', alternateColor: '125740' } }   // Jets Gotham Green
+  const greenContrast = resolveContrastingTeamColors(eaglesComp, jetsComp)
+  assert.ok(greenContrast.homeColor)
+  assert.ok(greenContrast.awayColor)
+
+  // 2. Contrasting colors: Purple hue (261-329)
+  const ravensComp = { team: { color: '241773', alternateColor: '241773' } } // Ravens Purple
+  const vikingsComp = { team: { color: '4f2683', alternateColor: '4f2683' } } // Vikings Purple
+  const purpleContrast = resolveContrastingTeamColors(ravensComp, vikingsComp)
+  assert.ok(purpleContrast.homeColor)
+  assert.ok(purpleContrast.awayColor)
+
+  // 3. Reconcile: options.force returns nextData immediately
+  const prevData = { events: [{ id: 'ev-1', status: { period: 4 } }] }
+  const nextData = { events: [{ id: 'ev-1', status: { period: 1 } }] }
+  const forced = reconcileScoreboardData(prevData, nextData, { force: true })
+  assert.equal(forced.events[0].status.period, 1)
+
+  // 4. Reconcile: nextData without valid events array returns nextData
+  assert.equal(reconcileScoreboardData(prevData, null), null)
+  assert.deepEqual(reconcileScoreboardData(prevData, { events: null }), { events: null })
+
+  // 5. Reconcile: nextEv without id returns nextEv unmodified
+  const noIdNext = { events: [{ status: { period: 2 } }] }
+  const reconciledNoId = reconcileScoreboardData(prevData, noIdNext)
+  assert.equal(reconciledNoId.events[0].status.period, 2)
+
+  // 6. Reconcile: nextPeriod > prevPeriod advances cleanly
+  const q2Prev = { events: [{ id: 'ev-adv', status: { period: 1 } }] }
+  const q2Next = { events: [{ id: 'ev-adv', status: { period: 2 } }] }
+  assert.equal(reconcileScoreboardData(q2Prev, q2Next).events[0].status.period, 2)
+
+  // 7. Reconcile: Score decrease rejected when not reviewed
+  const highPrev = {
+    events: [
+      {
+        id: 'ev-score',
+        status: { type: { state: 'in' }, period: 2, clock: 500 },
+        competitions: [{ competitors: [{ homeAway: 'home', score: '14' }, { homeAway: 'away', score: '7' }] }],
+      },
+    ],
+  }
+  const lowNextStale = {
+    events: [
+      {
+        id: 'ev-score',
+        status: { type: { state: 'in' }, period: 2, clock: 480 },
+        competitions: [{ competitors: [{ homeAway: 'home', score: '7' }, { homeAway: 'away', score: '7' }] }],
+      },
+    ],
+  }
+  assert.equal(
+    reconcileScoreboardData(highPrev, lowNextStale).events[0].competitions[0].competitors[0].score,
+    '14'
+  )
+
+  // 8. Reconcile: Score decrease accepted when official overturn occurs
+  const lowNextReview = {
+    events: [
+      {
+        id: 'ev-score',
+        status: { type: { state: 'in' }, period: 2, clock: 480 },
+        competitions: [
+          {
+            situation: { lastPlay: { text: 'Touchdown overturned upon video review' } },
+            competitors: [{ homeAway: 'home', score: '7' }, { homeAway: 'away', score: '7' }],
+          },
+        ],
+      },
+    ],
+  }
+  assert.equal(
+    reconcileScoreboardData(highPrev, lowNextReview).events[0].competitions[0].competitors[0].score,
+    '7'
+  )
+
+  // 9. Reconcile: Ref puts time back on clock (>3s) with official reset
+  const clockPrev = {
+    events: [
+      {
+        id: 'ev-clk',
+        status: { type: { state: 'in' }, period: 2, clock: 200 },
+      },
+    ],
+  }
+  const clockResetRef = {
+    events: [
+      {
+        id: 'ev-clk',
+        status: { type: { state: 'in', detail: 'Referee clock correction, reset to 2:15' }, period: 2, clock: 215 },
+      },
+    ],
+  }
+  assert.equal(reconcileScoreboardData(clockPrev, clockResetRef).events[0].status.clock, 215)
+
+  // 10. Reconcile: Jitter within 3 seconds keeps the more progressed clock
+  const clockJitter = {
+    events: [
+      {
+        id: 'ev-clk',
+        status: { type: { state: 'in' }, period: 2, clock: 202 },
+        competitions: [{ status: { clock: 202 } }],
+      },
+    ],
+  }
+  const jitterResolved = reconcileScoreboardData(clockPrev, clockJitter)
+  assert.equal(jitterResolved.events[0].status.clock, 200)
+
+  // 11. Reconcile: Incoming lost lastPlay on identical clock tick preserves previous lastPlay
+  const withLastPlay = {
+    events: [
+      {
+        id: 'ev-lp',
+        status: { type: { state: 'in' }, period: 3, clock: 400 },
+        competitions: [{ situation: { lastPlay: { text: 'P.Mahomes pass deep right to T.Kelce for 24 yds' } } }],
+      },
+    ],
+  }
+  const emptyLastPlay = {
+    events: [
+      {
+        id: 'ev-lp',
+        status: { type: { state: 'in' }, period: 3, clock: 400 },
+        competitions: [{ situation: { lastPlay: { text: '' } } }],
+      },
+    ],
+  }
+  const preservedLp = reconcileScoreboardData(withLastPlay, emptyLastPlay)
+  assert.equal(
+    preservedLp.events[0].competitions[0].situation.lastPlay.text,
+    'P.Mahomes pass deep right to T.Kelce for 24 yds'
+  )
+})
+
 
 
 

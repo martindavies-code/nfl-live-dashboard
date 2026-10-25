@@ -164,22 +164,18 @@ export function getVerifiedAnnouncers(
     ukWeekday = 'Sun'
     ukHour = 18
     if (event?.date) {
-      try {
-        const d = new Date(event.date)
-        if (!isNaN(d.getTime())) {
-          const parts = new Intl.DateTimeFormat('en-GB', {
-            timeZone: 'Europe/London',
-            weekday: 'short',
-            hour: 'numeric',
-            hour12: false,
-          }).formatToParts(d)
-          const w = parts.find((p) => p.type === 'weekday')?.value
-          const h = parts.find((p) => p.type === 'hour')?.value
-          if (w) ukWeekday = w
-          if (h) ukHour = parseInt(h, 10)
-        }
-      } catch {
-        // Fallback
+      const d = new Date(event.date)
+      if (!isNaN(d.getTime())) {
+        const parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/London',
+          weekday: 'short',
+          hour: 'numeric',
+          hour12: false,
+        }).formatToParts(d)
+        const w = parts.find((p) => p.type === 'weekday')?.value
+        const h = parts.find((p) => p.type === 'hour')?.value
+        if (w) ukWeekday = w
+        if (h) ukHour = parseInt(h, 10)
       }
     }
   }
@@ -267,24 +263,20 @@ export function getGameBroadcastDetails(event?: NFLEvent | null): GameBroadcastD
   let isLondonVenue = false
 
   if (event?.date) {
-    try {
-      const d = new Date(event.date)
-      if (!isNaN(d.getTime())) {
-        const parts = new Intl.DateTimeFormat('en-GB', {
-          timeZone: 'Europe/London',
-          weekday: 'short',
-          hour: 'numeric',
-          hour12: false,
-        }).formatToParts(d)
+    const d = new Date(event.date)
+    if (!isNaN(d.getTime())) {
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/London',
+        weekday: 'short',
+        hour: 'numeric',
+        hour12: false,
+      }).formatToParts(d)
 
-        const w = parts.find((p) => p.type === 'weekday')?.value
-        const h = parts.find((p) => p.type === 'hour')?.value
+      const w = parts.find((p) => p.type === 'weekday')?.value
+      const h = parts.find((p) => p.type === 'hour')?.value
 
-        if (w) ukWeekday = w
-        if (h) ukHour = parseInt(h, 10)
-      }
-    } catch {
-      // Fallback
+      if (w) ukWeekday = w
+      if (h) ukHour = parseInt(h, 10)
     }
   }
 
@@ -350,8 +342,6 @@ export function getGameBroadcastDetails(event?: NFLEvent | null): GameBroadcastD
     usTv = 'CBS'
   } else if (upperNet.includes('NBC')) {
     usTv = 'NBC'
-  } else if (upperNet.includes('PRIME') || upperNet.includes('AMAZON')) {
-    usTv = 'Amazon Prime Video'
   } else if (upperNet.includes('ESPN') || upperNet.includes('ABC')) {
     usTv = upperNet.includes('ABC') ? 'ESPN / ABC' : 'ESPN'
   } else if (upperNet.includes('NETFLIX')) {
@@ -366,9 +356,6 @@ export function getGameBroadcastDetails(event?: NFLEvent | null): GameBroadcastD
   } else if ((ukWeekday === 'Mon' && ukHour < 5) || (ukWeekday === 'Sun' && ukHour >= 23)) {
     // Unspecified network on Sunday Night Football window
     usTv = 'NBC'
-  } else if ((ukWeekday === 'Fri' && ukHour < 5) || (ukWeekday === 'Thu' && ukHour >= 23)) {
-    // Unspecified network on Thursday Night Football window
-    usTv = 'Amazon Prime Video'
   }
 
   // ---------------------------------------------------------------------------
