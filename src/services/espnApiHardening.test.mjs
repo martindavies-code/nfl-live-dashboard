@@ -387,4 +387,115 @@ test('fetchEventDrivePlays handles immediate AbortSignal and in-flight mirror fa
   }
 })
 
+test('fetchNFLScoreboard edge-case branch coverage (127.0.0.1, cache throttling, fallback keys)', async () => {
+  const originalFetch = globalThis.fetch
+  const originalWindow = globalThis.window
+
+  try {
+    const store = new Map()
+    globalThis.window = {
+      location: { hostname: '127.0.0.1' },
+      localStorage: {
+        getItem: (k) => store.get(k) || null,
+        setItem: (k, v) => store.set(k, v),
+      },
+    }
+
+    _resetCacheWriteTimeForTesting()
+
+    // 1. Success on 127.0.0.1 with non-finite/missing params and external signal
+    globalThis.fetch = async () => ({
+      ok: true,
+      json: async () => ({
+        events: [{ id: 'ev-edge', name: 'Edge Case Test' }],
+      }),
+    })
+
+    const signal = new AbortController().signal
+    // Passes params with NaN/null and signal as second argument
+    const res1 = await fetchNFLScoreboard({ seasonType: NaN, week: null, year: NaN }, signal)
+    assert.ok(res1)
+    assert.equal(res1.data.events[0].id, 'ev-edge')
+
+    // 2. Immediate second call should hit the throttle branch (now - _lastCacheWriteTime <= 15000)
+    const res2 = await fetchNFLScoreboard({ seasonType: 2, week: 4 })
+    assert.ok(res2)
+
+    // 3. Offline cache fallback to nfl_real_cache_latest when specific week key is missing
+    store.clear()
+    store.set(
+      'nfl_real_cache_latest',
+      JSON.stringify({
+        sourceName: 'Latest Mirror',
+        timestamp: 123456, // non-string timestamp to test branch
+        data: {
+          events: [{ id: 'latest-cached-ev', name: 'Cached Event' }],
+        },
+      })
+    )
+
+    globalThis.fetch = async () => {
+      throw new Error('All remote mirrors down')
+    }
+
+    const resCachedLatest = await fetchNFLScoreboard({ seasonType: 3, week: 2 })
+    assert.ok(resCachedLatest.isCached)
+    assert.equal(resCachedLatest.data.events[0].id, 'latest-cached-ev')
+    assert.equal(resCachedLatest.cachedTimestamp, undefined) // Non-string becomes undefined
+
+    // 4. Corrupted cache (e.g. array or missing events) falls through to throw
+    store.clear()
+    store.set('nfl_real_cache_latest', JSON.stringify([1, 2, 3]))
+    await assert.rejects(
+      () => fetchNFLScoreboard(),
+      /Unable to connect to live NFL scoreboard across all/
+    )
+
+    store.set('nfl_real_cache_latest', JSON.stringify({ data: { events: 'not-array' } }))
+    await assert.rejects(
+      () => fetchNFLScoreboard(),
+      /Unable to connect to live NFL scoreboard across all/
+    )
+  } finally {
+    globalThis.fetch = originalFetch
+    globalThis.window = originalWindow
+  }
+})
+
+test('fetchEventDrivePlays edge-case branch coverage (127.0.0.1, 404 then 200, empty previous plays)', async () => {
+  const originalFetch = globalThis.fetch
+  const originalWindow = globalThis.window
+
+  try {
+    globalThis.window = {
+      location: { hostname: '127.0.0.1' },
+    }
+
+    let callCount = 0
+    globalThis.fetch = async () => {
+      callCount++
+      if (callCount === 1) {
+        // First URL fails with 404 / not ok
+        return { ok: false, status: 404 }
+      }
+      // Second URL succeeds but drives.previous has non-array plays
+      return {
+        ok: true,
+        json: async () => ({
+          drives: {
+            previous: [{ plays: null }, {}],
+          },
+        }),
+      }
+    }
+
+    const plays = await fetchEventDrivePlays('test-event-404-fallback')
+    assert.deepEqual(plays, [])
+    assert.ok(callCount >= 2)
+  } finally {
+    globalThis.fetch = originalFetch
+    globalThis.window = originalWindow
+  }
+})
+
 

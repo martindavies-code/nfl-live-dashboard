@@ -139,3 +139,75 @@ test('Power Rankings: If multiple games are scheduled at the same time next, spo
   assert.equal(spotlight?.id, 'kc-bal-early', 'Must spotlight the highest ranked teams among the games kicking off next')
 })
 
+test('Power Rankings edge cases: empty, postgame slate, halftime-only, invalid dates, and fallbacks', () => {
+  // Empty or non-array
+  assert.equal(getBestMatchupByPowerRanking(null), null)
+  assert.equal(getBestMatchupByPowerRanking([]), null)
+
+  // getTeamPowerRank edge cases
+  assert.equal(getTeamPowerRank(), 20)
+  assert.equal(getTeamPowerRank(''), 20)
+  assert.equal(getTeamPowerRank('  kc  '), 1)
+
+  // getMatchupPowerScore edge cases with missing competitors
+  const emptyEvent = { id: 'empty' }
+  assert.ok(getMatchupPowerScore(emptyEvent) > 0)
+
+  // All games completed (post-game slate)
+  const postGame1 = mockGame('CAR', 'TEN', { state: 'post', id: 'car-ten-post' }) // 32 + 31 = 63
+  const postGame2 = mockGame('KC', 'DET', { state: 'post', id: 'kc-det-post' })    // 1 + 2 = 3
+  const spotlightPost = getBestMatchupByPowerRanking([postGame1, postGame2])
+  assert.equal(spotlightPost?.id, 'kc-det-post')
+
+  // Only halftime games in progress
+  const htGame1 = mockGame('CAR', 'TEN', { state: 'in', isHalftime: true, id: 'car-ten-ht' })
+  const htGame2 = mockGame('KC', 'DET', { state: 'in', isHalftime: true, id: 'kc-det-ht' })
+  const spotlightHt = getBestMatchupByPowerRanking([htGame1, htGame2])
+  assert.equal(spotlightHt?.id, 'kc-det-ht')
+
+  // Unknown state games fallback to events[0]
+  const unknown1 = { id: 'unk-1', status: { type: { state: 'custom-state' } } }
+  const unknown2 = { id: 'unk-2', status: { type: { state: 'custom-state' } } }
+  assert.equal(getBestMatchupByPowerRanking([unknown1, unknown2])?.id, 'unk-1')
+
+  // Pre-game with invalid/missing kickoff dates (earliestKickoff is Infinity)
+  const invalidDatePre1 = mockGame('CAR', 'TEN', { state: 'pre', id: 'inv-date-1', date: 'invalid-date' })
+  const invalidDatePre2 = mockGame('KC', 'DET', { state: 'pre', id: 'inv-date-2', date: 'another-invalid' })
+  const spotlightInv = getBestMatchupByPowerRanking([invalidDatePre1, invalidDatePre2])
+  assert.equal(spotlightInv?.id, 'inv-date-2') // Sorted by matchup power score among fallback
+
+  // Event with date on competition only, and status on competition only
+  const compDateOnlyGame = {
+    id: 'comp-date-only',
+    competitions: [
+      {
+        date: '2026-10-18T17:00:00Z',
+        status: { type: { state: 'pre' } },
+        competitors: [
+          { homeAway: 'home', team: { abbreviation: 'KC' } },
+          { homeAway: 'away', team: { abbreviation: 'BAL' } },
+        ],
+      },
+    ],
+  }
+  const spotlightCompDate = getBestMatchupByPowerRanking([compDateOnlyGame])
+  assert.equal(spotlightCompDate?.id, 'comp-date-only')
+
+  // NYG scheduled (pre) game passes through nygLiveGame check without selection
+  const nygPreGame = {
+    id: 'nyg-pre-only',
+    competitions: [
+      {
+        competitors: [
+          { homeAway: 'home', team: { abbreviation: 'NYG' } },
+          { homeAway: 'away', team: {} }, // Missing team abbreviation
+        ],
+      },
+    ],
+  }
+  const spotlightNygPre = getBestMatchupByPowerRanking([nygPreGame])
+  assert.equal(spotlightNygPre?.id, 'nyg-pre-only')
+})
+
+
+

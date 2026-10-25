@@ -214,3 +214,30 @@ test('Drive Plays: parseRawESPNPlays strictly EXCLUDES kickoff as the first play
   assert.equal(parsed[1].category, 'run')
 })
 
+test('Drive Plays: edge cases and branch coverage', () => {
+  // getPlayColor default
+  assert.equal(getPlayColor('other'), '#94a3b8')
+
+  // getPlayLaneY with totalPlays > 6
+  const lane7 = getPlayLaneY(7, 12)
+  assert.ok(lane7 >= 85 && lane7 <= 320)
+  const lane15 = getPlayLaneY(15, 20)
+  assert.ok(lane15 >= 85 && lane15 <= 320)
+
+  // isKickoffPlay null/undefined and text fallback branches
+  assert.equal(isKickoffPlay(null), false)
+  assert.equal(isKickoffPlay(undefined), false)
+  // Kick with string type
+  assert.equal(isKickoffPlay({ type: 'Kickoff' }), true)
+  // Text containing 'kicks' without exclusion words
+  assert.equal(isKickoffPlay({ text: 'kicks deep' }), true)
+
+  // categorizePlay default parameters
+  assert.equal(categorizePlay(), 'other')
+
+  // parseRawESPNPlays null or empty
+  assert.deepEqual(parseRawESPNPlays(null), [])
+  assert.deepEqual(parseRawESPNPlays([]), [])
+})
+
+

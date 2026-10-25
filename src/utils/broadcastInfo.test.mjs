@@ -289,3 +289,30 @@ test('Broadcast Fact-Check: Concurrent late CBS games (KC@LV and LAC@SEA) have d
   const crews = [kcAtLv.announcers.leadDuo, lacAtSea.announcers.leadDuo, denAtSf.announcers.leadDuo]
   assert.equal(new Set(crews).size, 3)
 })
+
+test('Broadcast: Prime/Amazon network naming, Thursday window fallback, and invalid date resilience', () => {
+  // Network matching PRIME
+  const primeGame = getGameBroadcastDetails(
+    game('MIA', 'BUF', { week: 99, network: 'PRIME VIDEO', name: 'Dolphins at Bills' })
+  )
+  assert.equal(primeGame.usTv, 'Amazon Prime Video')
+
+  // Unspecified network on Thursday night (e.g., Thu 23:30 UK time)
+  const thursdayNightGame = getGameBroadcastDetails(
+    game('LAR', 'SEA', { week: 99, date: '2026-10-01T23:30:00Z', name: 'Rams at Seahawks' })
+  )
+  assert.equal(thursdayNightGame.usTv, 'Amazon Prime Video')
+
+  // Unspecified network on Friday early morning UK time (e.g., Fri 01:15 UK)
+  const fridayEarlyGame = getGameBroadcastDetails(
+    game('LAR', 'SEA', { week: 99, date: '2026-10-02T01:15:00Z', name: 'Rams at Seahawks' })
+  )
+  assert.equal(fridayEarlyGame.usTv, 'Amazon Prime Video')
+
+  // Game with invalid date handles gracefully without throwing
+  const invalidDateGame = getGameBroadcastDetails(
+    game('CAR', 'ATL', { week: 99, date: 'not-a-valid-date', name: 'Panthers at Falcons' })
+  )
+  assert.ok(invalidDateGame)
+})
+
