@@ -8,6 +8,8 @@ import {
   safeParseInt,
   isRedZoneSituation,
   isHalftimeSituation,
+  isOvertimeSituation,
+  formatPeriodDisplay,
   getWeekLabel,
   formatLocalizedKickoff,
   sanitizePatriotsAbbreviation,
@@ -95,7 +97,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
   // Defensive extraction of clock, quarter period, and detail
   const safePeriod = typeof status?.period === 'number' && Number.isFinite(status.period) ? status.period : 1
   const safeClock = typeof status?.displayClock === 'string' && status.displayClock.trim() !== '' ? status.displayClock.trim() : '0:00'
-  const safeStatusDetail = status?.type?.detail || (isLive ? `Q${safePeriod} ${safeClock}` : isFinal ? 'Final' : 'Scheduled')
+  const periodText = formatPeriodDisplay(safePeriod, 'short')
+  const safeStatusDetail = status?.type?.detail || (isLive ? `${periodText} ${safeClock}` : isFinal ? 'Final' : 'Scheduled')
 
   // Check possession with helper (only active during live games)
   const { isHomePossession, isAwayPossession } = getOffensiveDrive(
@@ -133,7 +136,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
   const hasLineScores = awayLinescores.length > 0 || homeLinescores.length > 0
   const lineScorePeriods = Math.max(awayLinescores.length, homeLinescores.length, 4)
   const scoreDiff = Math.abs(homeScoreParsed - awayScoreParsed)
-  const isOvertime = status?.type?.detail?.includes('OT') || lineScorePeriods > 4
+  const isOvertime = isOvertimeSituation(event) || isOvertimeSituation(status) || lineScorePeriods > 4
   const winnerComp = isHomeWinner ? homeComp : isAwayWinner ? awayComp : null
   const loserComp = isHomeWinner ? awayComp : isAwayWinner ? homeComp : null
 
@@ -202,7 +205,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
     const statusText = isHalftime
       ? 'At Halftime'
       : isLive
-      ? `Q${safePeriod} ${safeClock}`
+      ? `${formatPeriodDisplay(safePeriod, 'short')} ${safeClock}`
       : isFinal
       ? sanitizeClipboardField(safeStatusDetail)
       : `Upcoming (${sanitizeClipboardField(formattedKickoff)})`

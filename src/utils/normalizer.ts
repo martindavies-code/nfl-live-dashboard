@@ -1,5 +1,5 @@
 import type { NFLSituation } from '../types/nfl'
-import { safeParseInt, sanitizeHexColor, getContrastYIQ, formatLocalizedKickoff, sanitizePatriotsName, sanitizePatriotsAbbreviation } from './nflHelpers.ts'
+import { safeParseInt, sanitizeHexColor, getContrastYIQ, formatLocalizedKickoff, sanitizePatriotsName, sanitizePatriotsAbbreviation, formatPeriodDisplay } from './nflHelpers.ts'
 
 export const FALLBACK_LOGO = 'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nfl.png'
 
@@ -280,7 +280,9 @@ export function normalizeNFLEvent(raw: any, index = 0): NormalizedEvent {
 
   const period = Math.max(1, safeParseInt(statusObj.period, 1))
   const displayClock = String(statusObj.displayClock || '0:00')
-  const detail = String(state === 'pre' ? formattedKickoff : (typeObj.detail || (state === 'post' ? 'Final' : `Q${period}`)))
+  const periodLabel = formatPeriodDisplay(period, 'short')
+  const postFallback = period > 4 ? 'Final/OT' : 'Final'
+  const detail = String(state === 'pre' ? formattedKickoff : (typeObj.detail || (state === 'post' ? postFallback : periodLabel)))
 
   // Competitors normalization
   const rawCompetitors: any[] = Array.isArray(comp.competitors) ? comp.competitors : []

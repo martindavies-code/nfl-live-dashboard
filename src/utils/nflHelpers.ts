@@ -450,6 +450,90 @@ export function isHalftimeSituation(
 }
 
 /**
+ * Rigorously verifies whether an NFL game or status represents an Overtime situation (periods 5+, OT, 2OT, etc.)
+ */
+export function isOvertimeSituation(
+  statusOrEvent: NFLStatus | NFLEvent | null | undefined
+): boolean {
+  if (!statusOrEvent) return false
+
+  // If NFLEvent passed, extract status and competition
+  const isEvent = typeof statusOrEvent === 'object' && ('competitions' in statusOrEvent || 'season' in statusOrEvent)
+  const event = isEvent ? (statusOrEvent as NFLEvent) : null
+  const comp = event?.competitions?.[0]
+  const status: NFLStatus | undefined = isEvent
+    ? (event?.status || comp?.status)
+    : (statusOrEvent as NFLStatus)
+
+  const compStatus = comp?.status
+
+  // 1. Period check: NFL regulation is 4 quarters; period >= 5 is Overtime
+  const period = typeof status?.period === 'number'
+    ? status.period
+    : typeof compStatus?.period === 'number'
+    ? compStatus.period
+    : 0
+
+  if (period >= 5) {
+    return true
+  }
+
+  // 2. Linescore check if event is present
+  if (comp?.competitors) {
+    for (const c of comp.competitors) {
+      if (Array.isArray(c.linescores) && c.linescores.length > 4) {
+        return true
+      }
+    }
+  }
+
+  // 3. Status name check: STATUS_OVERTIME or STATUS_FINAL_OVERTIME
+  const statusName = (status?.type?.name || compStatus?.type?.name || '').toUpperCase()
+  if (statusName === 'STATUS_OVERTIME' || statusName === 'STATUS_FINAL_OVERTIME') {
+    return true
+  }
+
+  // 4. Detail / Description check: "OT", "Final/OT", "Final (OT)", "Overtime", "2OT", etc.
+  const detail = (
+    status?.type?.detail ||
+    status?.type?.shortDetail ||
+    status?.type?.description ||
+    compStatus?.type?.detail ||
+    compStatus?.type?.shortDetail ||
+    compStatus?.type?.description ||
+    ''
+  ).toUpperCase()
+
+  if (/\bOT\b|\b[1-9]OT\b|OVERTIME/i.test(detail)) {
+    return true
+  }
+
+  return false
+}
+
+/**
+ * Formats a quarter/period into clean, human-readable display string.
+ * Period 1 -> "Q1" (or "1st Quarter" / "Quarter 1")
+ * Period 2 -> "Q2" (or "2nd Quarter" / "Quarter 2")
+ * Period 3 -> "Q3" (or "3rd Quarter" / "Quarter 3")
+ * Period 4 -> "Q4" (or "4th Quarter" / "Quarter 4")
+ * Period 5 -> "OT" (or "Overtime" / "Overtime")
+ * Period 6 -> "2OT" (or "2nd Overtime" / "2nd Overtime")
+ */
+export function formatPeriodDisplay(period: number, format: 'short' | 'long' | 'aria' = 'short'): string {
+  if (!Number.isFinite(period) || period <= 0) return format === 'short' ? '' : 'Pregame'
+  if (period === 1) return format === 'short' ? 'Q1' : format === 'aria' ? 'Quarter 1' : '1st Quarter'
+  if (period === 2) return format === 'short' ? 'Q2' : format === 'aria' ? 'Quarter 2' : '2nd Quarter'
+  if (period === 3) return format === 'short' ? 'Q3' : format === 'aria' ? 'Quarter 3' : '3rd Quarter'
+  if (period === 4) return format === 'short' ? 'Q4' : format === 'aria' ? 'Quarter 4' : '4th Quarter'
+  if (period === 5) return format === 'short' ? 'OT' : 'Overtime'
+  const otNum = period - 4
+  const suffix = otNum === 2 ? 'nd' : otNum === 3 ? 'rd' : 'th'
+  return format === 'short' ? `${otNum}OT` : `${otNum}${suffix} Overtime`
+}
+
+
+/**
  * Rigorously verifies whether an NFL game has finished (completed/final).
  * Evaluates event-level and competition-level status flags, state attributes,
  * and canonical NFL final status naming conventions.

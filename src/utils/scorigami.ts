@@ -12,7 +12,7 @@
 // -----------------------------------------------------------------------------
 
 import { HISTORICAL_OCCURRED, TOTAL_UNIQUE_SCORIGAMIS, type HistoricalScoreRecord } from './scorigamiHistoricalData.ts'
-import { isHalftimeSituation, sanitizePatriotsName } from './nflHelpers.ts'
+import { isHalftimeSituation, isOvertimeSituation, sanitizePatriotsName } from './nflHelpers.ts'
 
 export interface ScorigamiInfo {
   /** True if the current score pair has never occurred in NFL history */
@@ -127,8 +127,12 @@ export function getGameSecondsRemaining(
     return 1800
   }
 
-  const period = typeof status?.period === 'number' && Number.isFinite(status.period) ? status.period : 1
   const clock = typeof status?.clock === 'number' && Number.isFinite(status.clock) ? Math.max(0, status.clock) : 900
+  if (isOvertimeSituation(status)) {
+    return Math.max(0, clock)
+  }
+
+  const period = typeof status?.period === 'number' && Number.isFinite(status.period) ? status.period : 1
 
   // Unstarted or period 0
   if (period < 1) return 3600

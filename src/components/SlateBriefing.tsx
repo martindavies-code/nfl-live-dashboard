@@ -1,6 +1,13 @@
 import React, { memo } from 'react'
 import type { NFLEvent, GameFilter } from '../types/nfl'
-import { isRedZoneSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation } from '../utils/nflHelpers'
+import {
+  isRedZoneSituation,
+  isOvertimeSituation,
+  formatPeriodDisplay,
+  getWeekLabel,
+  formatLocalizedKickoff,
+  sanitizePatriotsAbbreviation,
+} from '../utils/nflHelpers'
 import { Flame, Compass, ArrowRight, Zap } from 'lucide-react'
 
 interface SlateBriefingProps {
@@ -45,15 +52,41 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
     return (e.status?.type?.state || comp?.status?.type?.state) === 'post'
   })
 
-  // Detect 4th-quarter one-score thrillers (<= 8 points margin in Q4 or OT)
-  const fourthQuarterThrillers = liveEvents.filter((ev) => {
-    const period = ev.status?.period ?? 0
-    if (period < 4) return false
-    const comp = ev.competitions?.[0]
-    const homeScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
-    const awayScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'away')?.score || '0', 10)
-    return Math.abs(homeScore - awayScore) <= 8
-  })
+  // Detect Overtime live thrillers (games currently in overtime)
+  const overtimeThrillers = liveEvents
+    .filter((ev) => isOvertimeSituation(ev))
+    .slice()
+    .sort((a, b) => {
+      const getDiff = (ev: NFLEvent) => {
+        const comp = ev.competitions?.[0]
+        const h = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
+        const aw = parseInt(comp?.competitors?.find((c) => c.homeAway === 'away')?.score || '0', 10)
+        return Math.abs(h - aw)
+      }
+      return getDiff(a) - getDiff(b)
+    })
+
+  // Detect 4th-quarter one-score thrillers (<= 8 points margin strictly in Q4 regulation)
+  const fourthQuarterThrillers = liveEvents
+    .filter((ev) => {
+      if (isOvertimeSituation(ev)) return false
+      const period = ev.status?.period ?? 0
+      if (period !== 4) return false
+      const comp = ev.competitions?.[0]
+      const homeScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
+      const awayScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'away')?.score || '0', 10)
+      return Math.abs(homeScore - awayScore) <= 8
+    })
+    .slice()
+    .sort((a, b) => {
+      const getDiff = (ev: NFLEvent) => {
+        const comp = ev.competitions?.[0]
+        const h = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
+        const aw = parseInt(comp?.competitors?.find((c) => c.homeAway === 'away')?.score || '0', 10)
+        return Math.abs(h - aw)
+      }
+      return getDiff(a) - getDiff(b)
+    })
 
   // Find closest live game by score differential
   const closestLiveGame = liveEvents.slice().sort((a, b) => {
@@ -74,15 +107,24 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
       const aw = parseInt(comp?.competitors?.find((c) => c.homeAway === 'away')?.score || '0', 10)
       return Math.abs(h - aw)
     }
-    const aIsOT = (a.status?.type?.detail || a.competitions?.[0]?.status?.type?.detail || '').includes('OT')
-    const bIsOT = (b.status?.type?.detail || b.competitions?.[0]?.status?.type?.detail || '').includes('OT')
+    const aIsOT = isOvertimeSituation(a)
+    const bIsOT = isOvertimeSituation(b)
     if (aIsOT && !bIsOT) return -1
     if (!aIsOT && bIsOT) return 1
     return getDiff(a) - getDiff(b)
   })[0]
 
-  // Find the primary storyline game: 4th quarter thriller > red zone threat > closest live > closest final > upcoming
-  const primeAlertEvent = fourthQuarterThrillers[0] || redZoneEvents[0] || closestLiveGame || liveEvents[0] || closestFinalGame || upcomingEvents[0] || finalEvents[0]
+  // Find the primary storyline game: Overtime thriller > 4th quarter thriller > red zone threat > closest live > closest final > upcoming
+  const primeAlertEvent =
+    overtimeThrillers[0] ||
+    fourthQuarterThrillers[0] ||
+    redZoneEvents[0] ||
+    closestLiveGame ||
+    liveEvents[0] ||
+    closestFinalGame ||
+    upcomingEvents[0] ||
+    finalEvents[0]
+
   const primeComp = primeAlertEvent?.competitions?.[0]
   const primeHome = primeComp?.competitors?.find((c) => c.homeAway === 'home')
   const primeAway = primeComp?.competitors?.find((c) => c.homeAway === 'away')
@@ -108,7 +150,12 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
           </div>
 
           <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex flex-wrap items-center gap-2">
-            {fourthQuarterThrillers.length > 0 ? (
+            {overtimeThrillers.length > 0 ? (
+              <span className="flex items-center gap-1.5 text-amber-300">
+                <Flame className="h-4 w-4 text-amber-400 fill-amber-400 animate-pulse" />
+                Overtime Thriller: {primeAwayAbbr} vs {primeHomeAbbr}
+              </span>
+            ) : fourthQuarterThrillers.length > 0 ? (
               <span className="flex items-center gap-1.5 text-amber-300">
                 <Flame className="h-4 w-4 text-amber-400 fill-amber-400 animate-pulse" />
                 4th Quarter Thriller: {primeAwayAbbr} vs {primeHomeAbbr}
@@ -132,7 +179,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
               <span className="flex items-center gap-1.5 text-slate-200">
                 <span>🏆</span>
                 <span>
-                  {closestFinalGame && (closestFinalGame.status?.type?.detail || '').includes('OT')
+                  {closestFinalGame && isOvertimeSituation(closestFinalGame)
                     ? `${weekLabel} Final • OT Thriller: ${primeAwayAbbr} vs ${primeHomeAbbr}`
                     : `${weekLabel} Final • All ${finalEvents.length} Games Concluded`}
                 </span>
@@ -149,12 +196,16 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
               <span className="text-white font-medium">
                 {primeAwayAbbr} ({primeAway?.score ?? '-'}) @ {primeHomeAbbr} ({primeHome?.score ?? '-'})
               </span>
-              {fourthQuarterThrillers.includes(primeAlertEvent) ? (
+              {overtimeThrillers.includes(primeAlertEvent) ? (
+                <span className="text-amber-300 font-semibold">
+                  • Overtime drama with {primeAlertEvent.status?.displayClock || '0:00'} remaining
+                </span>
+              ) : fourthQuarterThrillers.includes(primeAlertEvent) ? (
                 <span className="text-amber-300 font-semibold">• One-score drama with {primeAlertEvent.status?.displayClock} remaining</span>
               ) : redZoneEvents.includes(primeAlertEvent) ? (
                 <span className="text-rose-400 font-semibold">• Red Zone Threat</span>
               ) : liveEvents.includes(primeAlertEvent) ? (
-                <span className="text-emerald-400 font-medium">• Q{primeAlertEvent.status?.period} {primeAlertEvent.status?.displayClock}</span>
+                <span className="text-emerald-400 font-medium">• {formatPeriodDisplay(primeAlertEvent.status?.period ?? 1, 'short')} {primeAlertEvent.status?.displayClock}</span>
               ) : upcomingEvents.includes(primeAlertEvent) ? (
                 <span className="text-sky-300 font-medium">• Kickoff {formatLocalizedKickoff(primeAlertEvent.date)}</span>
               ) : (

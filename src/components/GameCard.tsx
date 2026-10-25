@@ -8,6 +8,8 @@ import {
   safeParseInt,
   isRedZoneSituation,
   isHalftimeSituation,
+  isOvertimeSituation,
+  formatPeriodDisplay,
   formatLocalizedKickoff,
   getWeekLabel,
   sanitizePatriotsAbbreviation,
@@ -144,7 +146,10 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const venueText = competition.venue
     ? `${competition.venue.fullName || ''}${competition.venue.address?.city ? `, ${competition.venue.address.city}` : ''}`.trim()
     : ''
-  const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in Quarter ${status.period} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''} US broadcast on ${broadcastDetails.usTv}, ${broadcastDetails.announcers.verified ? `commentary by ${broadcastDetails.announcers.leadDuo}` : 'commentary crew TBD'}.`
+  const periodAria = isOvertimeSituation(event) || (status?.period && status.period > 4)
+    ? formatPeriodDisplay(status?.period ?? 5, 'aria')
+    : `Quarter ${status.period}`
+  const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in ${periodAria} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''} US broadcast on ${broadcastDetails.usTv}, ${broadcastDetails.announcers.verified ? `commentary by ${broadcastDetails.announcers.leadDuo}` : 'commentary crew TBD'}.`
 
   return (
     <article
@@ -216,7 +221,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           ) : isFinal ? (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/80 px-2.5 py-0.5 text-xs font-bold text-slate-300 shadow-sm">
               <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
-              FINAL{status?.type?.detail?.includes('OT') ? ' / OT' : ''}
+              FINAL{isOvertimeSituation(event) || status?.type?.detail?.includes('OT') ? ' / OT' : ''}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-950/70 px-2.5 py-0.5 text-xs font-semibold text-indigo-300 border border-indigo-500/35 shadow-sm">
@@ -233,7 +238,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               </span>
             ) : (
               <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-white">
-                <span className="text-slate-400">Q{status.period}</span>
+                <span className="text-slate-400">{formatPeriodDisplay(status.period, 'short')}</span>
                 <span className="text-emerald-400 tabular-nums">{status.displayClock}</span>
               </div>
             )

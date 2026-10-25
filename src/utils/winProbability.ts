@@ -1,5 +1,5 @@
 import type { NFLCompetitor, NFLSituation, NFLStatus, NFLOdds } from '../types/nfl'
-import { safeParseInt, isHalftimeSituation, sanitizePatriotsName, sanitizePatriotsAbbreviation } from './nflHelpers.ts'
+import { safeParseInt, isHalftimeSituation, isOvertimeSituation, sanitizePatriotsName, sanitizePatriotsAbbreviation } from './nflHelpers.ts'
 
 /**
  * Standard Normal Cumulative Distribution Function (Abramowitz & Stegun 7.1.26)
@@ -338,11 +338,12 @@ export function calculateWinProbability({
     const period = typeof status?.period === 'number' && Number.isFinite(status.period) ? status.period : 1
     const clockSeconds = typeof status?.clock === 'number' && Number.isFinite(status.clock) ? status.clock : 900
 
-    if (period >= 1 && period <= 4) {
-      secondsRemaining = Math.max(1, (4 - period) * 900 + clockSeconds)
-    } else if (period >= 5) {
+    const isOT = isOvertimeSituation(status)
+    if (isOT || period >= 5) {
       // Overtime
       secondsRemaining = Math.max(1, clockSeconds)
+    } else if (period >= 1 && period <= 4) {
+      secondsRemaining = Math.max(1, (4 - period) * 900 + clockSeconds)
     }
   }
 

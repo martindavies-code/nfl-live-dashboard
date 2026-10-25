@@ -27,6 +27,8 @@ import {
   parseWinLossRecord,
   isGameFinished,
   sortEventsFinishedLast,
+  isOvertimeSituation,
+  formatPeriodDisplay,
 } from './nflHelpers.ts'
 
 test('safeParseInt handles numbers, strings, dashes, nulls, and undefined', () => {
@@ -797,6 +799,97 @@ test('sortEventsFinishedLast ensures finished games are always listed last on th
   const sortedAllUpcoming = sortEventsFinishedLast(allUpcoming)
   assert.deepEqual(sortedAllUpcoming.map((g) => g.id), ['sun-upcoming', 'mnf-upcoming'])
 })
+
+test('isOvertimeSituation accurately identifies Overtime states across all payload variants', () => {
+  // 1. Null / undefined / invalid
+  assert.equal(isOvertimeSituation(null), false)
+  assert.equal(isOvertimeSituation(undefined), false)
+  assert.equal(isOvertimeSituation({}), false)
+
+  // 2. Regulation Quarters 1 to 4 -> NOT Overtime
+  assert.equal(isOvertimeSituation({ period: 1, type: { state: 'in', detail: 'Q1 12:00' } }), false)
+  assert.equal(isOvertimeSituation({ period: 2, type: { state: 'in', detail: 'Q2 04:30' } }), false)
+  assert.equal(isOvertimeSituation({ period: 3, type: { state: 'in', detail: 'Q3 09:15' } }), false)
+  assert.equal(isOvertimeSituation({ period: 4, type: { state: 'in', detail: 'Q4 01:45' } }), false)
+
+  // 3. Period 5+ -> Definitely Overtime
+  assert.equal(isOvertimeSituation({ period: 5 }), true)
+  assert.equal(isOvertimeSituation({ period: 6 }), true)
+  assert.equal(isOvertimeSituation({ period: 5, type: { state: 'in', detail: '8:42 - OT' } }), true)
+
+  // 4. Status Name indicates Overtime
+  assert.equal(isOvertimeSituation({ period: 4, type: { name: 'STATUS_OVERTIME' } }), true)
+  assert.equal(isOvertimeSituation({ period: 4, type: { name: 'STATUS_FINAL_OVERTIME' } }), true)
+
+  // 5. Detail / ShortDetail / Description indicates Overtime
+  assert.equal(isOvertimeSituation({ type: { detail: 'Final/OT' } }), true)
+  assert.equal(isOvertimeSituation({ type: { detail: 'Final (OT)' } }), true)
+  assert.equal(isOvertimeSituation({ type: { detail: 'OT' } }), true)
+  assert.equal(isOvertimeSituation({ type: { detail: '2OT 11:20' } }), true)
+  assert.equal(isOvertimeSituation({ type: { detail: 'Overtime' } }), true)
+  assert.equal(isOvertimeSituation({ type: { shortDetail: 'OT' } }), true)
+
+  // 6. NFLEvent with competition level status or linescores > 4
+  const eventInOT = {
+    id: 'ot-game',
+    competitions: [
+      {
+        status: { period: 5, clock: 480, type: { state: 'in', detail: '8:00 - OT' } },
+        competitors: [
+          { homeAway: 'home', score: '24', linescores: [{ value: 7 }, { value: 3 }, { value: 7 }, { value: 7 }, { value: 0 }] },
+          { homeAway: 'away', score: '24', linescores: [{ value: 0 }, { value: 10 }, { value: 7 }, { value: 7 }, { value: 0 }] },
+        ],
+      },
+    ],
+  }
+  assert.equal(isOvertimeSituation(eventInOT), true)
+
+  // 7. Regular 4th quarter 1-score nailbiter must NOT be flagged as Overtime
+  const q4Game = {
+    id: 'q4-game',
+    competitions: [
+      {
+        status: { period: 4, clock: 55, type: { state: 'in', detail: '0:55 - 4th Quarter' } },
+        competitors: [
+          { homeAway: 'home', score: '28' },
+          { homeAway: 'away', score: '24' },
+        ],
+      },
+    ],
+  }
+  assert.equal(isOvertimeSituation(q4Game), false)
+})
+
+test('formatPeriodDisplay correctly formats quarters and overtimes for short, long, and aria labels', () => {
+  // Short format
+  assert.equal(formatPeriodDisplay(1, 'short'), 'Q1')
+  assert.equal(formatPeriodDisplay(2, 'short'), 'Q2')
+  assert.equal(formatPeriodDisplay(3, 'short'), 'Q3')
+  assert.equal(formatPeriodDisplay(4, 'short'), 'Q4')
+  assert.equal(formatPeriodDisplay(5, 'short'), 'OT')
+  assert.equal(formatPeriodDisplay(6, 'short'), '2OT')
+  assert.equal(formatPeriodDisplay(7, 'short'), '3OT')
+
+  // Long format
+  assert.equal(formatPeriodDisplay(1, 'long'), '1st Quarter')
+  assert.equal(formatPeriodDisplay(2, 'long'), '2nd Quarter')
+  assert.equal(formatPeriodDisplay(3, 'long'), '3rd Quarter')
+  assert.equal(formatPeriodDisplay(4, 'long'), '4th Quarter')
+  assert.equal(formatPeriodDisplay(5, 'long'), 'Overtime')
+  assert.equal(formatPeriodDisplay(6, 'long'), '2nd Overtime')
+  assert.equal(formatPeriodDisplay(7, 'long'), '3rd Overtime')
+
+  // Aria format
+  assert.equal(formatPeriodDisplay(1, 'aria'), 'Quarter 1')
+  assert.equal(formatPeriodDisplay(4, 'aria'), 'Quarter 4')
+  assert.equal(formatPeriodDisplay(5, 'aria'), 'Overtime')
+  assert.equal(formatPeriodDisplay(6, 'aria'), '2nd Overtime')
+
+  // Invalid / pregame
+  assert.equal(formatPeriodDisplay(0, 'short'), '')
+  assert.equal(formatPeriodDisplay(-1, 'long'), 'Pregame')
+})
+
 
 
 
