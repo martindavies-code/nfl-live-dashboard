@@ -145,11 +145,11 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
               SLATE BRIEFING
             </span>
             <span className="text-[11px] text-slate-400 font-semibold">
-              {weekLabel} Overview
+              {weekLabel} Slate
             </span>
           </div>
 
-          <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex flex-wrap items-center gap-2">
+          <h2 className="title-section font-bold text-white tracking-tight flex flex-wrap items-center gap-2">
             {overtimeThrillers.length > 0 ? (
               <span className="flex items-center gap-1.5 text-amber-300">
                 <Flame className="h-4 w-4 text-amber-400 fill-amber-400 animate-pulse" />
@@ -220,7 +220,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
           <div className="flex items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/[0.06] shrink-0">
             <button
               onClick={() => onSpotlightEvent(primeAlertEvent.id)}
-              className="flex items-center gap-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/35 px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/35 px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer min-h-[44px] sm:min-h-[32px]"
             >
               <Compass className="h-3.5 w-3.5 text-sky-400" />
               <span>Inspect in Spotlight Radar</span>

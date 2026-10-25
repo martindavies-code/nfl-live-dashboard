@@ -811,7 +811,7 @@ export const Dashboard: React.FC = () => {
                   <span className="text-sm sm:text-xl">🏈</span>
                 </div>
                 <div className="min-w-0">
-                  <h1 className="font-bold text-sm sm:text-xl tracking-tight text-white uppercase leading-none whitespace-nowrap">
+                  <h1 className="font-bold title-page tracking-tight text-white uppercase whitespace-nowrap">
                     <span className="sm:hidden">NFL Command</span>
                     <span className="hidden sm:inline">NFL Live Command</span>
                   </h1>
@@ -842,7 +842,7 @@ export const Dashboard: React.FC = () => {
               {/* Sound Cues Toggle */}
               <button
                 onClick={toggleMute}
-                className={`flex h-8.5 sm:h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 text-xs font-semibold transition-all border focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                className={`flex h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 text-xs font-semibold min-h-[44px] min-w-[44px] sm:min-h-[36px] sm:min-w-0 transition-all border focus:outline-none focus:ring-2 focus:ring-sky-400 ${
                   !isMuted
                     ? 'bg-sky-500/15 text-sky-300 border-sky-500/40 hover:bg-sky-500/25'
                     : 'bg-[#111927] text-slate-400 border-white/[0.08] hover:text-white hover:bg-[#162032]'
@@ -911,7 +911,7 @@ export const Dashboard: React.FC = () => {
                   loadData(true)
                 }}
                 disabled={isRefreshing}
-                className="flex h-8.5 sm:h-9 items-center justify-center gap-1.5 rounded-lg bg-[#162032] hover:bg-[#1e2c45] px-2.5 sm:px-3 text-xs font-semibold text-slate-200 transition-all border border-white/[0.08] active:scale-95 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#162032] hover:bg-[#1e2c45] px-2.5 sm:px-3 text-xs font-semibold text-slate-200 min-h-[44px] min-w-[44px] sm:min-h-[36px] sm:min-w-0 transition-all border border-white/[0.08] active:scale-95 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-sky-400"
                 title="Force refresh live scoreboard"
                 aria-label="Refresh scoreboard data"
               >
@@ -1058,20 +1058,20 @@ export const Dashboard: React.FC = () => {
                 <span className="h-4 w-1 rounded-full bg-sky-400 shrink-0" aria-hidden="true" />
                 <h2
                   id="all-matchups-title"
-                  className="text-base sm:text-lg font-bold uppercase tracking-tight text-white"
+                  className="title-section font-bold uppercase tracking-tight text-white"
                 >
                   Matchup Directory
                 </h2>
               </div>
               <p className="text-xs text-slate-400 pl-3">
-                Select any matchup to inspect live drives and field tracking
+                Tap any matchup for real-time drives and field position
               </p>
             </div>
 
             {/* Filter Tabs & Search */}
-            <div className="flex flex-wrap items-center gap-2 max-w-full">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 w-full min-w-0">
               <div
-                className="flex items-center gap-1 rounded-lg bg-[#111927] p-1 border border-white/[0.08] overflow-x-auto no-scrollbar max-w-full flex-nowrap"
+                className="flex items-center gap-1 rounded-lg bg-[#111927] p-1 border border-white/[0.08] overflow-x-auto no-scrollbar w-full sm:w-auto min-w-0 flex-nowrap"
                 role="tablist"
                 aria-label="Filter games by state"
               >
@@ -1122,7 +1122,7 @@ export const Dashboard: React.FC = () => {
                           btns[targetIdx]?.focus()
                         }
                       }}
-                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all shrink-0 whitespace-nowrap cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[34px] ${
+                      className={`flex items-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all shrink-0 whitespace-nowrap cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[44px] sm:min-h-[34px] ${
                         isSelected
                           ? tab.id === 'live'
                             ? 'bg-rose-600 text-white shadow-sm ring-1 ring-white/20'
@@ -1152,104 +1152,107 @@ export const Dashboard: React.FC = () => {
                 })}
               </div>
 
-              {/* Global Expand Buttons for Radars, Broadcast, Scorigami */}
-              <div className="flex items-center rounded-lg bg-[#111927] p-1 border border-white/[0.08] gap-1 shrink-0" role="group" aria-label="Global Card Views">
-                {/* 1. All Radars */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setGlobalExpandedTab((prev) => {
-                      const next = prev === 'radar' ? null : 'radar'
-                      playTactileClick(isMuted)
-                      setSrAnnouncement(next ? 'All field radars expanded' : 'All field radars collapsed')
-                      return next
-                    })
-                  }}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] cursor-pointer ${
-                    globalExpandedTab === 'radar'
-                      ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
-                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
-                  }`}
-                  title="Toggle 100-yard field radar for all matchups (Shortcut: F)"
-                  aria-pressed={globalExpandedTab === 'radar'}
-                >
-                  <Compass className={`h-3.5 w-3.5 ${globalExpandedTab === 'radar' ? 'text-sky-400' : 'text-slate-400'}`} />
-                  <span className="hidden lg:inline">{globalExpandedTab === 'radar' ? 'Hide Radars' : 'Expand Radars'}</span>
-                  <span className="lg:hidden">Radars</span>
-                </button>
-
-                {/* 2. All Broadcast / Booths */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setGlobalExpandedTab((prev) => {
-                      const next = prev === 'broadcast' ? null : 'broadcast'
-                      playTactileClick(isMuted)
-                      setSrAnnouncement(next ? 'All broadcast announcing crews expanded' : 'All broadcast booths collapsed')
-                      return next
-                    })
-                  }}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] cursor-pointer ${
-                    globalExpandedTab === 'broadcast'
-                      ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
-                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
-                  }`}
-                  title="Toggle US broadcast announcing crew for all matchups (Shortcut: B)"
-                  aria-pressed={globalExpandedTab === 'broadcast'}
-                >
-                  <Mic className={`h-3.5 w-3.5 ${globalExpandedTab === 'broadcast' ? 'text-sky-400' : 'text-slate-400'}`} />
-                  <span className="hidden lg:inline">{globalExpandedTab === 'broadcast' ? 'Hide Broadcast' : 'Expand Broadcast'}</span>
-                  <span className="lg:hidden">Broadcast</span>
-                </button>
-
-                {/* 3. All Scorigami */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setGlobalExpandedTab((prev) => {
-                      const next = prev === 'scorigami' ? null : 'scorigami'
-                      playTactileClick(isMuted)
-                      setSrAnnouncement(next ? 'All Scorigami metrics expanded' : 'All Scorigami collapsed')
-                      return next
-                    })
-                  }}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all min-h-[30px] cursor-pointer ${
-                    globalExpandedTab === 'scorigami'
-                      ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/50 shadow-sm'
-                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
-                  }`}
-                  title="Toggle historical Scorigami probability for all matchups (Shortcut: C)"
-                  aria-pressed={globalExpandedTab === 'scorigami'}
-                >
-                  <Sparkles className={`h-3.5 w-3.5 ${globalExpandedTab === 'scorigami' ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
-                  <span className="hidden lg:inline">{globalExpandedTab === 'scorigami' ? 'Hide Scorigami' : 'Expand Scorigami'}</span>
-                  <span className="lg:hidden">Scorigami</span>
-                </button>
-              </div>
-
-              {/* Search Bar */}
-              <div className="relative w-full sm:w-auto min-w-0 sm:min-w-[200px] flex-1 sm:flex-initial" role="search">
-                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') setSearchQuery('')
-                  }}
-                  placeholder="Filter team..."
-                  aria-label="Filter teams by name or city"
-                  className="w-full rounded-md border border-white/[0.08] bg-[#111927] pl-8 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none min-h-[34px]"
-                />
-                {searchQuery && (
+              {/* Secondary Controls Row (Global Views & Search) */}
+              <div className="flex items-center gap-2 w-full sm:w-auto min-w-0 flex-wrap sm:flex-nowrap">
+                {/* Global Expand Buttons for Radars, Broadcast, Scorigami */}
+                <div className="flex items-center rounded-lg bg-[#111927] p-1 border border-white/[0.08] gap-1 shrink-0 overflow-x-auto no-scrollbar" role="group" aria-label="Global Card Views">
+                  {/* 1. All Radars */}
                   <button
-                    onClick={() => setSearchQuery('')}
-                    aria-label="Clear search query"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                    type="button"
+                    onClick={() => {
+                      setGlobalExpandedTab((prev) => {
+                        const next = prev === 'radar' ? null : 'radar'
+                        playTactileClick(isMuted)
+                        setSrAnnouncement(next ? 'All field radars expanded' : 'All field radars collapsed')
+                        return next
+                      })
+                    }}
+                    className={`flex items-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[44px] sm:min-h-[30px] cursor-pointer ${
+                      globalExpandedTab === 'radar'
+                        ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
+                        : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                    title="Toggle 100-yard field radar for all matchups (Shortcut: F)"
+                    aria-pressed={globalExpandedTab === 'radar'}
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <Compass className={`h-3.5 w-3.5 ${globalExpandedTab === 'radar' ? 'text-sky-400' : 'text-slate-400'}`} />
+                    <span className="hidden lg:inline">{globalExpandedTab === 'radar' ? 'Hide Radars' : 'Expand Radars'}</span>
+                    <span className="lg:hidden">Radars</span>
                   </button>
-                )}
+
+                  {/* 2. All Broadcast / Booths */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGlobalExpandedTab((prev) => {
+                        const next = prev === 'broadcast' ? null : 'broadcast'
+                        playTactileClick(isMuted)
+                        setSrAnnouncement(next ? 'All broadcast announcing crews expanded' : 'All broadcast booths collapsed')
+                        return next
+                      })
+                    }}
+                    className={`flex items-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[44px] sm:min-h-[30px] cursor-pointer ${
+                      globalExpandedTab === 'broadcast'
+                        ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
+                        : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                    title="Toggle US broadcast announcing crew for all matchups (Shortcut: B)"
+                    aria-pressed={globalExpandedTab === 'broadcast'}
+                  >
+                    <Mic className={`h-3.5 w-3.5 ${globalExpandedTab === 'broadcast' ? 'text-sky-400' : 'text-slate-400'}`} />
+                    <span className="hidden lg:inline">{globalExpandedTab === 'broadcast' ? 'Hide Broadcast' : 'Expand Broadcast'}</span>
+                    <span className="lg:hidden">Broadcast</span>
+                  </button>
+
+                  {/* 3. All Scorigami */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGlobalExpandedTab((prev) => {
+                        const next = prev === 'scorigami' ? null : 'scorigami'
+                        playTactileClick(isMuted)
+                        setSrAnnouncement(next ? 'All Scorigami metrics expanded' : 'All Scorigami collapsed')
+                        return next
+                      })
+                    }}
+                    className={`flex items-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[44px] sm:min-h-[30px] cursor-pointer ${
+                      globalExpandedTab === 'scorigami'
+                        ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/50 shadow-sm'
+                        : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                    title="Toggle historical Scorigami probability for all matchups (Shortcut: C)"
+                    aria-pressed={globalExpandedTab === 'scorigami'}
+                  >
+                    <Sparkles className={`h-3.5 w-3.5 ${globalExpandedTab === 'scorigami' ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
+                    <span className="hidden lg:inline">{globalExpandedTab === 'scorigami' ? 'Hide Scorigami' : 'Expand Scorigami'}</span>
+                    <span className="lg:hidden">Scorigami</span>
+                  </button>
+                </div>
+
+                {/* Search Bar */}
+                <div className="relative flex-1 min-w-[130px] sm:w-48 sm:flex-initial" role="search">
+                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setSearchQuery('')
+                    }}
+                    placeholder="Filter team..."
+                    aria-label="Filter teams by name or city"
+                    className="w-full rounded-md border border-white/[0.08] bg-[#111927] pl-8 pr-8 py-1.5 sm:py-1 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none min-h-[44px] sm:min-h-[34px]"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      aria-label="Clear search query"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-7 sm:w-7 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1311,7 +1314,7 @@ export const Dashboard: React.FC = () => {
               id="matchups-grid"
               role="tabpanel"
               aria-labelledby={`tab-${filter}`}
-              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch"
+              className="grid grid-cols-1 md:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-[repeat(3,minmax(0,1fr))] gap-5 items-stretch"
             >
               {decoratedFilteredEvents.map((event) => (
                 <GameCard

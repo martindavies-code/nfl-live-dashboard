@@ -338,7 +338,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
           {!isMultiThreat && onToggleAutoRedZone && (
             <button
               onClick={onToggleAutoRedZone}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2 sm:px-2.5 py-1 text-xs font-semibold border transition-all ${
+              className={`inline-flex items-center gap-1.5 rounded-md px-2 sm:px-2.5 py-1 text-xs font-semibold border transition-all min-h-[36px] sm:min-h-[28px] ${
                 autoRedZone
                   ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 shadow-sm'
                   : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
@@ -358,7 +358,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
           {/* 1-Click Share Snapshot Button */}
           <button
             onClick={handleCopySnapshot}
-            className={`inline-flex items-center gap-1.5 rounded-md px-2 sm:px-2.5 py-1 text-xs font-semibold border transition-all ${
+            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold border transition-all min-h-[36px] sm:min-h-[28px] ${
               isCopied
                 ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
                 : 'bg-sky-500/15 border-sky-500/40 text-sky-200 hover:bg-sky-500/25 hover:text-white'
@@ -617,7 +617,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 <button
                   type="button"
                   onClick={() => setShowFinalField((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400"
+                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400 min-h-[36px] sm:min-h-[28px]"
                   aria-expanded={showFinalField}
                   aria-label={showFinalField ? "Hide field radar" : "Show field radar"}
                 >
@@ -631,7 +631,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 <table className="w-full text-left text-xs tabular-nums border-collapse" aria-label="Game quarter scoring table">
                   <thead>
                     <tr className="border-b border-white/[0.08] text-[11px] font-mono text-slate-400 uppercase tracking-wider">
-                      <th scope="col" className="py-2 pr-3 font-semibold text-slate-300">Team</th>
+                      <th scope="col" className="sticky left-0 bg-[#0c1220] z-10 py-2 pr-3 font-semibold text-slate-300">Team</th>
                       {Array.from({ length: lineScorePeriods }).map((_, idx) => (
                         <th key={`period-header-${idx}`} scope="col" className="py-2 px-2.5 text-center font-bold">
                           {idx < 4 ? `Q${idx + 1}` : idx === 4 ? 'OT' : `OT${idx - 3}`}
@@ -643,7 +643,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                   <tbody className="divide-y divide-white/[0.04]">
                     {/* Away Team Row */}
                     <tr className={isAwayWinner ? "bg-white/[0.02]" : ""}>
-                      <td className="py-2.5 pr-3 font-bold text-white whitespace-nowrap">
+                      <td className="sticky left-0 bg-[#0c1220] z-10 py-2.5 pr-3 font-bold text-white whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <img
                             src={awayLogoUrl}
@@ -682,7 +682,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
 
                     {/* Home Team Row */}
                     <tr className={isHomeWinner ? "bg-white/[0.02]" : ""}>
-                      <td className="py-2.5 pr-3 font-bold text-white whitespace-nowrap">
+                      <td className="sticky left-0 bg-[#0c1220] z-10 py-2.5 pr-3 font-bold text-white whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <img
                             src={homeLogoUrl}

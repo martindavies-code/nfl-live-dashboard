@@ -28,6 +28,36 @@
   font-feature-settings: "tnum" 1;
 }
 
+/* Editorial Fluid Typography Tokens (Strict 4-Size Scale) */
+.title-page {
+  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.title-section {
+  font-size: clamp(0.9375rem, 1.8vw, 1.125rem);
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+.text-body-data {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.text-caption-axis {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* Touch Parity: 44px Minimum Hit Area on Touch Viewports */
+.touch-target-44 {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+
 /* Editorial Surface Tokens (Unified Low-Glare Dark Palette) */
 /* Primary Spotlight Hero View */
 .card-tier-hero {

@@ -95,14 +95,14 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
   return (
     <div className="relative inline-flex items-center" ref={menuRef}>
       {/* Week Navigation Capsule */}
-      <div className="flex h-9 items-center gap-0.5 sm:gap-1 bg-[#111927] border border-white/[0.12] rounded-lg p-0.5 shadow-sm">
+      <div className="flex h-10 sm:h-9 items-center gap-0.5 sm:gap-1 bg-[#111927] border border-white/[0.12] rounded-lg p-0.5 shadow-sm">
         {/* Previous Week Button */}
         <button
           onClick={handlePrev}
           disabled={disabled || isAtFirst}
           title="Previous week (Shortcut: [)"
           aria-label="Previous NFL Week"
-          className="flex h-7.5 w-7.5 sm:h-8 sm:w-8 items-center justify-center rounded-md text-slate-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 disabled:pointer-events-none transition-colors focus:outline-none focus:ring-1 focus:ring-sky-400"
+          className="flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-md text-slate-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 disabled:pointer-events-none transition-colors focus:outline-none focus:ring-1 focus:ring-sky-400"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -115,7 +115,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
           aria-haspopup="dialog"
           aria-expanded={isOpen}
           aria-label={`Current week: ${getWeekLabel(currentSeasonType, currentWeek)}. Click to change week or view playoffs.`}
-          className={`flex h-7.5 sm:h-8 items-center gap-1.5 px-2.5 rounded-md text-xs font-bold transition-all focus:outline-none focus:ring-1 focus:ring-sky-400 ${
+          className={`flex h-9 sm:h-8 items-center gap-1.5 px-3 sm:px-2.5 rounded-md text-xs font-bold transition-all focus:outline-none focus:ring-1 focus:ring-sky-400 ${
             isPlayoffs
               ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
               : isViewingLiveWeek
@@ -142,7 +142,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
           disabled={disabled || isAtLast}
           title="Next week (Shortcut: ])"
           aria-label="Next NFL Week"
-          className="flex h-7.5 w-7.5 sm:h-8 sm:w-8 items-center justify-center rounded-md text-slate-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 disabled:pointer-events-none transition-colors focus:outline-none focus:ring-1 focus:ring-sky-400"
+          className="flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-md text-slate-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 disabled:pointer-events-none transition-colors focus:outline-none focus:ring-1 focus:ring-sky-400"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -154,7 +154,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
           onClick={handleReturnToLive}
           title="Jump directly to current live week (Shortcut: 0 or W)"
           aria-label={`Jump back to Live Week ${liveWeek}`}
-          className="ml-1.5 sm:ml-2 flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-red-500/15 border border-red-500/40 px-2 sm:px-2.5 text-[11px] font-bold text-red-300 hover:bg-red-500/25 transition-all hover:border-red-400/60 focus:outline-none focus:ring-2 focus:ring-red-400 animate-pulse"
+          className="ml-1.5 sm:ml-2 flex h-10 sm:h-9 shrink-0 items-center gap-1.5 rounded-lg bg-red-500/15 border border-red-500/40 px-2.5 sm:px-2.5 text-[11px] font-bold text-red-300 hover:bg-red-500/25 transition-all hover:border-red-400/60 focus:outline-none focus:ring-2 focus:ring-red-400 animate-pulse"
         >
           <Radio className="h-3 w-3 text-red-400 shrink-0" />
           <span className="whitespace-nowrap">Live: W{liveWeek}</span>

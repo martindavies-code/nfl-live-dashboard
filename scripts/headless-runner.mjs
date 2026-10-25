@@ -266,9 +266,12 @@ async function runAudit(options = {}) {
 
     // 9b. Mobile Portrait Viewport on Upcoming Week (Week 12)
     console.log(`[10b/14] Testing Mobile Portrait Viewport - Upcoming Week 12 Matchup...`)
-    const weekBtnMob = await page.$('button[aria-haspopup="dialog"]')
-    if (weekBtnMob) {
-      await weekBtnMob.click()
+    const weekBtnMob = await page.evaluateHandle(() => {
+      const btns = Array.from(document.querySelectorAll('button[aria-haspopup="dialog"]'))
+      return btns.find((b) => b.offsetParent !== null) || null
+    })
+    if (weekBtnMob && weekBtnMob.asElement()) {
+      await weekBtnMob.asElement().click()
       await new Promise((r) => setTimeout(r, 400))
       await page.evaluate(() => {
         const btns = Array.from(document.querySelectorAll('button'))
@@ -348,14 +351,17 @@ async function runAudit(options = {}) {
 }
 
 // CLI argument parsing
-const args = process.argv.slice(2)
-const isHeadful = args.includes('--headful') || args.includes('-h')
-const urlArg = args.find((a) => a.startsWith('--url='))?.split('=')[1]
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
+  const args = process.argv.slice(2)
+  const isHeadful = args.includes('--headful') || args.includes('-h')
+  const urlArg = args.find((a) => a.startsWith('--url='))?.split('=')[1]
 
-runAudit({
-  url: urlArg || 'http://localhost:5173/',
-  headful: isHeadful,
-}).catch((err) => {
-  console.error('Fatal error during headless run:', err)
-  process.exit(1)
-})
+  runAudit({
+    url: urlArg || 'http://localhost:5173/',
+    headful: isHeadful,
+  }).catch((err) => {
+    console.error('Fatal error during headless run:', err)
+    process.exit(1)
+  })
+}
+

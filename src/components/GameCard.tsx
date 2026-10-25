@@ -275,7 +275,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                 e.stopPropagation()
                 onSpotlight(event.id)
               }}
-              className="flex items-center gap-1 rounded-md bg-white/[0.06] hover:bg-sky-500 hover:text-white px-2 py-0.5 text-xs font-semibold text-slate-300 transition-colors border border-white/[0.08] cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="flex items-center gap-1 rounded-md bg-white/[0.06] hover:bg-sky-500 hover:text-white px-2.5 py-1 text-xs font-semibold text-slate-300 transition-colors border border-white/[0.08] cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400 min-h-[36px] sm:min-h-[28px]"
               title="Spotlight this matchup at the top"
               aria-label={`Spotlight ${awayComp?.team?.name} at ${homeComp?.team?.name}`}
             >
@@ -638,7 +638,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           <button
             type="button"
             onClick={(e) => handleToggleTab('radar', e)}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium text-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-medium text-xs transition-colors cursor-pointer min-h-[40px] sm:min-h-[30px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               isRadarActive
                 ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -659,7 +659,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           <button
             type="button"
             onClick={(e) => handleToggleTab('broadcast', e)}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium text-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-medium text-xs transition-colors cursor-pointer min-h-[40px] sm:min-h-[30px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               isBroadcastActive
                 ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -676,7 +676,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           <button
             type="button"
             onClick={(e) => handleToggleTab('scorigami', e)}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium text-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-medium text-xs transition-colors cursor-pointer min-h-[40px] sm:min-h-[30px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               isScorigamiActive
                 ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
