@@ -27,12 +27,12 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#090d16] text-slate-100 flex items-center justify-center p-6">
-          <div className="max-w-md w-full rounded-2xl border border-rose-500/40 bg-[#0e1524] p-8 text-center shadow-2xl space-y-4">
+        <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex items-center justify-center p-6">
+          <div className="max-w-md w-full rounded-xl border border-rose-500/30 bg-[#0e1524] p-8 text-center shadow-2xl space-y-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/20 text-rose-400 mx-auto">
               <AlertTriangle className="h-6 w-6" />
             </div>
-            <h2 className="text-xl font-bold font-['Oswald'] uppercase text-white">
+            <h2 className="text-xl font-bold tracking-tight uppercase text-white">
               Scoreboard Encountered an Error
             </h2>
             <p className="text-xs text-slate-400">

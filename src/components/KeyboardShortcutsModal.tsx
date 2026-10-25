@@ -53,7 +53,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
     >
       <div
         ref={modalRef}
-        className="relative w-full max-w-lg rounded-2xl border border-white/20 bg-[#0c1220] p-6 shadow-2xl ring-1 ring-sky-500/30 text-white"
+        className="relative w-full max-w-lg rounded-xl border border-white/20 bg-[#0c1220] p-6 shadow-2xl ring-1 ring-sky-500/30 text-white"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">

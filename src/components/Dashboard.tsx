@@ -739,7 +739,7 @@ export const Dashboard: React.FC = () => {
   const seasonYear = data?.season?.year || 2026
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] high-contrast-pro">
+    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] high-contrast-pro">
       {/* Screen Reader Live Announcer */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {srAnnouncement}
@@ -762,9 +762,8 @@ export const Dashboard: React.FC = () => {
           <div className="flex items-center gap-2">
             <Database className="h-4 w-4 text-amber-400 shrink-0" />
             <span>
-              <strong>Offline Resiliency Active:</strong> Displaying last verified real NFL scoreboard data from {activeSource.name}
+              <strong>Offline Resiliency Active:</strong> Displaying verified real NFL scoreboard data from {activeSource.name}
               {activeSource.cachedTimestamp && ` (recorded at ${new Date(activeSource.cachedTimestamp).toLocaleTimeString()})`}.
-              Never using made-up data.
             </span>
           </div>
           <button
@@ -789,7 +788,7 @@ export const Dashboard: React.FC = () => {
       )}
 
       {/* HEADER: Sleek, Purposeful, Zero Redundant Clutter */}
-      <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#090d16]/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#0b0f19]/90 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12">
           <div className="flex h-16 items-center justify-between gap-3 sm:gap-4">
             {/* Logo, Brand & Season Context */}
@@ -802,7 +801,7 @@ export const Dashboard: React.FC = () => {
                   <span className="text-base sm:text-xl">🏈</span>
                 </div>
                 <div>
-                  <h1 className="font-['Oswald'] font-bold text-base sm:text-xl tracking-wider text-white uppercase leading-none">
+                  <h1 className="font-bold text-base sm:text-xl tracking-tight text-white uppercase leading-none">
                     <span className="sm:hidden">NFL Command</span>
                     <span className="hidden sm:inline">NFL Live Command</span>
                   </h1>
@@ -978,17 +977,17 @@ export const Dashboard: React.FC = () => {
           ) : (
             <section className="space-y-4" aria-label="Simultaneous Red Zone Spotlights">
               {/* Multi-Threat Red Zone Header Banner */}
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-500/30 bg-gradient-to-r from-rose-950/70 via-red-950/40 to-[#0e1626] p-3.5 sm:p-4 shadow-xl shadow-rose-950/30">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-[#160d18] p-4 shadow-md">
                 <div className="flex items-center gap-3">
                   <span className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-rose-600/30 border border-rose-500/50 text-rose-300 shadow-md shrink-0">
                     <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-rose-400 fill-rose-400 animate-pulse" />
                   </span>
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <h2 className="font-['Oswald'] text-base sm:text-xl font-bold uppercase tracking-wide text-white">
-                      Multi-Threat Red Zone Spotlight
+                    <h2 className="text-base sm:text-xl font-bold uppercase tracking-tight text-white">
+                      Active Red Zone Threats
                     </h2>
-                    <span className="rounded-full bg-rose-500/30 border border-rose-500/60 px-2.5 py-0.5 text-xs font-black text-rose-200 animate-pulse">
-                      {decoratedSpotlightMatchups.length} ACTIVE THREATS
+                    <span className="rounded-full bg-rose-500/30 border border-rose-500/60 px-2.5 py-0.5 text-xs font-bold text-rose-200 animate-pulse">
+                      {decoratedSpotlightMatchups.length} Active Threats
                     </span>
                   </div>
                 </div>
@@ -1035,13 +1034,13 @@ export const Dashboard: React.FC = () => {
                 <span className="h-4 w-1 rounded-full bg-sky-400 shrink-0" aria-hidden="true" />
                 <h2
                   id="all-matchups-title"
-                  className="font-['Oswald'] text-lg sm:text-xl font-bold uppercase tracking-wider text-white"
+                  className="text-base sm:text-lg font-bold uppercase tracking-tight text-white"
                 >
                   Matchup Directory
                 </h2>
               </div>
               <p className="text-xs text-slate-400 pl-3">
-                Click any matchup to promote to live radar command above
+                Select any matchup to inspect live drives and field tracking
               </p>
             </div>
 
@@ -1306,7 +1305,7 @@ export const Dashboard: React.FC = () => {
       </main>
 
       {/* FOOTER */}
-      <footer className="mt-auto border-t border-white/[0.06] bg-[#070b14] py-4 text-xs text-slate-400">
+      <footer className="mt-auto border-t border-white/[0.06] bg-[#0b0f19] py-4 text-xs text-slate-400">
         <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>NFL Live Command • Real-Time Field Tracker & Scoreboard</span>
           <span>Last sync: {lastUpdated.toLocaleTimeString()} • Sourced from ESPN API</span>

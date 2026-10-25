@@ -1,15 +1,15 @@
 import React, { memo } from 'react'
 import type { NFLEvent, GameFilter } from '../types/nfl'
-import { isRedZoneSituation, isHalftimeSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation } from '../utils/nflHelpers'
-import { Radio, Flame, Pause, Compass, ArrowRight, Zap } from 'lucide-react'
+import { isRedZoneSituation, getWeekLabel, formatLocalizedKickoff, sanitizePatriotsAbbreviation } from '../utils/nflHelpers'
+import { Flame, Compass, ArrowRight, Zap } from 'lucide-react'
 
 interface SlateBriefingProps {
   events: NFLEvent[]
   seasonType: number
   weekNumber: number
   seasonYear: number
-  activeFilter: GameFilter
-  onSelectFilter: (filter: GameFilter) => void
+  activeFilter?: GameFilter
+  onSelectFilter?: (filter: GameFilter) => void
   onSpotlightEvent?: (eventId: string) => void
 }
 
@@ -18,8 +18,8 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
   seasonType,
   weekNumber,
   seasonYear: _seasonYear,
-  activeFilter,
-  onSelectFilter,
+  activeFilter: _activeFilter,
+  onSelectFilter: _onSelectFilter,
   onSpotlightEvent,
 }) => {
   const weekLabel = getWeekLabel(seasonType, weekNumber)
@@ -33,11 +33,6 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
   const redZoneEvents = events.filter((e) => {
     const comp = e.competitions?.[0]
     return isRedZoneSituation(comp?.situation, e.status || comp?.status, comp?.competitors || [])
-  })
-
-  const halftimeEvents = events.filter((e) => {
-    const comp = e.competitions?.[0]
-    return isHalftimeSituation(e.status || comp?.status, comp?.situation)
   })
 
   const upcomingEvents = events.filter((e) => {
@@ -96,22 +91,19 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
 
   return (
     <section
-      aria-label="Slate Executive Briefing and Navigation Pathways"
-      className="relative overflow-hidden rounded-2xl border border-sky-500/25 bg-gradient-to-br from-[#0c1426] via-[#090e1c] to-[#0a1022] p-4 sm:p-5 shadow-xl shadow-black/50"
+      aria-label="Slate Executive Briefing"
+      className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-[#0c1424] p-4 sm:p-6 shadow-md"
     >
-      {/* Radiant Top Specular Highlight */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-sky-400/50 to-transparent" />
-
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Narrative Orientation (Kucharski Reason #1 & #7: Answer the core question immediately, no redundant duplication) */}
+        {/* Narrative Orientation: Answer the core question immediately */}
         <div className="space-y-1.5 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-xs font-bold text-sky-300 uppercase tracking-wider">
-              <Zap className="h-3.5 w-3.5 text-sky-400" />
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 border border-sky-500/30 px-2 py-0.5 text-[11px] font-bold text-sky-300 uppercase tracking-wider">
+              <Zap className="h-3 w-3 text-sky-400" />
               SLATE BRIEFING
             </span>
-            <span className="text-xs text-slate-400 font-semibold">
-              {weekLabel} Slate Overview
+            <span className="text-[11px] text-slate-400 font-semibold">
+              {weekLabel} Overview
             </span>
           </div>
 
@@ -119,7 +111,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
             {fourthQuarterThrillers.length > 0 ? (
               <span className="flex items-center gap-1.5 text-amber-300">
                 <Flame className="h-4 w-4 text-amber-400 fill-amber-400 animate-pulse" />
-                4th Quarter Thriller in Progress: {primeAwayAbbr} vs {primeHomeAbbr}
+                4th Quarter Thriller: {primeAwayAbbr} vs {primeHomeAbbr}
               </span>
             ) : liveEvents.length > 0 ? (
               <>
@@ -150,17 +142,17 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
 
           {/* Prime Storyline Callout */}
           {primeAlertEvent && (
-            <p className="text-xs text-slate-300 flex items-center gap-1.5 flex-wrap">
+            <p className="text-xs text-slate-300 flex items-center gap-2 flex-wrap">
               <span className="font-semibold text-slate-400">
-                {finalEvents.length === events.length && events.length > 0 ? 'Story of the Slate:' : 'Headline Action:'}
+                {finalEvents.length === events.length && events.length > 0 ? 'Slate Result:' : 'Key Matchup:'}
               </span>
               <span className="text-white font-medium">
                 {primeAwayAbbr} ({primeAway?.score ?? '-'}) @ {primeHomeAbbr} ({primeHome?.score ?? '-'})
               </span>
               {fourthQuarterThrillers.includes(primeAlertEvent) ? (
-                <span className="text-amber-300 font-semibold">• One-score drama with {primeAlertEvent.status?.displayClock} left</span>
+                <span className="text-amber-300 font-semibold">• One-score drama with {primeAlertEvent.status?.displayClock} remaining</span>
               ) : redZoneEvents.includes(primeAlertEvent) ? (
-                <span className="text-rose-400 font-semibold">• Active Red Zone Threat</span>
+                <span className="text-rose-400 font-semibold">• Red Zone Threat</span>
               ) : liveEvents.includes(primeAlertEvent) ? (
                 <span className="text-emerald-400 font-medium">• Q{primeAlertEvent.status?.period} {primeAlertEvent.status?.displayClock}</span>
               ) : upcomingEvents.includes(primeAlertEvent) ? (
@@ -168,88 +160,23 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
               ) : (
                 <span className="text-slate-300 font-medium">• Final: {primeAlertEvent.status?.type?.detail || 'Completed'}</span>
               )}
-              {onSpotlightEvent && (
-                <button
-                  onClick={() => onSpotlightEvent(primeAlertEvent.id)}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-sky-400 hover:text-sky-300 underline underline-offset-2 ml-1 cursor-pointer"
-                >
-                  Spotlight in Radar <ArrowRight className="h-3 w-3" />
-                </button>
-              )}
             </p>
           )}
         </div>
 
-        {/* Guided Journey Action Pathways */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/[0.06] shrink-0">
-          {/* Live Action Quick Route */}
-          {liveEvents.length > 0 && (
+        {/* Executive Action: Direct Spotlight Route */}
+        {primeAlertEvent && onSpotlightEvent && (
+          <div className="flex items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/[0.06] shrink-0">
             <button
-              onClick={() => onSelectFilter('live')}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-all shrink-0 whitespace-nowrap min-h-[34px] cursor-pointer ${
-                activeFilter === 'live'
-                  ? 'bg-rose-600 text-white shadow-md ring-1 ring-white/20'
-                  : 'bg-rose-950/40 text-rose-300 border border-rose-500/40 hover:bg-rose-900/50'
-              }`}
+              onClick={() => onSpotlightEvent(primeAlertEvent.id)}
+              className="flex items-center gap-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/35 px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer"
             >
-              <Radio className="h-3.5 w-3.5 animate-pulse" />
-              <span>
-                <span className="sm:hidden">Live</span>
-                <span className="hidden sm:inline">Live Action</span> ({liveEvents.length})
-              </span>
+              <Compass className="h-3.5 w-3.5 text-sky-400" />
+              <span>Inspect in Spotlight Radar</span>
+              <ArrowRight className="h-3 w-3" />
             </button>
-          )}
-
-          {/* Red Zone Scoring Drives Quick Route */}
-          {redZoneEvents.length > 0 && (
-            <button
-              onClick={() => onSelectFilter('redzone')}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-all shrink-0 whitespace-nowrap min-h-[34px] cursor-pointer ${
-                activeFilter === 'redzone'
-                  ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-md ring-1 ring-white/20'
-                  : 'bg-amber-950/40 text-amber-300 border border-amber-500/40 hover:bg-amber-900/50'
-              }`}
-            >
-              <Flame className="h-3.5 w-3.5 text-rose-400 fill-rose-400 animate-pulse" />
-              <span>Red Zone ({redZoneEvents.length})</span>
-            </button>
-          )}
-
-          {/* Halftime Quick Route */}
-          {halftimeEvents.length > 0 && (
-            <button
-              onClick={() => onSelectFilter('halftime')}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all shrink-0 whitespace-nowrap min-h-[34px] cursor-pointer ${
-                activeFilter === 'halftime'
-                  ? 'bg-amber-600 text-white shadow-md'
-                  : 'bg-amber-950/30 text-amber-300 border border-amber-500/30 hover:bg-amber-900/40'
-              }`}
-            >
-              <Pause className="h-3.5 w-3.5" />
-              <span>
-                <span className="sm:hidden">Half</span>
-                <span className="hidden sm:inline">Halftime</span> ({halftimeEvents.length})
-              </span>
-            </button>
-          )}
-
-          {/* All Matchups Route */}
-          <button
-            onClick={() => onSelectFilter('all')}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all shrink-0 whitespace-nowrap min-h-[34px] cursor-pointer ${
-              activeFilter === 'all'
-                ? 'bg-slate-700 text-white shadow-sm ring-1 ring-white/20'
-                : 'bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08] hover:text-white'
-            }`}
-          >
-            <Compass className="h-3.5 w-3.5 text-slate-400" />
-            <span>
-              <span className="sm:hidden">{finalEvents.length === events.length ? 'Final' : 'All'}</span>
-              <span className="hidden sm:inline">{finalEvents.length === events.length ? 'All Results' : 'All Games'}</span>
-              {finalEvents.length !== events.length && ` (${events.length})`}
-            </span>
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </section>
   )

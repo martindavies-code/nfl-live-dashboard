@@ -334,14 +334,14 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </div>
           </div>
 
-          <span className={`font-['Oswald'] text-2xl sm:text-3xl tracking-tight tabular-nums shrink-0 ml-3 ${
+          <span className={`font-bold text-2xl sm:text-3xl tracking-tight tabular-nums shrink-0 ml-3 ${
             isFinal
               ? isAwayWinner
-                ? 'font-black text-white'
-                : 'font-bold text-slate-500'
+                ? 'text-white'
+                : 'text-slate-500'
               : isLive
-              ? 'font-bold text-white'
-              : 'font-bold text-slate-400'
+              ? 'text-white'
+              : 'text-slate-400'
           }`}>
             {isFinal || isLive ? (awayComp?.score ?? '-') : '—'}
           </span>
@@ -422,14 +422,14 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </div>
           </div>
 
-          <span className={`font-['Oswald'] text-2xl sm:text-3xl tracking-tight tabular-nums shrink-0 ml-3 ${
+          <span className={`font-bold text-2xl sm:text-3xl tracking-tight tabular-nums shrink-0 ml-3 ${
             isFinal
               ? isHomeWinner
-                ? 'font-black text-white'
-                : 'font-bold text-slate-500'
+                ? 'text-white'
+                : 'text-slate-500'
               : isLive
-              ? 'font-bold text-white'
-              : 'font-bold text-slate-400'
+              ? 'text-white'
+              : 'text-slate-400'
           }`}>
             {isFinal || isLive ? (homeComp?.score ?? '-') : '—'}
           </span>

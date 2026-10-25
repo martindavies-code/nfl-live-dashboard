@@ -217,7 +217,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
 
   return (
     <section
-      className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
+      className={`relative overflow-hidden rounded-xl border transition-all duration-300 ${
         isRedZone
           ? 'card-tier-hero-redzone'
           : isFinal
@@ -241,18 +241,18 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
 
       {/* Top Accent Bar */}
       {isRedZone ? (
-        <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 animate-pulse" />
+        <div className="h-1 w-full bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 animate-pulse" />
       ) : isFinal ? (
-        <div className="h-1.5 w-full bg-slate-700/60" />
+        <div className="h-1 w-full bg-slate-700/60" />
       ) : !isLive ? (
-        <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500/50 via-sky-500/40 to-transparent" />
+        <div className="h-1 w-full bg-gradient-to-r from-indigo-500/50 via-sky-500/40 to-transparent" />
       ) : (
-        <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500" />
+        <div className="h-1 w-full bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500" />
       )}
 
       {/* Editorial Spotlight Banner */}
-      <div className={`flex items-center justify-between gap-2 border-b px-3.5 sm:px-5 py-2.5 sm:py-3 transition-colors ${
-        isRedZone ? 'border-rose-500/20 bg-[#12080d]' : isFinal ? 'border-slate-800/60 bg-[#090e18]' : !isLive ? 'border-indigo-500/20 bg-[#0c1426]' : 'border-white/[0.08] bg-[#090e18]'
+      <div className={`flex items-center justify-between gap-2 border-b px-4 sm:px-6 py-3 transition-colors ${
+        isRedZone ? 'border-rose-500/20 bg-[#160d18]' : isFinal ? 'border-slate-800/60 bg-[#0d121e]' : !isLive ? 'border-indigo-500/20 bg-[#0f1528]' : 'border-white/[0.08] bg-[#0d1424]'
       }`}>
         <div className="flex items-center gap-2 min-w-0">
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-sky-500/20 px-2.5 py-1 text-xs font-bold text-sky-300 border border-sky-500/40 shrink-0">
@@ -347,14 +347,14 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
         </div>
       </div>
 
-      {/* Hero Content: Mobile First Hierarchy (Teams -> Field Radar -> Situation) & Desktop Balanced Grid */}
+      {/* Hero Content: Proportional Hierarchy & Balanced Grid */}
       <div className={
         isMultiThreat
-          ? "flex flex-col gap-4 p-3.5 sm:p-4"
-          : "grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 p-3.5 sm:p-6"
+          ? "flex flex-col gap-4 p-4"
+          : "grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 p-4 sm:p-6"
       }>
         {/* Block 1: Teams & Scores (Top-Left on Desktop, 6 columns) */}
-        <div className={isMultiThreat ? "flex flex-col space-y-3" : "order-1 lg:order-1 col-span-12 lg:col-span-6 flex flex-col space-y-4 sm:space-y-6"}>
+        <div className={isMultiThreat ? "flex flex-col space-y-4" : "order-1 lg:order-1 col-span-12 lg:col-span-6 flex flex-col space-y-4 sm:space-y-6"}>
           {/* Quarter & Game Clock Banner */}
           <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-y-1.5 gap-x-2 border-b border-white/[0.06] pb-2.5 sm:pb-3">
             <div className="flex items-center gap-2 shrink-0">
@@ -469,11 +469,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 </div>
               </div>
 
-              <span className={`font-['Oswald'] text-3xl sm:text-5xl font-bold tracking-tight tabular-nums shrink-0 ml-3 ${
+              <span className={`font-extrabold text-3xl sm:text-4xl tracking-tight tabular-nums shrink-0 ml-3 ${
                 isFinal
                   ? isAwayWinner
-                    ? 'text-white font-black'
-                    : 'text-slate-500 font-bold'
+                    ? 'text-white'
+                    : 'text-slate-500'
                   : 'text-white'
               }`}>
                 {awayScoreDisplay}
@@ -554,11 +554,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 </div>
               </div>
 
-              <span className={`font-['Oswald'] text-3xl sm:text-5xl font-bold tracking-tight tabular-nums shrink-0 ml-3 ${
+              <span className={`font-extrabold text-3xl sm:text-4xl tracking-tight tabular-nums shrink-0 ml-3 ${
                 isFinal
                   ? isHomeWinner
-                    ? 'text-white font-black'
-                    : 'text-slate-500 font-bold'
+                    ? 'text-white'
+                    : 'text-slate-500'
                   : 'text-white'
               }`}>
                 {homeScoreDisplay}
@@ -572,11 +572,10 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
         {/* When Game is LIVE or PRE: Show Full 100-Yard Field Radar */}
         <div className={isMultiThreat ? "flex flex-col justify-center" : "order-2 lg:order-3 col-span-12 flex flex-col justify-center"}>
           {isFinal ? (
-            <div className="rounded-xl border border-white/[0.08] bg-[#070c16]/95 p-3.5 sm:p-5 shadow-inner">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3 mb-3.5">
+            <div className="rounded-xl border border-white/[0.08] bg-[#0c1220] p-4 sm:p-6 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3 mb-4">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="inline-flex items-center gap-1.5 rounded-md bg-white/[0.06] px-2 py-0.5 text-xs font-bold text-slate-200 border border-white/[0.08]">
-                    <span>📊</span>
                     <span>Quarter-by-Quarter Scoring Breakdown</span>
                   </span>
                   {winnerComp && loserComp && (
@@ -641,8 +640,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                           {awayLinescores[idx]?.value ?? (hasLineScores ? 0 : '—')}
                         </td>
                       ))}
-                      <td className={`py-2.5 pl-3 text-right font-['Oswald'] text-lg sm:text-xl font-bold tabular-nums ${
-                        isAwayWinner ? 'text-white font-black' : 'text-slate-500'
+                      <td className={`py-2.5 pl-3 text-right font-bold text-base tabular-nums ${
+                        isAwayWinner ? 'text-white' : 'text-slate-500'
                       }`}>
                         {awayScoreDisplay}
                       </td>
@@ -676,8 +675,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                           {homeLinescores[idx]?.value ?? (hasLineScores ? 0 : '—')}
                         </td>
                       ))}
-                      <td className={`py-2.5 pl-3 text-right font-['Oswald'] text-lg sm:text-xl font-bold tabular-nums ${
-                        isHomeWinner ? 'text-white font-black' : 'text-slate-500'
+                      <td className={`py-2.5 pl-3 text-right font-bold text-base tabular-nums ${
+                        isHomeWinner ? 'text-white' : 'text-slate-500'
                       }`}>
                         {homeScoreDisplay}
                       </td>
@@ -723,8 +722,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
         </div>
 
         {/* Block 3: Matchup Intelligence Panel (Key Situation, Win Probability & Scorigami) */}
-        <div className={isMultiThreat ? "flex flex-col space-y-3" : "order-3 lg:order-2 col-span-12 lg:col-span-6 flex flex-col justify-between"}>
-          <div className="rounded-xl border border-white/[0.08] bg-[#070c16]/90 p-3 sm:p-4 space-y-3 sm:space-y-3.5 shadow-sm">
+        <div className={isMultiThreat ? "flex flex-col space-y-4" : "order-3 lg:order-2 col-span-12 lg:col-span-6 flex flex-col justify-between"}>
+          <div className="rounded-xl border border-white/[0.08] bg-[#0c1220] p-4 space-y-4 shadow-sm">
             {/* Active Play Situation (Only shown during live games) */}
             {isLive && (
               <div className="border-b border-white/[0.06] pb-3">
@@ -818,7 +817,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
       </div>
 
       {/* US Announcing Crew & Network */}
-      <div className="border-t border-white/[0.08] bg-[#080d17]/95 px-3.5 py-2.5 sm:px-6">
+      <div className="border-t border-white/[0.08] bg-[#090e18] px-4 py-3 sm:px-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="p-1.5 rounded-md bg-rose-500/20 text-rose-300 shrink-0">

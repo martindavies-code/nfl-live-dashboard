@@ -82,7 +82,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
         className="w-full select-none"
         aria-label={`Win probability: ${homeAbbr} ${homePct.toFixed(1)}%, ${awayAbbr} ${awayPct.toFixed(1)}%`}
       >
-        <div className="flex items-center justify-between text-[11px] font-mono font-bold mb-1.5">
+        <div className="flex items-center justify-between text-[11px] font-bold mb-1.5">
           <div className="flex items-center gap-1.5">
             <span
               className="h-2 w-2 rounded-full shrink-0 ring-1 ring-white/30"
@@ -132,7 +132,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
 
         {/* Compact pre-game handicap and total strip if available */}
         {formattedOdds && (
-          <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mt-1.5 px-0.5">
+          <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1.5 px-0.5 tabular-nums">
             <span className="text-slate-300 font-semibold">{handicap || ''}</span>
             <span className="text-slate-400">{overUnderText || ''}</span>
           </div>
@@ -182,7 +182,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
             </span>
           </div>
           <span
-            className="font-mono text-xs sm:text-sm md:text-base font-black tracking-tight tabular-nums ml-0.5"
+            className="text-xs sm:text-sm md:text-base font-bold tracking-tight tabular-nums ml-0.5"
             style={{ color: isHomeFavored ? '#38bdf8' : '#e2e8f0' }}
           >
             {homePct.toFixed(1)}%
@@ -204,7 +204,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
             : 'bg-transparent'
         }`}>
           <span
-            className="font-mono text-xs sm:text-sm md:text-base font-black tracking-tight tabular-nums mr-0.5"
+            className="text-xs sm:text-sm md:text-base font-bold tracking-tight tabular-nums mr-0.5"
             style={{ color: isAwayFavored ? '#f43f5e' : '#e2e8f0' }}
           >
             {awayPct.toFixed(1)}%
@@ -312,7 +312,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
       </div>
 
       {/* Bar Scale Labels (25%, 50%, 75%) mathematically aligned with bar ticks */}
-      <div className="relative mt-1.5 h-4 w-full text-[10px] sm:text-[11px] font-mono text-slate-400 select-none">
+      <div className="relative mt-1.5 h-4 w-full text-[11px] text-slate-400 select-none tabular-nums">
         <span className="absolute left-0 text-slate-400 font-semibold">{homeAbbr}</span>
         <span className="absolute left-[25%] -translate-x-1/2">25%</span>
         <span className="absolute left-1/2 -translate-x-1/2 font-bold text-slate-200">50%</span>
@@ -359,7 +359,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
             <span className="text-slate-400 font-medium truncate text-[11px] sm:text-xs">Even matchup (50/50)</span>
           )}
         </div>
-        <span className="text-[9px] sm:text-[10px] md:text-xs font-mono font-semibold text-slate-400 uppercase shrink-0 bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/[0.06] whitespace-nowrap">
+        <span className="text-[11px] font-semibold text-slate-400 uppercase shrink-0 bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/[0.06] whitespace-nowrap">
           {modelSource}
         </span>
       </div>

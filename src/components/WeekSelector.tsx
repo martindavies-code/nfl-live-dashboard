@@ -173,7 +173,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
             <div className="flex items-center gap-2">
-              <span className="font-['Oswald'] font-bold text-sm uppercase tracking-wide text-white">
+              <span className="font-bold text-sm uppercase tracking-wide text-white">
                 {seasonYear} NFL Calendar
               </span>
               <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-white/[0.08] text-slate-400">

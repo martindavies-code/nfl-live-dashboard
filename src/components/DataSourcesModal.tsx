@@ -43,7 +43,7 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
     >
       <div
         ref={modalRef}
-        className="relative w-full max-w-2xl rounded-2xl border border-slate-700/80 bg-[#0d1322] p-6 shadow-2xl text-slate-100 max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-2xl rounded-xl border border-slate-700/80 bg-[#0d1322] p-6 shadow-2xl text-slate-100 max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
         <div className="flex items-start justify-between border-b border-slate-800 pb-4">
