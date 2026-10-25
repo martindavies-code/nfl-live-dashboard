@@ -4,6 +4,7 @@ import {
   getTeamPowerRank,
   getMatchupPowerScore,
   getBestMatchupByPowerRanking,
+  getMatchupTierInfo,
 } from './powerRankings.ts'
 
 function mockGame(awayAbbr, homeAbbr, options = {}) {
@@ -207,6 +208,42 @@ test('Power Rankings edge cases: empty, postgame slate, halftime-only, invalid d
   }
   const spotlightNygPre = getBestMatchupByPowerRanking([nygPreGame])
   assert.equal(spotlightNygPre?.id, 'nyg-pre-only')
+})
+
+test('Power Rankings: getMatchupTierInfo correctly categorizes matchup quality and tiers', () => {
+  // Top-10 Heavyweight Clash
+  const top10 = getMatchupTierInfo(1, 4)
+  assert.equal(top10.label, 'Top-10 Heavyweight Clash')
+  assert.equal(top10.isMarquee, true)
+  assert.ok(top10.badgeClass.includes('rose'))
+
+  // Playoff Contender Battle (both <= 16, but not both <= 10)
+  const playoff = getMatchupTierInfo(12, 14)
+  assert.equal(playoff.label, 'Playoff Contender Battle')
+  assert.equal(playoff.isMarquee, true)
+  assert.ok(playoff.badgeClass.includes('indigo'))
+
+  // Marquee Powerhouse Matchup (one team <= 5, opponent > 16)
+  const marquee = getMatchupTierInfo(3, 24)
+  assert.equal(marquee.label, 'Marquee Powerhouse Matchup')
+  assert.equal(marquee.isMarquee, true)
+  assert.ok(marquee.badgeClass.includes('amber'))
+
+  const marqueeHome = getMatchupTierInfo(20, 2)
+  assert.equal(marqueeHome.label, 'Marquee Powerhouse Matchup')
+  assert.equal(marqueeHome.isMarquee, true)
+
+  // Competitive Showdown (avg <= 16)
+  const competitive = getMatchupTierInfo(15, 17)
+  assert.equal(competitive.label, 'Competitive Showdown')
+  assert.equal(competitive.isMarquee, false)
+  assert.ok(competitive.badgeClass.includes('sky'))
+
+  // Key Matchup (avg > 16)
+  const keyMatchup = getMatchupTierInfo(24, 28)
+  assert.equal(keyMatchup.label, 'Key Matchup')
+  assert.equal(keyMatchup.isMarquee, false)
+  assert.ok(keyMatchup.badgeClass.includes('slate'))
 })
 
 

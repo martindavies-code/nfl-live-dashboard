@@ -1021,3 +1021,74 @@ export function sanitizeClipboardField(text?: string | null, fallback = ''): str
   return text.replace(CONTROL_CHAR_REGEX, ' ').replace(/\s+/g, ' ').trim() || fallback
 }
 
+/**
+ * Computes a human-readable countdown string for upcoming games (e.g. "Kickoff in 2h 15m", "Kickoff tomorrow").
+ */
+export function formatKickoffCountdown(
+  dateStr?: string | null,
+  nowMs: number = Date.now()
+): {
+  label: string
+  isImminent: boolean
+  isPast: boolean
+} {
+  if (!dateStr || typeof dateStr !== 'string') {
+    return { label: 'Upcoming', isImminent: false, isPast: false }
+  }
+  const kickoffMs = new Date(dateStr).getTime()
+  if (!Number.isFinite(kickoffMs)) {
+    return { label: 'Upcoming', isImminent: false, isPast: false }
+  }
+
+  const diffMs = kickoffMs - nowMs
+  if (diffMs <= 0) {
+    return { label: 'Kickoff Imminent', isImminent: true, isPast: true }
+  }
+
+  const diffMins = Math.floor(diffMs / (1000 * 60))
+  const diffHours = Math.floor(diffMins / 60)
+  const remMins = diffMins % 60
+  const diffDays = Math.floor(diffHours / 24)
+  const remHours = diffHours % 24
+
+  if (diffMins < 60) {
+    return { label: `Kickoff in ${diffMins}m`, isImminent: true, isPast: false }
+  }
+  if (diffHours < 24) {
+    return { label: `Kickoff in ${diffHours}h ${remMins}m`, isImminent: diffHours < 3, isPast: false }
+  }
+  if (diffDays === 1) {
+    return { label: `Kickoff tomorrow (${remHours}h)`, isImminent: false, isPast: false }
+  }
+  return { label: `Kickoff in ${diffDays} days`, isImminent: false, isPast: false }
+}
+
+/**
+ * Safely parses team record string (e.g. "5-1", "10-6-1") and computes formatted win percentage.
+ */
+export function parseWinLossRecord(recordStr?: string | null): {
+  wins: number
+  losses: number
+  ties: number
+  summary: string
+  winPctString: string
+} {
+  if (!recordStr || typeof recordStr !== 'string') {
+    return { wins: 0, losses: 0, ties: 0, summary: '0-0', winPctString: '.000' }
+  }
+  const clean = recordStr.trim()
+  if (clean === '' || clean === '-') {
+    return { wins: 0, losses: 0, ties: 0, summary: '0-0', winPctString: '.000' }
+  }
+  const parts = clean.split('-').map((p) => safeParseInt(p, 0))
+  const wins = parts[0] ?? 0
+  const losses = parts[1] ?? 0
+  const ties = parts[2] ?? 0
+  const total = wins + losses + ties
+  const winPct = total > 0 ? (wins + ties * 0.5) / total : 0
+  const winPctString = total > 0 ? winPct.toFixed(3).replace(/^0/, '') : '.000'
+  const summary = ties > 0 ? `${wins}-${losses}-${ties}` : `${wins}-${losses}`
+
+  return { wins, losses, ties, summary, winPctString }
+}
+

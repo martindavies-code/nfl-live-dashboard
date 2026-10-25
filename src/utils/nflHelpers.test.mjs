@@ -23,6 +23,8 @@ import {
   sanitizePatriotsInScoreboardData,
   isDarkLogoTeam,
   shouldDisplayLastPlayText,
+  formatKickoffCountdown,
+  parseWinLossRecord,
 } from './nflHelpers.ts'
 
 test('safeParseInt handles numbers, strings, dashes, nulls, and undefined', () => {
@@ -653,4 +655,62 @@ test('shouldDisplayLastPlayText: displays last play only when live and NOT rende
   assert.equal(shouldDisplayLastPlayText('', true, false), false)
   assert.equal(shouldDisplayLastPlayText('   ', true, false), false)
 })
+
+test('formatKickoffCountdown computes human-readable countdowns across all time thresholds', () => {
+  const baseTime = new Date('2026-10-25T12:00:00Z').getTime()
+
+  // Null, undefined, non-string, or invalid inputs
+  assert.deepEqual(formatKickoffCountdown(null, baseTime), { label: 'Upcoming', isImminent: false, isPast: false })
+  assert.deepEqual(formatKickoffCountdown(undefined, baseTime), { label: 'Upcoming', isImminent: false, isPast: false })
+  assert.deepEqual(formatKickoffCountdown(12345, baseTime), { label: 'Upcoming', isImminent: false, isPast: false })
+  assert.deepEqual(formatKickoffCountdown('invalid-date', baseTime), { label: 'Upcoming', isImminent: false, isPast: false })
+
+  // Past / Zero time (kickoff now or past)
+  assert.deepEqual(formatKickoffCountdown('2026-10-25T11:59:00Z', baseTime), { label: 'Kickoff Imminent', isImminent: true, isPast: true })
+  assert.deepEqual(formatKickoffCountdown('2026-10-25T12:00:00Z', baseTime), { label: 'Kickoff Imminent', isImminent: true, isPast: true })
+
+  // Under 60 minutes
+  assert.deepEqual(formatKickoffCountdown('2026-10-25T12:45:00Z', baseTime), { label: 'Kickoff in 45m', isImminent: true, isPast: false })
+
+  // Same day under 3 hours (< 3h is imminent)
+  assert.deepEqual(formatKickoffCountdown('2026-10-25T14:15:00Z', baseTime), { label: 'Kickoff in 2h 15m', isImminent: true, isPast: false })
+
+  // Same day 3 hours or more (not imminent)
+  assert.deepEqual(formatKickoffCountdown('2026-10-25T18:30:00Z', baseTime), { label: 'Kickoff in 6h 30m', isImminent: false, isPast: false })
+
+  // Tomorrow (diffDays === 1)
+  assert.deepEqual(formatKickoffCountdown('2026-10-26T16:00:00Z', baseTime), { label: 'Kickoff tomorrow (4h)', isImminent: false, isPast: false })
+
+  // Future days (diffDays > 1)
+  assert.deepEqual(formatKickoffCountdown('2026-10-29T12:00:00Z', baseTime), { label: 'Kickoff in 4 days', isImminent: false, isPast: false })
+})
+
+test('parseWinLossRecord safely parses records and computes win percentage strings', () => {
+  // Empty, null, non-string, dash, and missing inputs
+  assert.deepEqual(parseWinLossRecord(null), { wins: 0, losses: 0, ties: 0, summary: '0-0', winPctString: '.000' })
+  assert.deepEqual(parseWinLossRecord(undefined), { wins: 0, losses: 0, ties: 0, summary: '0-0', winPctString: '.000' })
+  assert.deepEqual(parseWinLossRecord(12345), { wins: 0, losses: 0, ties: 0, summary: '0-0', winPctString: '.000' })
+  assert.deepEqual(parseWinLossRecord(''), { wins: 0, losses: 0, ties: 0, summary: '0-0', winPctString: '.000' })
+  assert.deepEqual(parseWinLossRecord('   '), { wins: 0, losses: 0, ties: 0, summary: '0-0', winPctString: '.000' })
+  assert.deepEqual(parseWinLossRecord('-'), { wins: 0, losses: 0, ties: 0, summary: '0-0', winPctString: '.000' })
+  assert.deepEqual(parseWinLossRecord('0-0'), { wins: 0, losses: 0, ties: 0, summary: '0-0', winPctString: '.000' })
+  assert.deepEqual(parseWinLossRecord('5'), { wins: 5, losses: 0, ties: 0, summary: '5-0', winPctString: '1.000' })
+
+  // Standard 2-part record
+  const chiefs = parseWinLossRecord('5-1')
+  assert.equal(chiefs.wins, 5)
+  assert.equal(chiefs.losses, 1)
+  assert.equal(chiefs.ties, 0)
+  assert.equal(chiefs.summary, '5-1')
+  assert.equal(chiefs.winPctString, '.833')
+
+  // 3-part record with tie
+  const tieRecord = parseWinLossRecord('10-6-1')
+  assert.equal(tieRecord.wins, 10)
+  assert.equal(tieRecord.losses, 6)
+  assert.equal(tieRecord.ties, 1)
+  assert.equal(tieRecord.summary, '10-6-1')
+  assert.equal(tieRecord.winPctString, '.618')
+})
+
 

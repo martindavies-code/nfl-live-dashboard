@@ -170,3 +170,50 @@ export function getBestMatchupByPowerRanking(events: NFLEvent[]): NFLEvent | nul
 
   return events[0]
 }
+
+/**
+ * Resolves qualitative matchup stature label and badge styling from team power rankings.
+ */
+export function getMatchupTierInfo(
+  awayRank: number,
+  homeRank: number
+): {
+  label: string
+  isMarquee: boolean
+  badgeClass: string
+} {
+  const avg = (awayRank + homeRank) / 2
+  if (awayRank <= 10 && homeRank <= 10) {
+    return {
+      label: 'Top-10 Heavyweight Clash',
+      isMarquee: true,
+      badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    }
+  }
+  if (awayRank <= 16 && homeRank <= 16) {
+    return {
+      label: 'Playoff Contender Battle',
+      isMarquee: true,
+      badgeClass: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+    }
+  }
+  if (awayRank <= 5 || homeRank <= 5) {
+    return {
+      label: 'Marquee Powerhouse Matchup',
+      isMarquee: true,
+      badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    }
+  }
+  if (avg <= 16) {
+    return {
+      label: 'Competitive Showdown',
+      isMarquee: false,
+      badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
+    }
+  }
+  return {
+    label: 'Key Matchup',
+    isMarquee: false,
+    badgeClass: 'bg-slate-800 text-slate-300 border-slate-700',
+  }
+}

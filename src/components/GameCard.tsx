@@ -2,7 +2,19 @@ import React, { useState, memo } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
-import { formatDownAndDistance, getOffensiveDrive, safeParseInt, isRedZoneSituation, isHalftimeSituation, formatLocalizedKickoff, getWeekLabel, sanitizePatriotsAbbreviation, isDarkLogoTeam } from '../utils/nflHelpers'
+import {
+  formatDownAndDistance,
+  getOffensiveDrive,
+  safeParseInt,
+  isRedZoneSituation,
+  isHalftimeSituation,
+  formatLocalizedKickoff,
+  getWeekLabel,
+  sanitizePatriotsAbbreviation,
+  isDarkLogoTeam,
+  formatKickoffCountdown,
+  parseWinLossRecord,
+} from '../utils/nflHelpers'
 import { 
   Flame, 
   Activity,
@@ -18,6 +30,8 @@ import {
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
+import { getTeamPowerRank, getMatchupTierInfo } from '../utils/powerRankings'
+import { getBettingOddsInfo } from '../utils/winProbability'
 
 interface GameCardProps {
   event: NFLEvent
@@ -120,6 +134,16 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const broadcastPanelId = `broadcast-panel-${event.id}`
   const scorigamiPanelId = `scorigami-panel-${event.id}`
   const broadcastDetails = getGameBroadcastDetails(event)
+  const awayRank = getTeamPowerRank(awayAbbr)
+  const homeRank = getTeamPowerRank(homeAbbr)
+  const matchupTier = getMatchupTierInfo(awayRank, homeRank)
+  const kickoffCountdown = formatKickoffCountdown(event.date)
+  const awayRecord = parseWinLossRecord(awayComp?.records?.[0]?.summary)
+  const homeRecord = parseWinLossRecord(homeComp?.records?.[0]?.summary)
+  const bettingOdds = getBettingOddsInfo(competition.odds, homeAbbr, awayAbbr)
+  const venueText = competition.venue
+    ? `${competition.venue.fullName || ''}${competition.venue.address?.city ? `, ${competition.venue.address.city}` : ''}`.trim()
+    : ''
   const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in Quarter ${status.period} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''} US broadcast on ${broadcastDetails.usTv}, ${broadcastDetails.announcers.verified ? `commentary by ${broadcastDetails.announcers.leadDuo}` : 'commentary crew TBD'}.`
 
   return (
@@ -436,18 +460,65 @@ export const GameCard: React.FC<GameCardProps> = memo(({
         </div>
       </div>
 
-      {/* Dynamic Expanded Section: Radar (Hero of Card Body when active) */}
+      {/* Dynamic Expanded Section: Radar / Preview */}
       {isRadarActive ? (
-        <div id={fieldPanelId} className="px-3 pb-2.5 pt-0.5" role="region" aria-label="Field position view">
-          <FieldDiagram
-            situation={situation}
-            competitors={competitors}
-            gameState={state}
-            gameStatusDetail={isHalftime ? 'At Halftime' : status?.type?.detail}
-            status={status}
-            compact={true}
-            drivePlays={drivePlays}
-          />
+        <div id={fieldPanelId} className="px-3 pb-2.5 pt-0.5" role="region" aria-label={state === 'pre' ? 'Pre-game matchup preview' : 'Field position view'}>
+          {state === 'pre' ? (
+            <div className="rounded-lg border border-white/[0.08] bg-[#070b14]/95 p-3 space-y-2.5 text-xs">
+              <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] pb-2">
+                <span className="font-bold text-slate-200 flex items-center gap-1.5 text-xs">
+                  <Sparkles className="h-3 w-3 text-amber-400" />
+                  {matchupTier.label}
+                </span>
+                <span className={`font-mono text-[11px] font-semibold px-1.5 py-0.5 rounded border ${
+                  kickoffCountdown.isImminent
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    : 'bg-sky-950/60 text-sky-300 border-sky-800/40'
+                }`}>
+                  {kickoffCountdown.label}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div className="rounded bg-white/[0.03] p-2 border border-white/[0.04] space-y-1">
+                  <span className="text-[10px] uppercase font-semibold text-slate-400 block tracking-wider">Tale of the Tape</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white font-bold">#{awayRank} {awayAbbr}</span>
+                    <span className="font-mono text-slate-400">{awayRecord.summary}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white font-bold">#{homeRank} {homeAbbr}</span>
+                    <span className="font-mono text-slate-400">{homeRecord.summary}</span>
+                  </div>
+                </div>
+
+                <div className="rounded bg-white/[0.03] p-2 border border-white/[0.04] space-y-1">
+                  <span className="text-[10px] uppercase font-semibold text-slate-400 block tracking-wider">Consensus Line</span>
+                  <div className="font-mono font-bold text-slate-200 truncate">
+                    {bettingOdds.handicap || 'EVEN'}
+                  </div>
+                  <div className="font-mono text-slate-400 truncate">
+                    {bettingOdds.overUnder || 'O/U —'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-white/[0.04]">
+                <span className="truncate">{venueText || 'NFL Stadium'}</span>
+                <span className="font-semibold text-slate-300 ml-1 shrink-0">{broadcastDetails.usTv}</span>
+              </div>
+            </div>
+          ) : (
+            <FieldDiagram
+              situation={situation}
+              competitors={competitors}
+              gameState={state}
+              gameStatusDetail={isHalftime ? 'At Halftime' : status?.type?.detail}
+              status={status}
+              compact={true}
+              drivePlays={drivePlays}
+            />
+          )}
         </div>
       ) : (
         /* Situational Callout Strip (Only rendered when radar is collapsed) */
@@ -569,10 +640,14 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             }`}
             aria-expanded={isRadarActive}
             aria-controls={fieldPanelId}
-            aria-label={isRadarActive ? `Collapse field radar for ${awayAbbr} at ${homeAbbr}` : `View field radar for ${awayAbbr} at ${homeAbbr}`}
+            aria-label={
+              isRadarActive
+                ? `Collapse ${state === 'pre' ? 'preview' : 'field radar'} for ${awayAbbr} at ${homeAbbr}`
+                : `View ${state === 'pre' ? 'preview' : 'field radar'} for ${awayAbbr} at ${homeAbbr}`
+            }
           >
             <Compass className={`h-3.5 w-3.5 ${isRadarActive ? 'text-sky-400' : 'text-slate-400'}`} />
-            <span>Radar</span>
+            <span>{state === 'pre' ? 'Preview' : 'Radar'}</span>
           </button>
 
           {/* Broadcast Tab */}

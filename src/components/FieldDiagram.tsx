@@ -855,7 +855,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 textAnchor="middle"
               >
                 {gameState === 'pre'
-                  ? 'Pregame Tactical View'
+                  ? 'Field Layout Preview'
                   : gameState === 'post'
                   ? 'Game Concluded'
                   : 'Play Paused'}

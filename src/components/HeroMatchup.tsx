@@ -15,6 +15,9 @@ import {
   isDarkLogoTeam,
   shouldDisplayLastPlayText,
   sanitizeClipboardField,
+  formatKickoffCountdown,
+  parseWinLossRecord,
+  resolveContrastingTeamColors,
 } from '../utils/nflHelpers'
 import {
   Flame,
@@ -30,9 +33,14 @@ import {
   Radio,
   CheckCircle2,
   Calendar,
+  Swords,
+  TrendingUp,
+  Tv,
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
+import { getTeamPowerRank, getMatchupTierInfo } from '../utils/powerRankings'
+import { calculateWinProbability, getBettingOddsInfo } from '../utils/winProbability'
 import { sanitizeUrl, FALLBACK_LOGO } from '../utils/normalizer'
 
 export interface HeroMatchupProps {
@@ -56,6 +64,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
   const [isCopied, setIsCopied] = useState(false)
   const [showScorigamiDetails, setShowScorigamiDetails] = useState(false)
   const [showFinalField, setShowFinalField] = useState(false)
+  const [showPregameField, setShowPregameField] = useState(false)
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reactId = useId().replace(/:/g, '')
 
@@ -154,6 +163,23 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
   const formattedKickoff = useMemo(() => {
     return formatLocalizedKickoff(event?.date)
   }, [event?.date])
+
+  const awayRank = useMemo(() => getTeamPowerRank(awayAbbr), [awayAbbr])
+  const homeRank = useMemo(() => getTeamPowerRank(homeAbbr), [homeAbbr])
+  const matchupTier = useMemo(() => getMatchupTierInfo(awayRank, homeRank), [awayRank, homeRank])
+  const kickoffCountdown = useMemo(() => formatKickoffCountdown(event?.date), [event?.date])
+  const awayRecord = useMemo(() => parseWinLossRecord(awayComp?.records?.[0]?.summary), [awayComp?.records])
+  const homeRecord = useMemo(() => parseWinLossRecord(homeComp?.records?.[0]?.summary), [homeComp?.records])
+  const bettingOdds = useMemo(() => getBettingOddsInfo(competition?.odds, homeAbbr, awayAbbr), [competition?.odds, homeAbbr, awayAbbr])
+  const calculatedWinProb = useMemo(() => calculateWinProbability({
+    homeCompetitor: homeComp,
+    awayCompetitor: awayComp,
+    gameState: state,
+    status,
+    situation,
+    odds: competition?.odds,
+  }), [homeComp, awayComp, state, status, situation, competition?.odds])
+  const contrastingColors = useMemo(() => resolveContrastingTeamColors(homeComp, awayComp), [homeComp, awayComp])
 
   const downAndDistance = useMemo(() => {
     return formatDownAndDistance(situation)
@@ -703,6 +729,205 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                     gameStatusDetail={safeStatusDetail}
                     isHero={true}
                     compact={false}
+                    status={status}
+                    drivePlays={drivePlays}
+                  />
+                </div>
+              )}
+            </div>
+          ) : !isLive ? (
+            <div className="rounded-xl border border-white/[0.08] bg-[#0c1220] p-4 sm:p-5 shadow-sm space-y-4">
+              {/* Header Bar: Matchup Tier, Kickoff Countdown, and Field Radar Toggle */}
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-bold border ${matchupTier.badgeClass}`}>
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>{matchupTier.label}</span>
+                  </span>
+                  <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-mono font-semibold border ${
+                    kickoffCountdown.isImminent
+                      ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                      : 'bg-white/[0.05] text-slate-300 border-white/[0.08]'
+                  }`}>
+                    <Clock className="h-3 w-3 text-sky-400" />
+                    <span>{kickoffCountdown.label}</span>
+                  </span>
+                  {venueText && (
+                    <span className="text-xs text-slate-400 hidden xl:inline-flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-slate-500" />
+                      <span>{venueText}</span>
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPregameField((prev) => !prev)}
+                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400"
+                  aria-expanded={showPregameField}
+                  aria-label={showPregameField ? "Hide field layout preview" : "View field layout preview"}
+                >
+                  <Compass className="h-3.5 w-3.5 text-sky-400" />
+                  <span>{showPregameField ? 'Hide Field Layout' : 'View Field Layout'}</span>
+                </button>
+              </div>
+
+              {/* 3-Column Pre-Game Tale of the Tape Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                {/* Column 1: Tale of the Tape (Rankings & Records) */}
+                <div className="rounded-lg bg-white/[0.02] border border-white/[0.05] p-3.5 flex flex-col justify-between space-y-3">
+                  <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
+                    <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                      <Swords className="h-3.5 w-3.5 text-amber-400" />
+                      Tale of the Tape
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-500">Power & Form</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono font-bold text-slate-400">#{awayRank}</span>
+                        <span className="font-bold text-white">{awayAbbr}</span>
+                      </div>
+                      <span className="text-slate-400 font-mono text-xs">
+                        {awayRecord.summary} <span className="text-slate-500">({awayRecord.winPctString})</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono font-bold text-slate-400">#{homeRank}</span>
+                        <span className="font-bold text-white">{homeAbbr}</span>
+                      </div>
+                      <span className="text-slate-400 font-mono text-xs">
+                        {homeRecord.summary} <span className="text-slate-500">({homeRecord.winPctString})</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Pre-Game Win Expectancy Mini-Bar */}
+                  <div className="space-y-1 pt-1 border-t border-white/[0.04]">
+                    <div className="flex items-center justify-between text-[11px] font-mono">
+                      <span className="font-semibold text-slate-300">{awayAbbr} {calculatedWinProb.awayPct}%</span>
+                      <span className="text-[10px] text-slate-500 uppercase tracking-wider">Win Expectancy</span>
+                      <span className="font-semibold text-slate-300">{calculatedWinProb.homePct}% {homeAbbr}</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden flex" role="progressbar" aria-valuenow={calculatedWinProb.awayPct} aria-valuemin={0} aria-valuemax={100} aria-label={`Win expectancy: ${awayAbbr} ${calculatedWinProb.awayPct}%, ${homeAbbr} ${calculatedWinProb.homePct}%`}>
+                      <div
+                        className="h-full transition-all duration-500"
+                        style={{
+                          width: `${calculatedWinProb.awayPct}%`,
+                          backgroundColor: contrastingColors.awayColor || '#38bdf8'
+                        }}
+                      />
+                      <div
+                        className="h-full transition-all duration-500"
+                        style={{
+                          width: `${calculatedWinProb.homePct}%`,
+                          backgroundColor: contrastingColors.homeColor || '#f97316'
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column 2: Vegas Consensus & Market Line */}
+                <div className="rounded-lg bg-white/[0.02] border border-white/[0.05] p-3.5 flex flex-col justify-between space-y-3">
+                  <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
+                    <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                      <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+                      Vegas Consensus
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {bettingOdds.provider || 'Sportsbook'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded bg-white/[0.03] p-2 border border-white/[0.04]">
+                      <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider">Point Spread</span>
+                      <span className="block font-mono font-bold text-sm sm:text-base text-white mt-0.5">
+                        {bettingOdds.handicap || 'Line TBD'}
+                      </span>
+                    </div>
+                    <div className="rounded bg-white/[0.03] p-2 border border-white/[0.04]">
+                      <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider">Total (Over/Under)</span>
+                      <span className="block font-mono font-bold text-sm sm:text-base text-white mt-0.5">
+                        {bettingOdds.overUnder || 'O/U TBD'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Scorigami Novelty Forecast */}
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
+                    <span className="text-slate-400 flex items-center gap-1 text-[11px]">
+                      <Sparkles className="h-3 w-3 text-indigo-400" />
+                      Scorigami Forecast
+                    </span>
+                    <span className="font-mono text-xs font-semibold text-indigo-300">
+                      {scorigamiInfo.chanceLabel}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Column 3: Venue & Broadcast Operations */}
+                <div className="rounded-lg bg-white/[0.02] border border-white/[0.05] p-3.5 flex flex-col justify-between space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
+                    <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                      <Tv className="h-3.5 w-3.5 text-sky-400" />
+                      Broadcast & Venue
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-sky-300 bg-sky-950/60 px-1.5 py-0.2 rounded border border-sky-800/40">
+                      {broadcastDetails.usTv}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    <div>
+                      <span className="text-[10px] uppercase font-semibold text-slate-400 block tracking-wider">US Commentary Duo</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="font-bold text-white truncate">{broadcastDetails.announcers.leadDuo}</span>
+                        {broadcastDetails.announcers.verified && (
+                          <span title="Verified Broadcast Crew" className="inline-flex items-center text-emerald-400 shrink-0">
+                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {broadcastDetails.announcers.sideline && (
+                      <div className="text-[11px] text-slate-400 truncate">
+                        <span className="text-slate-500">Sideline: </span>
+                        <span className="text-slate-300">{broadcastDetails.announcers.sideline}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-white/[0.04] text-slate-400">
+                    <span className="truncate flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-slate-500 shrink-0" />
+                      {venueText || 'NFL Stadium'}
+                    </span>
+                    {event?.weather?.displayValue && (
+                      <span className="font-mono text-slate-300 shrink-0 ml-1">
+                        {event.weather.displayValue}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* On-Demand Field Layout Preview for Pre-Game */}
+              {showPregameField && (
+                <div className="mt-4 pt-4 border-t border-white/[0.06]">
+                  <FieldDiagram
+                    situation={situation}
+                    competitors={competitors}
+                    gameState={state}
+                    gameStatusDetail={`Kickoff: ${formattedKickoff}`}
+                    isHero={true}
+                    compact={Boolean(totalThreats && totalThreats > 1)}
                     status={status}
                     drivePlays={drivePlays}
                   />
