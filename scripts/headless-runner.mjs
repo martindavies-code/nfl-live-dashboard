@@ -308,8 +308,11 @@ async function runAudit(options = {}) {
     // 11. Mobile Matchups Grid
     console.log(`[12/14] Capturing Mobile Matchups Grid...`)
     await page.evaluate(() => {
-      const el = document.querySelector('#all-matchups-title')
-      if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' })
+      const el = document.querySelector('section[aria-labelledby="all-matchups-title"]')
+      if (el) {
+        el.scrollIntoView({ behavior: 'instant', block: 'start' })
+        window.scrollBy(0, -90)
+      }
     })
     await new Promise((r) => setTimeout(r, 500))
     await saveShot(page, '12-mobile-matchups-grid.png')

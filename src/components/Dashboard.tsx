@@ -1051,7 +1051,7 @@ export const Dashboard: React.FC = () => {
         )}
 
         {/* SECTION 2: SLATE DIRECTORY TOOLBAR */}
-        <section className="space-y-5" aria-labelledby="all-matchups-title">
+        <section className="space-y-5 scroll-mt-24" aria-labelledby="all-matchups-title">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
@@ -1071,7 +1071,7 @@ export const Dashboard: React.FC = () => {
             {/* Filter Tabs & Search */}
             <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 w-full min-w-0">
               <div
-                className="flex items-center gap-1 rounded-lg bg-[#111927] p-1 border border-white/[0.08] overflow-x-auto no-scrollbar w-full sm:w-auto min-w-0 flex-nowrap"
+                className="grid grid-cols-3 sm:flex sm:items-center gap-1 rounded-lg bg-[#111927] p-1 border border-white/[0.08] w-full sm:w-auto min-w-0 overflow-hidden sm:overflow-x-auto sm:no-scrollbar"
                 role="tablist"
                 aria-label="Filter games by state"
               >
@@ -1122,7 +1122,7 @@ export const Dashboard: React.FC = () => {
                           btns[targetIdx]?.focus()
                         }
                       }}
-                      className={`flex items-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all shrink-0 whitespace-nowrap cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[44px] sm:min-h-[34px] ${
+                      className={`flex items-center justify-center gap-1.5 rounded-md px-2 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 min-h-[40px] sm:min-h-[34px] w-full sm:w-auto sm:shrink-0 ${
                         isSelected
                           ? tab.id === 'live'
                             ? 'bg-rose-600 text-white shadow-sm ring-1 ring-white/20'
@@ -1155,7 +1155,7 @@ export const Dashboard: React.FC = () => {
               {/* Secondary Controls Row (Global Views & Search) */}
               <div className="flex items-center gap-2 w-full sm:w-auto min-w-0 flex-wrap sm:flex-nowrap">
                 {/* Global Expand Buttons for Radars, Broadcast, Scorigami */}
-                <div className="flex items-center rounded-lg bg-[#111927] p-1 border border-white/[0.08] gap-1 shrink-0 overflow-x-auto no-scrollbar" role="group" aria-label="Global Card Views">
+                <div className="grid grid-cols-3 sm:flex sm:items-center rounded-lg bg-[#111927] p-1 border border-white/[0.08] gap-1 w-full sm:w-auto sm:shrink-0" role="group" aria-label="Global Card Views">
                   {/* 1. All Radars */}
                   <button
                     type="button"
@@ -1167,7 +1167,7 @@ export const Dashboard: React.FC = () => {
                         return next
                       })
                     }}
-                    className={`flex items-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[44px] sm:min-h-[30px] cursor-pointer ${
+                    className={`flex items-center justify-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[40px] sm:min-h-[30px] cursor-pointer w-full sm:w-auto ${
                       globalExpandedTab === 'radar'
                         ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
                         : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1191,7 +1191,7 @@ export const Dashboard: React.FC = () => {
                         return next
                       })
                     }}
-                    className={`flex items-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[44px] sm:min-h-[30px] cursor-pointer ${
+                    className={`flex items-center justify-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[40px] sm:min-h-[30px] cursor-pointer w-full sm:w-auto ${
                       globalExpandedTab === 'broadcast'
                         ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
                         : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1215,7 +1215,7 @@ export const Dashboard: React.FC = () => {
                         return next
                       })
                     }}
-                    className={`flex items-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[44px] sm:min-h-[30px] cursor-pointer ${
+                    className={`flex items-center justify-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[40px] sm:min-h-[30px] cursor-pointer w-full sm:w-auto ${
                       globalExpandedTab === 'scorigami'
                         ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/50 shadow-sm'
                         : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1230,7 +1230,7 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Search Bar */}
-                <div className="relative flex-1 min-w-[130px] sm:w-48 sm:flex-initial" role="search">
+                <div className="relative w-full sm:w-48 sm:flex-initial" role="search">
                   <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
@@ -1241,7 +1241,7 @@ export const Dashboard: React.FC = () => {
                     }}
                     placeholder="Filter team..."
                     aria-label="Filter teams by name or city"
-                    className="w-full rounded-md border border-white/[0.08] bg-[#111927] pl-8 pr-8 py-1.5 sm:py-1 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none min-h-[44px] sm:min-h-[34px]"
+                    className="w-full rounded-md border border-white/[0.08] bg-[#111927] pl-8 pr-8 py-1.5 sm:py-1 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none min-h-[40px] sm:min-h-[34px]"
                   />
                   {searchQuery && (
                     <button
