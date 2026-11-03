@@ -37,7 +37,7 @@ import {
   getMatchupTierInfo,
   getPowerRankTierStyle,
 } from '../utils/powerRankings'
-import { getBettingOddsInfo } from '../utils/winProbability'
+import { getBettingOddsInfo, isFourthQuarterThriller } from '../utils/winProbability'
 
 interface GameCardProps {
   event: NFLEvent
@@ -273,6 +273,17 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             <span className="inline-flex items-center gap-1 rounded-md bg-rose-600/30 border border-rose-500/60 px-2 py-0.5 text-[10px] font-black tracking-wider text-rose-200 animate-pulse shadow-sm shadow-rose-950">
               <Flame className="h-3 w-3 text-rose-400 fill-rose-400" />
               RED ZONE
+            </span>
+          )}
+
+          {/* LATE THRILLER BADGE (4th Quarter or Overtime with Win Probability in Doubt) */}
+          {isLive && !isRedZone && (isOvertimeSituation(event) || (status?.period && status.period > 4) || isFourthQuarterThriller(event)) && (
+            <span
+              className="inline-flex items-center gap-1 rounded-md bg-amber-500/25 border border-amber-500/50 px-2 py-0.5 text-[10px] font-black tracking-wider text-amber-200 animate-pulse shadow-sm shadow-amber-950"
+              title={isOvertimeSituation(event) || (status?.period && status.period > 4) ? 'Overtime Thriller' : '4th Quarter Thriller: Win Probability in Doubt'}
+            >
+              <Flame className="h-3 w-3 text-amber-400 fill-amber-400" />
+              {isOvertimeSituation(event) || (status?.period && status.period > 4) ? 'OT THRILLER' : 'THRILLER'}
             </span>
           )}
 

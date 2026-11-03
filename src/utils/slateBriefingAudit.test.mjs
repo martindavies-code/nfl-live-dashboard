@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { isOvertimeSituation, formatPeriodDisplay } from './nflHelpers.ts'
 import { normalizeNFLEvent } from './normalizer.ts'
+import { isFourthQuarterThriller, getEventWinProbability } from './winProbability.ts'
 
 // Pure replication of SlateBriefing's selection logic to guarantee zero drift
 function computeSlateBriefingSummary(events) {
@@ -19,6 +20,13 @@ function computeSlateBriefingSummary(events) {
     .filter((ev) => isOvertimeSituation(ev))
     .slice()
     .sort((a, b) => {
+      const probA = getEventWinProbability(a)
+      const probB = getEventWinProbability(b)
+      const spreadA = Math.abs(probA.homePct - 50)
+      const spreadB = Math.abs(probB.homePct - 50)
+      if (Math.abs(spreadA - spreadB) > 1) {
+        return spreadA - spreadB
+      }
       const getDiff = (ev) => {
         const comp = ev.competitions?.[0]
         const h = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
@@ -29,17 +37,16 @@ function computeSlateBriefingSummary(events) {
     })
 
   const fourthQuarterThrillers = liveEvents
-    .filter((ev) => {
-      if (isOvertimeSituation(ev)) return false
-      const period = ev.status?.period ?? 0
-      if (period !== 4) return false
-      const comp = ev.competitions?.[0]
-      const homeScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
-      const awayScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'away')?.score || '0', 10)
-      return Math.abs(homeScore - awayScore) <= 8
-    })
+    .filter((ev) => isFourthQuarterThriller(ev))
     .slice()
     .sort((a, b) => {
+      const probA = getEventWinProbability(a)
+      const probB = getEventWinProbability(b)
+      const spreadA = Math.abs(probA.homePct - 50)
+      const spreadB = Math.abs(probB.homePct - 50)
+      if (Math.abs(spreadA - spreadB) > 1) {
+        return spreadA - spreadB
+      }
       const getDiff = (ev) => {
         const comp = ev.competitions?.[0]
         const h = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
@@ -200,6 +207,88 @@ test('Slate Briefing: Legitimate 4th quarter game correctly announces 4th Quarte
   const briefing = computeSlateBriefingSummary([q4Game])
   assert.equal(briefing.headline.includes('4th Quarter Thriller: PHI vs DAL'), true)
   assert.equal(briefing.storylineSubtext.includes('One-score drama with 2:00 remaining'), true)
+})
+
+test('Slate Briefing: Team up by 8 at opponent 1-yd line with 1s left is NOT a 4th Quarter Thriller', () => {
+  const decidedGame = {
+    id: 'game-decided',
+    name: 'KC vs BAL',
+    status: {
+      period: 4,
+      clock: 1,
+      displayClock: '0:01',
+      type: { state: 'in', name: 'STATUS_IN_PROGRESS', detail: '0:01 - 4th Quarter' },
+    },
+    competitions: [
+      {
+        status: { period: 4, clock: 1, displayClock: '0:01', type: { state: 'in' } },
+        situation: {
+          down: 1,
+          yardLine: 99,
+          possession: 'home',
+        },
+        competitors: [
+          { id: 'home', homeAway: 'home', score: '28', team: { abbreviation: 'KC' } },
+          { id: 'away', homeAway: 'away', score: '20', team: { abbreviation: 'BAL' } },
+        ],
+      },
+    ],
+  }
+
+  const briefing = computeSlateBriefingSummary([decidedGame])
+  // Must NOT be hailed as a 4th Quarter Thriller because win probability is 99.9%
+  assert.equal(briefing.headline.includes('4th Quarter Thriller'), false)
+  assert.equal(briefing.storylineSubtext.includes('One-score drama'), false)
+  // Accurately reflects regular live game without false thriller alarm
+  assert.equal(briefing.headline, '1 Games Live')
+  assert.equal(briefing.storylineSubtext, 'Q4 0:01')
+})
+
+test('Slate Briefing: Prioritizes 4th Quarter Thriller with closer win probability over decided game', () => {
+  const nailBiter = {
+    id: 'game-nail-biter',
+    name: 'DET vs GB',
+    status: {
+      period: 4,
+      clock: 60,
+      displayClock: '1:00',
+      type: { state: 'in', name: 'STATUS_IN_PROGRESS', detail: '1:00 - 4th Quarter' },
+    },
+    competitions: [
+      {
+        status: { period: 4, clock: 60, displayClock: '1:00', type: { state: 'in' } },
+        competitors: [
+          { homeAway: 'home', score: '24', team: { abbreviation: 'GB' } },
+          { homeAway: 'away', score: '23', team: { abbreviation: 'DET' } },
+        ],
+      },
+    ],
+  }
+
+  const lateDecided = {
+    id: 'game-late-decided',
+    name: 'KC vs BAL',
+    status: {
+      period: 4,
+      clock: 1,
+      displayClock: '0:01',
+      type: { state: 'in', name: 'STATUS_IN_PROGRESS', detail: '0:01 - 4th Quarter' },
+    },
+    competitions: [
+      {
+        status: { period: 4, clock: 1, displayClock: '0:01', type: { state: 'in' } },
+        situation: { down: 1, yardLine: 99, possession: 'home' },
+        competitors: [
+          { id: 'home', homeAway: 'home', score: '28', team: { abbreviation: 'KC' } },
+          { id: 'away', homeAway: 'away', score: '20', team: { abbreviation: 'BAL' } },
+        ],
+      },
+    ],
+  }
+
+  const briefing = computeSlateBriefingSummary([lateDecided, nailBiter])
+  assert.equal(briefing.headline.includes('4th Quarter Thriller: DET vs GB'), true)
+  assert.equal(briefing.primeAlertEvent.id, 'game-nail-biter')
 })
 
 test('Normalizer: Live game in period >= 5 defaults to OT or 2OT instead of Q5 or Q6', () => {

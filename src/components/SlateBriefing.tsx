@@ -14,6 +14,7 @@ import {
   getMatchupTierInfo,
   getPowerRankTierStyle,
 } from '../utils/powerRankings'
+import { isFourthQuarterThriller, getEventWinProbability } from '../utils/winProbability'
 
 interface SlateBriefingProps {
   events: NFLEvent[]
@@ -62,6 +63,14 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
     .filter((ev) => isOvertimeSituation(ev))
     .slice()
     .sort((a, b) => {
+      // Prioritize games with closest win probability (spread from 50/50), tiebroken by score differential
+      const probA = getEventWinProbability(a)
+      const probB = getEventWinProbability(b)
+      const spreadA = Math.abs(probA.homePct - 50)
+      const spreadB = Math.abs(probB.homePct - 50)
+      if (Math.abs(spreadA - spreadB) > 1) {
+        return spreadA - spreadB
+      }
       const getDiff = (ev: NFLEvent) => {
         const comp = ev.competitions?.[0]
         const h = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
@@ -71,19 +80,19 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
       return getDiff(a) - getDiff(b)
     })
 
-  // Detect 4th-quarter one-score thrillers (<= 8 points margin strictly in Q4 regulation)
+  // Detect 4th-quarter one-score thrillers (<= 8 points margin AND win probability in doubt in Q4 regulation)
   const fourthQuarterThrillers = liveEvents
-    .filter((ev) => {
-      if (isOvertimeSituation(ev)) return false
-      const period = ev.status?.period ?? 0
-      if (period !== 4) return false
-      const comp = ev.competitions?.[0]
-      const homeScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
-      const awayScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'away')?.score || '0', 10)
-      return Math.abs(homeScore - awayScore) <= 8
-    })
+    .filter((ev) => isFourthQuarterThriller(ev))
     .slice()
     .sort((a, b) => {
+      // Sort thrillers by closest win probability (most undecided contest), tiebroken by score differential
+      const probA = getEventWinProbability(a)
+      const probB = getEventWinProbability(b)
+      const spreadA = Math.abs(probA.homePct - 50)
+      const spreadB = Math.abs(probB.homePct - 50)
+      if (Math.abs(spreadA - spreadB) > 1) {
+        return spreadA - spreadB
+      }
       const getDiff = (ev: NFLEvent) => {
         const comp = ev.competitions?.[0]
         const h = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)

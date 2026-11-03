@@ -23,6 +23,7 @@ export interface NFLCompetitor {
   }>
   team: NFLTeam
   linescores?: Array<{ value: number }>
+  prob?: number | string
 }
 
 export interface NFLLastPlay {

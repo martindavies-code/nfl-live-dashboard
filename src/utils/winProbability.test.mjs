@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { calculateWinProbability, normalCdf, getBettingOddsInfo } from './winProbability.ts'
+import { calculateWinProbability, normalCdf, getBettingOddsInfo, getEventWinProbability, isFourthQuarterThriller } from './winProbability.ts'
 
 test('normalCdf computes standard Gaussian probabilities accurately', () => {
   assert.ok(Math.abs(normalCdf(0) - 0.5) < 1e-4)
@@ -281,5 +281,210 @@ test('calculateWinProbability populates handicap, overUnder, and formattedOdds',
   assert.equal(res.overUnder, 43.5)
   assert.equal(res.overUnderText, 'O/U 43.5')
   assert.equal(res.formattedOdds, 'CHI -2.5 • O/U 43.5')
+})
+
+test('getEventWinProbability: handles nullish events, extracts live ESPN telemetry and analytic models', () => {
+  // 1. Null event defense
+  const nullResult = getEventWinProbability(null)
+  assert.equal(typeof nullResult.homePct, 'number')
+  assert.equal(nullResult.homePct, 53.5)
+
+  // 2. Full event extraction with live ESPN FPI probability
+  const fpiEvent = {
+    id: 'fpi-game',
+    status: { type: { state: 'in' }, period: 4, clock: 300 },
+    competitions: [
+      {
+        competitors: [
+          { id: '1', homeAway: 'home', score: '24', prob: '0.62', team: { abbreviation: 'PHI' } },
+          { id: '2', homeAway: 'away', score: '21', prob: '0.38', team: { abbreviation: 'DAL' } },
+        ],
+        situation: {
+          lastPlay: {
+            probability: {
+              homeWinPercentage: 0.62,
+              awayWinPercentage: 0.38,
+            },
+          },
+        },
+      },
+    ],
+  }
+  const fpiResult = getEventWinProbability(fpiEvent)
+  assert.equal(fpiResult.homePct, 62)
+  assert.equal(fpiResult.awayPct, 38)
+  assert.equal(fpiResult.modelSource, 'ESPN FPI')
+
+  // 3. Fallback to dynamic analytic model when ESPN FPI probability not provided
+  const analyticEvent = {
+    id: 'analytic-game',
+    status: { type: { state: 'in' }, period: 4, clock: 60 },
+    competitions: [
+      {
+        competitors: [
+          { id: '1', homeAway: 'home', score: '21', team: { abbreviation: 'KC' } },
+          { id: '2', homeAway: 'away', score: '20', team: { abbreviation: 'BUF' } },
+        ],
+      },
+    ],
+  }
+  const analyticResult = getEventWinProbability(analyticEvent)
+  assert.equal(analyticResult.modelSource, 'Live Analytic Model')
+  assert.ok(analyticResult.homePct > 50 && analyticResult.homePct < 95)
+})
+
+test('isFourthQuarterThriller: correctly distinguishes true thrillers from decided games', () => {
+  // 1. Nullish or non-live games are never 4th quarter thrillers
+  assert.equal(isFourthQuarterThriller(null), false)
+  assert.equal(isFourthQuarterThriller({ status: { type: { state: 'pre' } } }), false)
+  assert.equal(isFourthQuarterThriller({ status: { type: { state: 'post' } } }), false)
+
+  // 2. Overtime games are handled by OT logic, not 4th quarter
+  const otEvent = {
+    status: { period: 5, type: { state: 'in', detail: 'OT' } },
+    competitions: [
+      {
+        status: { period: 5, type: { state: 'in' } },
+        competitors: [
+          { homeAway: 'home', score: '20' },
+          { homeAway: 'away', score: '20' },
+        ],
+      },
+    ],
+  }
+  assert.equal(isFourthQuarterThriller(otEvent), false)
+
+  // 3. Regulation quarters other than 4 are not 4th quarter thrillers
+  const q3Event = {
+    status: { period: 3, type: { state: 'in' } },
+    competitions: [
+      {
+        status: { period: 3, type: { state: 'in' } },
+        competitors: [
+          { homeAway: 'home', score: '21' },
+          { homeAway: 'away', score: '20' },
+        ],
+      },
+    ],
+  }
+  assert.equal(isFourthQuarterThriller(q3Event), false)
+
+  // 4. Score margin > 8 points (two possessions) is not a one-score thriller
+  const twoScoreEvent = {
+    status: { period: 4, clock: 120, type: { state: 'in' } },
+    competitions: [
+      {
+        status: { period: 4, clock: 120, type: { state: 'in' } },
+        competitors: [
+          { homeAway: 'home', score: '30' },
+          { homeAway: 'away', score: '20' },
+        ],
+      },
+    ],
+  }
+  assert.equal(isFourthQuarterThriller(twoScoreEvent), false)
+
+  // 5. User exact scenario: Team up by 8, at opposition 1-yd line with 1s to go
+  // Even though it's technically an 8-point game (1 possession), win probability is 99.9%
+  const decidedOneScoreEvent = {
+    status: { period: 4, clock: 1, type: { state: 'in' } },
+    competitions: [
+      {
+        status: { period: 4, clock: 1, type: { state: 'in' } },
+        situation: { down: 1, yardLine: 99, possession: 'home' },
+        competitors: [
+          { id: 'home', homeAway: 'home', score: '28', team: { abbreviation: 'KC' } },
+          { id: 'away', homeAway: 'away', score: '20', team: { abbreviation: 'BAL' } },
+        ],
+      },
+    ],
+  }
+  assert.equal(isFourthQuarterThriller(decidedOneScoreEvent), false)
+
+  // 6. Legitimate thriller: 4th quarter, 3-point game with 2:00 left and driving
+  const genuineThrillerEvent = {
+    status: { period: 4, clock: 120, type: { state: 'in' } },
+    competitions: [
+      {
+        status: { period: 4, clock: 120, type: { state: 'in' } },
+        situation: { down: 1, yardLine: 50, possession: 'away' },
+        competitors: [
+          { id: 'home', homeAway: 'home', score: '24', team: { abbreviation: 'PHI' } },
+          { id: 'away', homeAway: 'away', score: '21', team: { abbreviation: 'DAL' } },
+        ],
+      },
+    ],
+  }
+  assert.equal(isFourthQuarterThriller(genuineThrillerEvent), true)
+
+  // 7. Custom threshold works as expected
+  // If we set threshold to 50%, a game where one team is 54% favored is not a thriller
+  assert.equal(isFourthQuarterThriller(genuineThrillerEvent, 50), false)
+  // But with 95% threshold, it is
+  assert.equal(isFourthQuarterThriller(genuineThrillerEvent, 95), true)
+
+  // 8. Defensive fallbacks: missing competitions, competitors, or status
+  assert.equal(isFourthQuarterThriller({ competitions: [] }), false)
+  assert.equal(isFourthQuarterThriller({ status: { type: { state: 'in' }, period: 4 } }), false)
+})
+
+test('winProbability: complete branch coverage for odds, normalCdf, and event conversions', () => {
+  // normalCdf edge branches
+  assert.equal(normalCdf(NaN), 0.5)
+  assert.equal(normalCdf(0), 0.5)
+  assert.equal(normalCdf(12), 1)
+  assert.equal(normalCdf(-12), 0)
+
+  // getBettingOddsInfo branch variations
+  const pickOdds = getBettingOddsInfo([{ details: "pick'em", provider: { displayName: 'DraftKings' } }])
+  assert.equal(pickOdds.handicap, 'EVEN')
+  assert.equal(pickOdds.provider, 'DraftKings')
+
+  const pkOdds = getBettingOddsInfo([{ details: 'pk' }])
+  assert.equal(pkOdds.handicap, 'EVEN')
+
+  const zeroSpreadOdds = getBettingOddsInfo([{ spread: 0, overUnder: '47.5' }])
+  assert.equal(zeroSpreadOdds.handicap, 'EVEN')
+  assert.equal(zeroSpreadOdds.overUnderValue, 47.5)
+
+  const onlyOU = getBettingOddsInfo([{ overUnder: 51 }])
+  assert.equal(onlyOU.formattedSummary, 'O/U 51')
+
+  const onlyHandicap = getBettingOddsInfo([{ details: 'KC -3' }])
+  assert.equal(onlyHandicap.formattedSummary, 'KC -3')
+
+  const totalInDetails = getBettingOddsInfo([{ details: 'Total Points 45.5', overUnder: 45.5 }])
+  assert.equal(totalInDetails.formattedSummary, 'Total Points 45.5')
+
+  // getEventWinProbability branch variations
+  const stringProbEvent = {
+    competitions: [
+      {
+        status: { type: { state: 'in' } },
+        competitors: [
+          { id: 'h', homeAway: 'home', score: '10', prob: 'invalid' },
+          { id: 'a', homeAway: 'away', score: '7', prob: '0.45' },
+        ],
+      },
+    ],
+  }
+  const stringProbRes = getEventWinProbability(stringProbEvent)
+  assert.equal(typeof stringProbRes.homePct, 'number')
+
+  // Live analytic model with away possession and red zone
+  const awayDrivingRzEvent = {
+    status: { type: { state: 'in' }, period: 4, clock: 90 },
+    competitions: [
+      {
+        situation: { down: 2, yardLine: 10, possession: 'a', isRedZone: true },
+        competitors: [
+          { id: 'h', homeAway: 'home', score: '20' },
+          { id: 'a', homeAway: 'away', score: '17' },
+        ],
+      },
+    ],
+  }
+  const awayRzRes = getEventWinProbability(awayDrivingRzEvent)
+  assert.ok(awayRzRes.awayPct > 40)
 })
 

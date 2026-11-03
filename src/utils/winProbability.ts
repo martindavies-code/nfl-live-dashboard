@@ -1,4 +1,4 @@
-import type { NFLCompetitor, NFLSituation, NFLStatus, NFLOdds } from '../types/nfl'
+import type { NFLEvent, NFLCompetitor, NFLSituation, NFLStatus, NFLOdds } from '../types/nfl'
 import { safeParseInt, isHalftimeSituation, isOvertimeSituation, sanitizePatriotsName, sanitizePatriotsAbbreviation } from './nflHelpers.ts'
 
 /**
@@ -399,4 +399,91 @@ export function calculateWinProbability({
     isHome ? homeName : isAway ? awayName : 'Even',
     'Live Analytic Model'
   )
+}
+
+/**
+ * Safely computes win probability directly from an NFLEvent object.
+ * Extracts competitors, game state, clock status, down/distance/possession,
+ * and betting odds with full fallback defenses.
+ */
+export function getEventWinProbability(event?: NFLEvent | null): CalculatedWinProbability {
+  if (!event) {
+    return calculateWinProbability({
+      homeCompetitor: { id: 'home', homeAway: 'home' } as NFLCompetitor,
+      awayCompetitor: { id: 'away', homeAway: 'away' } as NFLCompetitor,
+      gameState: 'pre',
+    })
+  }
+
+  const comp = event.competitions?.[0]
+  const homeComp = comp?.competitors?.find((c) => c.homeAway === 'home') ?? ({ id: 'home', homeAway: 'home' } as NFLCompetitor)
+  const awayComp = comp?.competitors?.find((c) => c.homeAway === 'away') ?? ({ id: 'away', homeAway: 'away' } as NFLCompetitor)
+  const gameState = (event.status?.type?.state || comp?.status?.type?.state || 'pre') as 'pre' | 'in' | 'post'
+  const status = event.status || comp?.status
+  const situation = comp?.situation
+  const odds = comp?.odds
+
+  // Extract official ESPN live probability if provided in situation telemetry
+  const rawHomeProb = situation?.lastPlay?.probability?.homeWinPercentage ?? homeComp?.prob
+  const rawAwayProb = situation?.lastPlay?.probability?.awayWinPercentage ?? awayComp?.prob
+  const homeWinPct = typeof rawHomeProb === 'number' && Number.isFinite(rawHomeProb)
+    ? rawHomeProb
+    : typeof rawHomeProb === 'string' && Number.isFinite(parseFloat(rawHomeProb))
+      ? parseFloat(rawHomeProb)
+      : undefined
+  const awayWinPct = typeof rawAwayProb === 'number' && Number.isFinite(rawAwayProb)
+    ? rawAwayProb
+    : typeof rawAwayProb === 'string' && Number.isFinite(parseFloat(rawAwayProb))
+      ? parseFloat(rawAwayProb)
+      : undefined
+
+  return calculateWinProbability({
+    homeWinPercentage: homeWinPct,
+    awayWinPercentage: awayWinPct,
+    homeCompetitor: homeComp,
+    awayCompetitor: awayComp,
+    gameState,
+    status,
+    situation,
+    odds,
+  })
+}
+
+/**
+ * Evaluates whether a live game is a genuine "4th Quarter Thriller".
+ *
+ * Criteria:
+ * 1. Must be currently live in progress (gameState === 'in')
+ * 2. Strictly in regulation 4th quarter (period === 4) and NOT in overtime
+ * 3. One-score margin: absolute score differential <= 8 points
+ * 4. Win probability is genuinely in doubt: neither team has clinched
+ *    win probability >= maxWinPctThreshold (default 95%).
+ *
+ * This accounts for situations where a team is ahead by 8 with 1 second left
+ * at the opponent's 1-yard line (win probability 99.9%), ensuring such
+ * decided games are not falsely highlighted as active thrillers.
+ */
+export function isFourthQuarterThriller(
+  event?: NFLEvent | null,
+  maxWinPctThreshold: number = 95
+): boolean {
+  if (!event) return false
+  if (isOvertimeSituation(event)) return false
+
+  const comp = event.competitions?.[0]
+  if (!comp || !Array.isArray(comp.competitors) || comp.competitors.length < 2) return false
+  const state = event.status?.type?.state || comp?.status?.type?.state || 'pre'
+  if (state !== 'in') return false
+
+  const status = event.status || comp?.status
+  const period = status?.period ?? 0
+  if (period !== 4) return false
+
+  const homeScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
+  const awayScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'away')?.score || '0', 10)
+  if (Math.abs(homeScore - awayScore) > 8) return false
+
+  const winProb = getEventWinProbability(event)
+  const maxWinPct = Math.max(winProb.homePct, winProb.awayPct)
+  return maxWinPct < maxWinPctThreshold
 }
