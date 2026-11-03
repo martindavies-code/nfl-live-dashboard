@@ -639,53 +639,67 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                 : (scorigamiInfo.isCurrentScorigami ? 'Live Scorigami Active' : 'Scorigami Chance')}
             </span>
             <span className="font-mono font-bold text-xs bg-indigo-950/80 text-indigo-300 px-2 py-0.5 rounded border border-indigo-700/40">
-              {scorigamiInfo.chanceLabel}
+              {isFinal
+                ? (scorigamiInfo.isCurrentScorigami
+                    ? `#${(TOTAL_UNIQUE_SCORIGAMIS + 1).toLocaleString()} Novel Score`
+                    : `${scorigamiInfo.currentOccurrences}x in NFL History`)
+                : scorigamiInfo.chanceLabel}
             </span>
           </div>
+
           {isFinal ? (
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Scorigami Result:</span>
-              <span className="font-mono font-bold text-indigo-200">
-                {scorigamiInfo.isCurrentScorigami ? `Yes, #${TOTAL_UNIQUE_SCORIGAMIS + 1} unique score in NFL history` : 'No, previously occurred'}
-              </span>
-            </div>
-          ) : scorigamiInfo.mostLikelyNovel ? (
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Most Likely:</span>
-              <span className="font-mono font-bold text-indigo-200">{scorigamiInfo.mostLikelyLabel}</span>
-            </div>
-          ) : null}
-          <div className="text-xs text-slate-400">
-            <span className="text-slate-300 font-semibold">{isFinal ? 'Result: ' : 'Scenario: '}</span>
-            {scorigamiInfo.whenScenario}
-          </div>
-          {state === 'pre' ? (
-            <div className="text-xs text-slate-400 border-t border-white/[0.04] pt-1">
-              Target score: <span className="text-indigo-200 font-medium">Never occurred — would be a first in NFL history</span>
-            </div>
-          ) : scorigamiInfo.lastGameSummary ? (
-            <div className="text-xs text-slate-400 border-t border-white/[0.04] pt-1">
-              Last: <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
-              <span className="text-slate-500 ml-1">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
-            </div>
-          ) : null}
+            scorigamiInfo.isCurrentScorigami ? (
+              <div className="text-xs text-emerald-300 font-medium">
+                Milestone: #{(TOTAL_UNIQUE_SCORIGAMIS + 1).toLocaleString()} unique final score in NFL history!
+              </div>
+            ) : (
+              <div className="text-xs text-slate-400">
+                Last: <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary || (scorigamiInfo.lastSeenYear ? `in ${scorigamiInfo.lastSeenYear}` : 'previously recorded')}</strong>
+              </div>
+            )
+          ) : (
+            <>
+              {scorigamiInfo.mostLikelyNovel && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Most Likely:</span>
+                  <span className="font-mono font-bold text-indigo-200">{scorigamiInfo.mostLikelyLabel}</span>
+                </div>
+              )}
+              <div className="text-xs text-slate-400">
+                <span className="text-slate-300 font-semibold">Scenario: </span>
+                {scorigamiInfo.whenScenario}
+              </div>
+              {state === 'pre' ? (
+                <div className="text-xs text-slate-400 border-t border-white/[0.04] pt-1">
+                  Target score: <span className="text-indigo-200 font-medium">Never occurred — would be a first in NFL history</span>
+                </div>
+              ) : scorigamiInfo.lastGameSummary ? (
+                <div className="text-xs text-slate-400 border-t border-white/[0.04] pt-1">
+                  Last: <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
+                  <span className="text-slate-500 ml-1">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
+                </div>
+              ) : null}
+            </>
+          )}
         </div>
       )}
 
-      {/* In-place Compact Win Probability Bar */}
-      <div className="px-4 pb-3">
-        <WinProbabilityBar
-          homeWinPercentage={situation?.lastPlay?.probability?.homeWinPercentage}
-          awayWinPercentage={situation?.lastPlay?.probability?.awayWinPercentage}
-          homeCompetitor={homeComp}
-          awayCompetitor={awayComp}
-          gameState={state}
-          status={status}
-          situation={situation}
-          odds={competition.odds}
-          compact={true}
-        />
-      </div>
+      {/* In-place Compact Win Probability Bar (hidden for finished games) */}
+      {!isFinal && (
+        <div className="px-4 pb-3">
+          <WinProbabilityBar
+            homeWinPercentage={situation?.lastPlay?.probability?.homeWinPercentage}
+            awayWinPercentage={situation?.lastPlay?.probability?.awayWinPercentage}
+            homeCompetitor={homeComp}
+            awayCompetitor={awayComp}
+            gameState={state}
+            status={status}
+            situation={situation}
+            odds={competition.odds}
+            compact={true}
+          />
+        </div>
+      )}
 
       {/* Progressive Disclosure Action Toolbar (Anchored at Bottom Edge) */}
       <div className={`border-t px-2 sm:px-3 py-1.5 mt-auto transition-colors ${
