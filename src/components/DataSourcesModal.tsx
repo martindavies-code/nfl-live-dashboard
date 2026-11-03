@@ -1,8 +1,9 @@
 import React from 'react'
 import { createPortal } from 'react-dom'
-import { Server, CheckCircle2, ShieldCheck, X, RefreshCw, Zap, Database } from 'lucide-react'
+import { Server, CheckCircle2, ShieldCheck, X, RefreshCw, Zap, Database, Award, ExternalLink } from 'lucide-react'
 import { REAL_NFL_DATA_SOURCES } from '../services/espnApi'
 import { useFocusTrap } from '../utils/useFocusTrap'
+import { getLatestPowerRankingsEdition } from '../utils/powerRankings'
 
 interface DataSourcesModalProps {
   isOpen: boolean
@@ -187,6 +188,39 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
               </span>
             </div>
           </div>
+
+          {/* Authoritative NFL Power Rankings Source */}
+          {(() => {
+            const latestEdition = getLatestPowerRankingsEdition()
+            return (
+              <div className="mt-4 rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <Award className="h-4 w-4 text-amber-400" />
+                    Authoritative NFL Power Rankings
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-900/60 text-indigo-200 border border-indigo-700/50">
+                    Week {latestEdition.week} Verified
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                  Team power rankings and marquee matchup tiers are ingested directly from weekly published consensus sports journalism ballots (<strong>{latestEdition.source.publisher}</strong>), not synthesized from raw win/loss records alone.
+                </p>
+                <div className="mt-2.5 flex items-center justify-between text-xs pt-2 border-t border-indigo-900/40">
+                  <span className="text-slate-400 truncate max-w-[320px]">{latestEdition.source.title}</span>
+                  <a
+                    href={latestEdition.source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sky-400 hover:text-sky-300 font-semibold inline-flex items-center gap-1 shrink-0 ml-2"
+                  >
+                    <span>View Source</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            )
+          })()}
         </div>
 
         {/* Footer actions */}

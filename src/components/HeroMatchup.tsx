@@ -38,10 +38,17 @@ import {
   Swords,
   TrendingUp,
   Tv,
+  ExternalLink,
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
-import { getTeamPowerRank, getMatchupTierInfo } from '../utils/powerRankings'
+import {
+  getTeamPowerRank,
+  getMatchupTierInfo,
+  getPowerRankTierStyle,
+  getTeamPowerRankDetail,
+  getLatestPowerRankingsEdition,
+} from '../utils/powerRankings'
 import { calculateWinProbability, getBettingOddsInfo } from '../utils/winProbability'
 import { sanitizeUrl, FALLBACK_LOGO } from '../utils/normalizer'
 
@@ -169,6 +176,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
 
   const awayRank = useMemo(() => getTeamPowerRank(awayAbbr), [awayAbbr])
   const homeRank = useMemo(() => getTeamPowerRank(homeAbbr), [homeAbbr])
+  const awayRankStyle = useMemo(() => getPowerRankTierStyle(awayRank), [awayRank])
+  const homeRankStyle = useMemo(() => getPowerRankTierStyle(homeRank), [homeRank])
+  const awayRankDetail = useMemo(() => getTeamPowerRankDetail(awayAbbr), [awayAbbr])
+  const homeRankDetail = useMemo(() => getTeamPowerRankDetail(homeAbbr), [homeAbbr])
+  const latestEdition = useMemo(() => getLatestPowerRankingsEdition(), [])
   const matchupTier = useMemo(() => getMatchupTierInfo(awayRank, homeRank), [awayRank, homeRank])
   const kickoffCountdown = useMemo(() => formatKickoffCountdown(event?.date), [event?.date])
   const awayRecord = useMemo(() => parseWinLossRecord(awayComp?.records?.[0]?.summary), [awayComp?.records])
@@ -412,6 +424,16 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                   Kickoff: {formattedKickoff}
                 </span>
               )}
+
+              {matchupTier && (
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-bold border ${matchupTier.badgeClass}`}
+                  title={`Published Power Ranking Matchup: ${matchupTier.label}`}
+                >
+                  <Sparkles className="h-3 w-3" />
+                  <span>{matchupTier.label}</span>
+                </span>
+              )}
             </div>
 
             {venueText && (
@@ -461,6 +483,13 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <span
+                      className={`font-mono text-xs font-bold px-1.5 py-0.5 rounded border tabular-nums shrink-0 ${awayRankStyle.pillClass}`}
+                      title={`Published Power Rank #${awayRank}`}
+                      aria-label={`Power Rank #${awayRank}`}
+                    >
+                      #{awayRank}
+                    </span>
                     <span className={`text-base sm:text-xl font-black tracking-tight leading-tight ${
                       isFinal
                         ? isAwayWinner
@@ -546,6 +575,13 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <span
+                      className={`font-mono text-xs font-bold px-1.5 py-0.5 rounded border tabular-nums shrink-0 ${homeRankStyle.pillClass}`}
+                      title={`Published Power Rank #${homeRank}`}
+                      aria-label={`Power Rank #${homeRank}`}
+                    >
+                      #{homeRank}
+                    </span>
                     <span className={`text-base sm:text-xl font-black tracking-tight leading-tight ${
                       isFinal
                         ? isHomeWinner
@@ -784,14 +820,30 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                       <Swords className="h-3.5 w-3.5 text-amber-400" />
                       Tale of the Tape
                     </span>
-                    <span className="text-[10px] font-mono text-slate-500">Power & Form</span>
+                    <a
+                      href={latestEdition.source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-mono text-sky-400 hover:underline inline-flex items-center gap-0.5"
+                      title={`${latestEdition.source.title} (${latestEdition.source.publisher})`}
+                    >
+                      <span>{latestEdition.source.publisher}</span>
+                      <ExternalLink className="h-2.5 w-2.5" />
+                    </a>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-slate-400">#{awayRank}</span>
+                        <span className={`font-mono text-xs px-1.5 py-0.2 rounded border tabular-nums ${awayRankStyle.pillClass}`}>
+                          #{awayRank}
+                        </span>
                         <span className="font-bold text-white">{awayAbbr}</span>
+                        {awayRankDetail.change !== 0 && (
+                          <span className={`text-[10px] font-mono font-bold ${awayRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {awayRankDetail.change > 0 ? `▲+${awayRankDetail.change}` : `▼${awayRankDetail.change}`}
+                          </span>
+                        )}
                       </div>
                       <span className="text-slate-400 font-mono text-xs">
                         {awayRecord.summary} <span className="text-slate-500">({awayRecord.winPctString})</span>
@@ -800,8 +852,15 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
 
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-slate-400">#{homeRank}</span>
+                        <span className={`font-mono text-xs px-1.5 py-0.2 rounded border tabular-nums ${homeRankStyle.pillClass}`}>
+                          #{homeRank}
+                        </span>
                         <span className="font-bold text-white">{homeAbbr}</span>
+                        {homeRankDetail.change !== 0 && (
+                          <span className={`text-[10px] font-mono font-bold ${homeRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {homeRankDetail.change > 0 ? `▲+${homeRankDetail.change}` : `▼${homeRankDetail.change}`}
+                          </span>
+                        )}
                       </div>
                       <span className="text-slate-400 font-mono text-xs">
                         {homeRecord.summary} <span className="text-slate-500">({homeRecord.winPctString})</span>

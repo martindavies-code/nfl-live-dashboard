@@ -1,58 +1,40 @@
 import type { NFLEvent } from '../types/nfl'
 import { isHalftimeSituation } from './nflHelpers.ts'
+import {
+  getTeamPowerRank as getTeamPowerRankFromRegistry,
+  getTeamPowerRankDetail,
+  getPowerRankTierStyle,
+  getLatestPowerRankingsEdition,
+  getWeeklyPowerRankingsEdition,
+  getAuthoritativePowerRankingsMap,
+  NFL_POWER_RANKINGS,
+} from '../data/powerRankingsRegistry.ts'
 
-/**
- * Consensus NFL Team Power Rankings (1 to 32, 1 = best).
- * Used for dynamic spotlighting of premier matchups.
- */
-export const NFL_POWER_RANKINGS: Record<string, number> = {
-  KC: 1,
-  DET: 2,
-  BAL: 3,
-  BUF: 4,
-  PHI: 5,
-  SF: 6,
-  GB: 7,
-  MIN: 8,
-  HOU: 9,
-  WSH: 10,
-  PIT: 11,
-  TB: 12,
-  LAC: 13,
-  DEN: 14,
-  CIN: 15,
-  SEA: 16,
-  ATL: 17,
-  DAL: 18,
-  CHI: 19,
-  ARI: 20,
-  IND: 21,
-  LAR: 22,
-  MIA: 23,
-  NYJ: 24,
-  NYG: 25,
-  NO: 26,
-  JAX: 27,
-  CLE: 28,
-  LV: 29,
-  NE: 30,
-  FNE: 30, // Alias for Patriots
-  TEN: 31,
-  CAR: 32,
+export {
+  getTeamPowerRankDetail,
+  getPowerRankTierStyle,
+  getLatestPowerRankingsEdition,
+  getWeeklyPowerRankingsEdition,
+  getAuthoritativePowerRankingsMap,
+  NFL_POWER_RANKINGS,
 }
 
 /**
- * Returns the power ranking (1-32) for a given team abbreviation.
+ * Returns the authoritative power ranking (1-32) for a given team abbreviation.
+ * Sourced from published weekly consensus sports editorial editions.
  */
-export function getTeamPowerRank(abbr: string = ''): number {
-  const clean = (abbr || '').trim().toUpperCase()
-  return NFL_POWER_RANKINGS[clean] ?? 20
+export function getTeamPowerRank(
+  abbr: string = '',
+  week?: number,
+  season: number = 2026
+): number {
+  return getTeamPowerRankFromRegistry(abbr, week, season)
 }
 
 /**
  * Calculates a matchup quality score based on team power rankings.
  * Lower score = higher quality matchup between premier powerhouse teams.
- * e.g., KC (#1) vs BUF (#4) = score 5.01 (Premier matchup!)
+ * e.g., BUF (#1) vs SF (#2) = score 3.01 (Premier matchup!)
  */
 export function getMatchupPowerScore(event: NFLEvent): number {
   const comp = event.competitions?.[0]

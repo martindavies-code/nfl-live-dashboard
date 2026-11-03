@@ -32,7 +32,11 @@ import {
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
-import { getTeamPowerRank, getMatchupTierInfo } from '../utils/powerRankings'
+import {
+  getTeamPowerRank,
+  getMatchupTierInfo,
+  getPowerRankTierStyle,
+} from '../utils/powerRankings'
 import { getBettingOddsInfo } from '../utils/winProbability'
 
 interface GameCardProps {
@@ -138,6 +142,8 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const broadcastDetails = getGameBroadcastDetails(event)
   const awayRank = getTeamPowerRank(awayAbbr)
   const homeRank = getTeamPowerRank(homeAbbr)
+  const awayRankStyle = getPowerRankTierStyle(awayRank)
+  const homeRankStyle = getPowerRankTierStyle(homeRank)
   const matchupTier = getMatchupTierInfo(awayRank, homeRank)
   const kickoffCountdown = formatKickoffCountdown(event.date)
   const awayRecord = parseWinLossRecord(awayComp?.records?.[0]?.summary)
@@ -252,6 +258,16 @@ export const GameCard: React.FC<GameCardProps> = memo(({
         </div>
 
         <div className="flex items-center gap-2">
+          {matchupTier.isMarquee && (
+            <span
+              className={`hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border ${matchupTier.badgeClass}`}
+              title={`Consensus Published Matchup: ${matchupTier.label}`}
+            >
+              <Sparkles className="h-2.5 w-2.5" />
+              <span>{matchupTier.label}</span>
+            </span>
+          )}
+
           {/* RED ZONE BADGE */}
           {isLive && isRedZone && (
             <span className="inline-flex items-center gap-1 rounded-md bg-rose-600/30 border border-rose-500/60 px-2 py-0.5 text-[10px] font-black tracking-wider text-rose-200 animate-pulse shadow-sm shadow-rose-950">
@@ -325,6 +341,13 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
+                <span
+                  className={`font-mono text-[10px] px-1 py-0.2 rounded border tabular-nums shrink-0 ${awayRankStyle.pillClass}`}
+                  title={`Published Power Rank #${awayRank}`}
+                  aria-label={`Power rank #${awayRank}`}
+                >
+                  #{awayRank}
+                </span>
                 <span className={`text-sm truncate ${
                   isFinal
                     ? isAwayWinner
@@ -413,6 +436,13 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
+                <span
+                  className={`font-mono text-[10px] px-1 py-0.2 rounded border tabular-nums shrink-0 ${homeRankStyle.pillClass}`}
+                  title={`Published Power Rank #${homeRank}`}
+                  aria-label={`Power rank #${homeRank}`}
+                >
+                  #{homeRank}
+                </span>
                 <span className={`text-sm truncate ${
                   isFinal
                     ? isHomeWinner

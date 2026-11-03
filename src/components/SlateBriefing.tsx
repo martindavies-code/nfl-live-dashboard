@@ -8,7 +8,12 @@ import {
   formatLocalizedKickoff,
   sanitizePatriotsAbbreviation,
 } from '../utils/nflHelpers'
-import { Flame, Compass, ArrowRight, Zap } from 'lucide-react'
+import { Flame, Compass, ArrowRight, Zap, Sparkles } from 'lucide-react'
+import {
+  getTeamPowerRank,
+  getMatchupTierInfo,
+  getPowerRankTierStyle,
+} from '../utils/powerRankings'
 
 interface SlateBriefingProps {
   events: NFLEvent[]
@@ -131,6 +136,12 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
   const primeHomeAbbr = sanitizePatriotsAbbreviation(primeHome?.team?.abbreviation) || 'Home'
   const primeAwayAbbr = sanitizePatriotsAbbreviation(primeAway?.team?.abbreviation) || 'Away'
 
+  const primeAwayRank = getTeamPowerRank(primeAwayAbbr)
+  const primeHomeRank = getTeamPowerRank(primeHomeAbbr)
+  const primeAwayRankStyle = getPowerRankTierStyle(primeAwayRank)
+  const primeHomeRankStyle = getPowerRankTierStyle(primeHomeRank)
+  const primeTier = getMatchupTierInfo(primeAwayRank, primeHomeRank)
+
   return (
     <section
       aria-label="Slate Executive Briefing"
@@ -193,9 +204,33 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
               <span className="font-semibold text-slate-400">
                 {finalEvents.length === events.length && events.length > 0 ? 'Slate Result:' : 'Key Matchup:'}
               </span>
-              <span className="text-white font-medium">
-                {primeAwayAbbr} ({primeAway?.score ?? '-'}) @ {primeHomeAbbr} ({primeHome?.score ?? '-'})
+              <span className="text-white font-medium flex items-center gap-1.5 flex-wrap">
+                <span
+                  className={`font-mono text-[10px] px-1 py-0.2 rounded border tabular-nums shrink-0 ${primeAwayRankStyle.pillClass}`}
+                  title={`Published Power Rank #${primeAwayRank}`}
+                  aria-label={`Power Rank #${primeAwayRank}`}
+                >
+                  #{primeAwayRank}
+                </span>
+                <span>{primeAwayAbbr}</span>
+                <span className="text-slate-400">({primeAway?.score ?? '-'})</span>
+                <span className="text-slate-500 font-mono">@</span>
+                <span
+                  className={`font-mono text-[10px] px-1 py-0.2 rounded border tabular-nums shrink-0 ${primeHomeRankStyle.pillClass}`}
+                  title={`Published Power Rank #${primeHomeRank}`}
+                  aria-label={`Power Rank #${primeHomeRank}`}
+                >
+                  #{primeHomeRank}
+                </span>
+                <span>{primeHomeAbbr}</span>
+                <span className="text-slate-400">({primeHome?.score ?? '-'})</span>
               </span>
+              {primeTier.isMarquee && (
+                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border ${primeTier.badgeClass}`}>
+                  <Sparkles className="h-2.5 w-2.5" />
+                  <span>{primeTier.label}</span>
+                </span>
+              )}
               {overtimeThrillers.includes(primeAlertEvent) ? (
                 <span className="text-amber-300 font-semibold">
                   • Overtime drama with {primeAlertEvent.status?.displayClock || '0:00'} remaining

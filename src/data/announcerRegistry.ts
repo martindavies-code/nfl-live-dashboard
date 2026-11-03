@@ -630,6 +630,13 @@ export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
     sources: [{ label: 'Yahoo Sports / Akron Beacon Journal — NFL schedule and announcer pairings for Week 8', url: 'https://sports.yahoo.com/articles/see-full-list-nfl-week-211608334.html' }],
     verifiedOn: '2026-10-29',
   },
+  {
+    season: 2026, week: 9, away: 'JAX', home: 'BAL', kickoffUtc: '2026-11-06T01:15Z',
+    network: 'Amazon Prime Video',
+    playByPlay: 'Al Michaels', analysts: ['Kirk Herbstreit'], sideline: ['Kaylee Hartung'],
+    sources: [{ label: 'Amazon Prime Video Thursday Night Football official crew', url: 'https://www.amazon.com/tnf' }],
+    verifiedOn: '2026-11-03',
+  },
 ]
 
 /** ESPN abbreviations vary from the UI's sanitised ones (the Patriots display as `FNE`). */
