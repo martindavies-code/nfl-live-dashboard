@@ -9,7 +9,7 @@ import {
 
 test('Highlights Registry: all entries have valid 11-char YouTube video IDs and non-empty titles', () => {
   const entries = Object.entries(HIGHLIGHTS_REGISTRY)
-  assert.ok(entries.length >= 14, `Expected at least 14 registered highlights, got ${entries.length}`)
+  assert.ok(entries.length >= 120, `Expected at least 120 registered highlights across weeks 1-8, got ${entries.length}`)
 
   const youtubeVideoIdRegex = /^[a-zA-Z0-9_-]{11}$/
 

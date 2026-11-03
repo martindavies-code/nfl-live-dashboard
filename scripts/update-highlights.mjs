@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
  * Automated script to search and update official NFL YouTube highlights
- * in src/data/highlightsRegistry.ts.
+ * in src/data/highlightsRegistry.ts across all past and completed weeks.
  *
- * Scrapes official @nfl channel search results for completed games.
+ * Scrapes official @nfl channel search results for completed games with
+ * high-precision title verification matching teams, year, and week numbers.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -20,85 +21,264 @@ async function fetchScoreboard(year = 2026, week = 8, seasonType = 2) {
   return await res.json()
 }
 
-async function findYouTubeHighlight(awayName, homeName, week, year, seasonType) {
-  const seasonTypeLabel = seasonType === 3 ? 'Playoffs' : 'Season'
-  const q = `${awayName} vs ${homeName} Game Highlights ${year} NFL ${seasonTypeLabel} Week ${week}`
-  const url = `https://www.youtube.com/@nfl/search?query=${encodeURIComponent(q)}`
-  try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } })
-    if (!res.ok) return null
-    const html = await res.text()
-    const match = html.match(/\/watch\?v=([a-zA-Z0-9_-]{11})/)
-    if (!match) return null
+function matchTeam(text, team) {
+  if (!team) return false
+  const clean = text.toLowerCase()
+  const name = (team.name || '').toLowerCase()
+  const disp = (team.displayName || '').toLowerCase()
+  const stem = name.endsWith('s') ? name.slice(0, -1) : name
+  return clean.includes(name) || clean.includes(disp) || (stem.length > 3 && clean.includes(stem))
+}
 
-    const videoId = match[1]
-    // Fetch video page to verify exact title from the official NFL channel
-    const vidRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, { headers: { 'User-Agent': 'Mozilla/5.0' } })
-    const vidHtml = await vidRes.text()
-    const titleMatch = vidHtml.match(/<title>(.*?)<\/title>/)
-    let title = titleMatch ? titleMatch[1].replace(/ - YouTube$/, '').trim() : `${awayName} vs ${homeName} Game Highlights`
+function matchHighlight(title, awayTeam, homeTeam, week, _year) {
+  const text = title.toLowerCase()
+  if (!text.includes('highlight')) return false
+  if (!matchTeam(text, awayTeam)) return false
+  if (!matchTeam(text, homeTeam)) return false
 
-    return { videoId, title }
-  } catch (err) {
-    console.warn(`Failed searching YouTube for ${awayName} vs ${homeName}:`, err.message)
-    return null
+  // Reject any past seasons (2010-2025)
+  if (/\b(201\d|202[0-5])\b/.test(text)) return false
+
+  // Strict Week check: \bweek\s*X\b
+  const hasTargetWeek = new RegExp(`\\bweek\\s*${week}\\b`, 'i').test(text)
+  if (hasTargetWeek) return true
+
+  // Fallback check: if no other week number is mentioned anywhere in the title (e.g. Melbourne international game or shortened titles)
+  const mentionsOtherWeek = /\bweek\s*\d+\b/i.test(text)
+  if (!mentionsOtherWeek) {
+    return true
   }
+
+  return false
+}
+
+async function findYouTubeHighlight(awayTeam, homeTeam, week, year, retries = 2) {
+  const q = `${awayTeam.displayName} vs ${homeTeam.displayName} Game Highlights ${year} Week ${week}`
+  const url = `https://www.youtube.com/@nfl/search?query=${encodeURIComponent(q)}`
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      })
+      if (!res.ok) {
+        if (attempt < retries) {
+          await new Promise((r) => setTimeout(r, 600 * (attempt + 1)))
+          continue
+        }
+        return null
+      }
+      const html = await res.text()
+      const jsonStr = html.match(/ytInitialData\s*=\s*({.+?});<\/script>/s)?.[1] || ''
+      const titles = [
+        ...jsonStr.matchAll(
+          /"videoRenderer":\{"videoId":"([^"]+)".+?"title":\{"runs":\[\{"text":"([^"]+)"/g
+        ),
+      ]
+
+      if (titles.length === 0 && attempt < retries) {
+        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)))
+        continue
+      }
+
+      const match = titles.find((t) => matchHighlight(t[2], awayTeam, homeTeam, week, year))
+      if (match) {
+        return {
+          videoId: match[1],
+          title: match[2].trim(),
+        }
+      }
+
+      return null
+    } catch (err) {
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)))
+        continue
+      }
+      console.warn(`Failed searching YouTube for ${awayTeam.displayName} vs ${homeTeam.displayName}:`, err.message)
+      return null
+    }
+  }
+  return null
+}
+
+async function pMap(items, fn, concurrency = 3) {
+  const results = new Array(items.length)
+  let currentIndex = 0
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (currentIndex < items.length) {
+      const i = currentIndex++
+      results[i] = await fn(items[i], i)
+    }
+  })
+  await Promise.all(workers)
+  return results
 }
 
 async function main() {
   const year = 2026
-  const week = 8
   const seasonType = 2
+  const targetWeekArg = process.argv.find((a) => a.startsWith('--week='))
 
-  console.log(`[Highlights Ingestion] Fetching ESPN scoreboard for ${year} Season Week ${week}...`)
-  const sbData = await fetchScoreboard(year, week, seasonType)
-  const events = sbData.events || []
+  const weeksToScan = targetWeekArg
+    ? [parseInt(targetWeekArg.split('=')[1], 10)]
+    : [1, 2, 3, 4, 5, 6, 7, 8]
 
-  console.log(`Found ${events.length} games. Scanning for completed games...`)
+  console.log(`[Highlights Ingestion] Scanning official highlights for ${year} weeks:`, weeksToScan)
 
-  let registryCode = fs.readFileSync(REGISTRY_FILE, 'utf8')
-  let countUpdated = 0
+  const allEntriesByWeek = {}
 
-  for (const ev of events) {
-    const comp = ev.competitions?.[0]
-    const state = ev.status?.type?.state || comp?.status?.type?.state
-    if (state !== 'post') continue // Only finished games
+  for (const week of weeksToScan) {
+    console.log(`\n--- Fetching ESPN scoreboard for Week ${week} ---`)
+    const sbData = await fetchScoreboard(year, week, seasonType)
+    const events = sbData.events || []
+    allEntriesByWeek[week] = []
 
-    const awayComp = comp?.competitors?.find((c) => c.homeAway === 'away')
-    const homeComp = comp?.competitors?.find((c) => c.homeAway === 'home')
-    const awayAbbr = awayComp?.team?.abbreviation
-    const homeAbbr = homeComp?.team?.abbreviation
-    const awayName = awayComp?.team?.displayName || awayComp?.team?.name
-    const homeName = homeComp?.team?.displayName || homeComp?.team?.name
+    const finishedGames = []
+    for (const ev of events) {
+      const comp = ev.competitions?.[0]
+      const state = ev.status?.type?.state || comp?.status?.type?.state
+      if (state !== 'post') continue // Only finished games
 
-    const typeStr = seasonType === 3 ? 'POST' : 'REG'
-    const key = `${year}_${typeStr}_${week}_${awayAbbr}_${homeAbbr}`
+      const awayComp = comp?.competitors?.find((c) => c.homeAway === 'away')
+      const homeComp = comp?.competitors?.find((c) => c.homeAway === 'home')
+      const awayTeam = awayComp?.team
+      const homeTeam = homeComp?.team
+      const awayAbbr = awayTeam?.abbreviation
+      const homeAbbr = homeTeam?.abbreviation
 
-    if (registryCode.includes(`'${key}':`)) {
-      console.log(`  ✓ ${key} already registered.`)
-      continue
+      const typeStr = seasonType === 3 ? 'POST' : 'REG'
+      const key = `${year}_${typeStr}_${week}_${awayAbbr}_${homeAbbr}`
+
+      finishedGames.push({
+        key,
+        awayTeam,
+        homeTeam,
+        kickoffUtc: comp?.date || ev.date || '',
+        week,
+      })
     }
 
-    console.log(`  🔍 Searching official highlights for ${key} (${awayName} @ ${homeName})...`)
-    const result = await findYouTubeHighlight(awayName, homeName, week, year, seasonType)
-    if (result && result.videoId) {
-      console.log(`  ✅ Found ${result.videoId}: "${result.title}"`)
-      const entryBlock = `  '${key}': {\n    videoId: '${result.videoId}',\n    title: '${result.title.replace(/'/g, "\\'")}',\n    kickoffUtc: '${comp?.date || ev.date || ''}',\n  },\n`
-      // Insert into HIGHLIGHTS_REGISTRY
-      const targetPos = registryCode.indexOf('};\n')
-      if (targetPos !== -1) {
-        registryCode = registryCode.slice(0, targetPos) + entryBlock + registryCode.slice(targetPos)
-        countUpdated++
-      }
-    }
+    console.log(`Week ${week}: ${finishedGames.length} completed games. Resolving official highlights...`)
+
+    await pMap(
+      finishedGames,
+      async (game) => {
+        const result = await findYouTubeHighlight(game.awayTeam, game.homeTeam, week, year)
+        if (result && result.videoId) {
+          console.log(`  ✓ [Matched] ${game.key} -> ${result.videoId} ("${result.title}")`)
+          allEntriesByWeek[week].push({
+            key: game.key,
+            videoId: result.videoId,
+            title: result.title,
+            kickoffUtc: game.kickoffUtc,
+          })
+        } else {
+          console.warn(`  ✗ [Missing] ${game.key} (${game.awayTeam?.name} @ ${game.homeTeam?.name})`)
+        }
+      },
+      3
+    )
   }
 
-  if (countUpdated > 0) {
-    fs.writeFileSync(REGISTRY_FILE, registryCode, 'utf8')
-    console.log(`Successfully injected ${countUpdated} new official NFL highlight entries!`)
-  } else {
-    console.log(`All completed games already up to date.`)
+  // Generate updated TypeScript registry file
+  let code = `import { sanitizePatriotsAbbreviation } from '../utils/nflHelpers.ts'
+
+export interface RegisteredHighlight {
+  videoId: string
+  title: string
+  kickoffUtc?: string
+}
+
+/**
+ * Authoritative registry of official NFL YouTube game highlight videos.
+ * Published directly by the official NFL YouTube channel (@nfl).
+ *
+ * Key format: \`\${seasonYear}_\${seasonType}_\${weekNumber}_\${awayAbbr}_\${homeAbbr}\`
+ * where seasonType is 'REG' or 'POST'.
+ */
+export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
+`
+
+  let totalEntries = 0
+  const sortedWeeks = Object.keys(allEntriesByWeek).map(Number).sort((a, b) => a - b)
+  for (const week of sortedWeeks) {
+    const list = allEntriesByWeek[week]
+    if (!list || list.length === 0) continue
+    // Sort games chronologically by kickoffUtc
+    list.sort((a, b) => (a.kickoffUtc || '').localeCompare(b.kickoffUtc || ''))
+
+    code += `  // =========================================================================\n`
+    code += `  // ${year} Regular Season - Week ${week} (${list.length} Official NFL Highlights)\n`
+    code += `  // =========================================================================\n`
+    for (const item of list) {
+      code += `  '${item.key}': {\n`
+      code += `    videoId: '${item.videoId}',\n`
+      code += `    title: '${item.title.replace(/'/g, "\\'")}',\n`
+      code += `    kickoffUtc: '${item.kickoffUtc}',\n`
+      code += `  },\n`
+      totalEntries++
+    }
+    code += `\n`
   }
+
+  code += `}
+
+/**
+ * Normalizes team abbreviation for registry key lookup.
+ * Automatically handles Patriots aliases (FNE -> NE) and upper-casing.
+ */
+export function normalizeHighlightAbbr(abbr?: string | null): string {
+  if (!abbr || typeof abbr !== 'string') return ''
+  const clean = abbr.trim().toUpperCase()
+  if (clean === 'FNE' || clean === 'PATRIOTS') return 'NE'
+  const sanitized = sanitizePatriotsAbbreviation(clean)
+  if (sanitized === 'FNE') return 'NE'
+  return clean
+}
+
+/**
+ * Builds the canonical registry key for a given game.
+ */
+export function buildHighlightKey(
+  seasonYear?: number | string | null,
+  seasonType?: number | string | null,
+  weekNumber?: number | string | null,
+  awayAbbr: string = '',
+  homeAbbr: string = ''
+): string {
+  const year = seasonYear ? String(seasonYear).trim() : '2026'
+  const typeStr = Number(seasonType) === 3 ? 'POST' : 'REG'
+  const week = weekNumber ? String(weekNumber).trim() : '1'
+  const away = normalizeHighlightAbbr(awayAbbr)
+  const home = normalizeHighlightAbbr(homeAbbr)
+  return \`\${year}_\${typeStr}_\${week}_\${away}_\${home}\`
+}
+
+/**
+ * Looks up a registered official highlight video for a game.
+ */
+export function getRegisteredHighlight(
+  seasonYear?: number | string | null,
+  seasonType?: number | string | null,
+  weekNumber?: number | string | null,
+  awayAbbr?: string | null,
+  homeAbbr?: string | null
+): RegisteredHighlight | null {
+  if (!awayAbbr || !homeAbbr) return null
+  const key = buildHighlightKey(
+    seasonYear ?? 2026,
+    seasonType ?? 2,
+    weekNumber ?? 1,
+    awayAbbr,
+    homeAbbr
+  )
+  return HIGHLIGHTS_REGISTRY[key] || null
+}
+`
+
+  fs.writeFileSync(REGISTRY_FILE, code, 'utf8')
+  console.log(`\n🎉 Successfully wrote ${totalEntries} official NFL highlights into ${REGISTRY_FILE}!`)
 }
 
 main().catch((err) => {
