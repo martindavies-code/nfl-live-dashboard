@@ -161,6 +161,7 @@ export function getMatchupTierInfo(
   homeRank: number
 ): {
   label: string
+  shortLabel: string
   isMarquee: boolean
   badgeClass: string
 } {
@@ -168,6 +169,7 @@ export function getMatchupTierInfo(
   if (awayRank <= 10 && homeRank <= 10) {
     return {
       label: 'Top-10 Heavyweight Clash',
+      shortLabel: 'Top-10 Clash',
       isMarquee: true,
       badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
     }
@@ -175,6 +177,7 @@ export function getMatchupTierInfo(
   if (awayRank <= 16 && homeRank <= 16) {
     return {
       label: 'Playoff Contender Battle',
+      shortLabel: 'Contender Battle',
       isMarquee: true,
       badgeClass: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
     }
@@ -182,6 +185,7 @@ export function getMatchupTierInfo(
   if (awayRank <= 5 || homeRank <= 5) {
     return {
       label: 'Marquee Powerhouse Matchup',
+      shortLabel: 'Marquee Powerhouse',
       isMarquee: true,
       badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
     }
@@ -189,12 +193,14 @@ export function getMatchupTierInfo(
   if (avg <= 16) {
     return {
       label: 'Competitive Showdown',
+      shortLabel: 'Showdown',
       isMarquee: false,
       badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
     }
   }
   return {
     label: 'Key Matchup',
+    shortLabel: 'Matchup',
     isMarquee: false,
     badgeClass: 'bg-slate-800 text-slate-300 border-slate-700',
   }
