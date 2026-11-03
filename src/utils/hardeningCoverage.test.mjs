@@ -1668,6 +1668,147 @@ test('Hardening: nflHelpers resolveContrastingTeamColors and reconcileScoreboard
   )
 })
 
+test('hardeningCoverage: gameHighlights edge cases and Patriots alias resolution', async () => {
+  const { getGameHighlightInfo } = await import('./gameHighlights.ts')
+
+  // 1. Registered game with Patriots alias (FNE vs MIA in Week 8)
+  const patriotsEvent = {
+    season: { year: 2026, type: 2 },
+    week: { number: 8 },
+    competitions: [
+      {
+        competitors: [
+          { homeAway: 'home', team: { abbreviation: 'MIA', displayName: 'Miami Dolphins' } },
+          { homeAway: 'away', team: { abbreviation: 'FNE', displayName: 'New England Patriots' } },
+        ],
+      },
+    ],
+  }
+  const patInfo = getGameHighlightInfo(patriotsEvent)
+  assert.equal(patInfo.isDirect, true)
+  assert.ok(patInfo.videoId)
+
+  // 2. Defaulting when season and week are completely omitted
+  const noSeasonEvent = {
+    competitions: [
+      {
+        competitors: [
+          { homeAway: 'home', team: { abbreviation: 'DET', displayName: 'Detroit Lions' } },
+          { homeAway: 'away', team: { abbreviation: 'MIN', displayName: 'Minnesota Vikings' } },
+        ],
+      },
+    ],
+  }
+  const noSeasonInfo = getGameHighlightInfo(noSeasonEvent)
+  assert.equal(typeof noSeasonInfo.url, 'string')
+})
+
+test('hardeningCoverage: winProbability mathematical boundaries and branch exhaustiveness', async () => {
+  const {
+    normalCdf,
+    moneylineToImplied,
+    getBettingOddsInfo,
+    calculateWinProbability,
+    isFourthQuarterThriller,
+  } = await import('./winProbability.ts')
+
+  // 1. normalCdf extreme and invalid parameters
+  assert.equal(normalCdf(Infinity), 1)
+  assert.equal(normalCdf(-Infinity), 0)
+  assert.equal(normalCdf(12), 1)
+  assert.equal(normalCdf(-12), 0)
+  assert.equal(normalCdf(0), 0.5)
+  assert.equal(normalCdf(NaN), 0.5)
+  assert.equal(normalCdf('invalid'), 0.5)
+  assert.equal(normalCdf(null), 0.5)
+
+  // 2. moneylineToImplied
+  assert.equal(moneylineToImplied(null), null)
+  assert.equal(moneylineToImplied(undefined), null)
+  assert.equal(moneylineToImplied(0), null)
+  assert.equal(moneylineToImplied(NaN), null)
+  assert.ok(Math.abs(moneylineToImplied(-110) - 0.5238) < 0.001)
+  assert.ok(Math.abs(moneylineToImplied(150) - 0.4) < 0.001)
+
+  // 3. getBettingOddsInfo edge branches
+  assert.equal(getBettingOddsInfo(null).formattedSummary, null)
+  assert.equal(getBettingOddsInfo([]).formattedSummary, null)
+  assert.equal(getBettingOddsInfo([null]).formattedSummary, null)
+  assert.equal(getBettingOddsInfo(['not-an-object']).formattedSummary, null)
+
+  // spread is pick'em / pk
+  const pkOdds = getBettingOddsInfo([{ details: 'pk', overUnder: 42 }])
+  assert.equal(pkOdds.handicap, 'EVEN')
+
+  // spread is pick
+  const pickOdds = getBettingOddsInfo([{ details: 'pick', overUnder: 42 }])
+  assert.equal(pickOdds.handicap, 'EVEN')
+
+  // spread is pick'em
+  const pickemOdds = getBettingOddsInfo([{ details: "pick'em", overUnder: 42 }])
+  assert.equal(pickemOdds.handicap, 'EVEN')
+
+  // primaryOdds.overUnder is invalid string
+  const invalidStringOU = getBettingOddsInfo([{ overUnder: 'N/A' }])
+  assert.equal(invalidStringOU.overUnder, null)
+
+  // 4. calculateWinProbability edge branches
+  // In-game with only homeWinPercentage and no awayWinPercentage
+  const onlyHomePct = calculateWinProbability({
+    gameState: 'in',
+    homeWinPercentage: 72,
+    homeCompetitor: { id: 'h', score: '14' },
+    awayCompetitor: { id: 'a', score: '10' },
+  })
+  assert.equal(onlyHomePct.homePct, 72)
+  assert.equal(onlyHomePct.awayPct, 28)
+
+  // In-game with moneyline odds only in pre-game where one side is missing
+  const partialMl = calculateWinProbability({
+    gameState: 'pre',
+    odds: [{ moneylineWinner: true, homeMoneyline: -200 }],
+    homeCompetitor: { id: 'h' },
+    awayCompetitor: { id: 'a' },
+  })
+  assert.ok(Number.isFinite(partialMl.homePct))
+
+  // In-game with situation and away driving
+  const awayDriveInGame = calculateWinProbability({
+    gameState: 'in',
+    status: { period: 3, clock: 500 },
+    situation: { down: 1, yardLine: 80, possession: 'a', isRedZone: true },
+    homeCompetitor: { id: 'h', score: '10' },
+    awayCompetitor: { id: 'a', score: '7' },
+  })
+  assert.ok(awayDriveInGame.awayPct > 35)
+
+  // 5. isFourthQuarterThriller exhaustive branches
+  assert.equal(isFourthQuarterThriller(null), false)
+  assert.equal(isFourthQuarterThriller({ competitions: [] }), false)
+  assert.equal(isFourthQuarterThriller({ competitions: [{ competitors: [{ id: '1' }] }] }), false)
+  // Not in-progress (e.g. pre or post)
+  assert.equal(isFourthQuarterThriller({
+    status: { type: { state: 'pre' }, period: 4 },
+    competitions: [{ competitors: [{ id: '1', score: '20' }, { id: '2', score: '17' }] }],
+  }), false)
+  // Not 4th quarter (e.g. 3rd quarter)
+  assert.equal(isFourthQuarterThriller({
+    status: { type: { state: 'in' }, period: 3 },
+    competitions: [{ competitors: [{ id: '1', score: '20' }, { id: '2', score: '17' }] }],
+  }), false)
+  // Blowout in 4th quarter
+  assert.equal(isFourthQuarterThriller({
+    status: { type: { state: 'in' }, period: 4 },
+    competitions: [{ competitors: [{ homeAway: 'home', score: '35' }, { homeAway: 'away', score: '10' }] }],
+  }), false)
+  // Overtime
+  assert.equal(isFourthQuarterThriller({
+    status: { type: { state: 'in' }, period: 5 },
+    competitions: [{ competitors: [{ id: '1', score: '20' }, { id: '2', score: '20' }] }],
+  }), false)
+})
+
+
 
 
 

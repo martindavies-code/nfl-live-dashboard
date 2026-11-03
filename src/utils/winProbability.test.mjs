@@ -486,5 +486,33 @@ test('winProbability: complete branch coverage for odds, normalCdf, and event co
   }
   const awayRzRes = getEventWinProbability(awayDrivingRzEvent)
   assert.ok(awayRzRes.awayPct > 40)
+
+  // Post-game NFL tie (homeScore === awayScore)
+  const postTie = calculateWinProbability({
+    gameState: 'post',
+    homeCompetitor: { score: '20' },
+    awayCompetitor: { score: '20' },
+  })
+  assert.equal(postTie.homePct, 50)
+  assert.equal(postTie.awayPct, 50)
+  assert.equal(postTie.favoredName, 'Tied')
+
+  // Live in-game overtime (period 5)
+  const liveOT = calculateWinProbability({
+    gameState: 'in',
+    status: { period: 5, clock: 300 },
+    homeCompetitor: { id: 'h', score: '23' },
+    awayCompetitor: { id: 'a', score: '23' },
+  })
+  assert.ok(Number.isFinite(liveOT.homePct))
+  assert.ok(Number.isFinite(liveOT.awayPct))
+
+  // Odds with numeric spread of 0
+  const zeroSpread = getBettingOddsInfo([{ spread: 0, overUnder: 45 }])
+  assert.equal(zeroSpread.handicap, 'EVEN')
+
+  // Odds with string overUnder
+  const stringOU = getBettingOddsInfo([{ overUnder: '47.5' }])
+  assert.equal(stringOU.overUnder, 'O/U 47.5')
 })
 

@@ -110,4 +110,41 @@ test('gameHighlights: handles postseason games and Patriots name sanitization', 
   const sparseInfo = getGameHighlightInfo(sparseEvent)
   assert.equal(sparseInfo.isDirect, false)
   assert.ok(sparseInfo.url.includes('AWAY'))
+
+  // Event with only team.name fallback
+  const nameOnlyEvent = {
+    season: { year: 2026, type: 2 },
+    week: { number: 9 },
+    competitions: [
+      {
+        competitors: [
+          { homeAway: 'home', team: { id: '1', name: 'Ravens', abbreviation: 'BAL' } },
+          { homeAway: 'away', team: { id: '2', name: 'Jaguars', abbreviation: 'JAX' } },
+        ],
+      },
+    ],
+  }
+  const nameOnlyInfo = getGameHighlightInfo(nameOnlyEvent)
+  assert.equal(nameOnlyInfo.isDirect, false)
+  assert.ok(nameOnlyInfo.title.includes('Jaguars vs Ravens'))
+
+  // Event with only abbreviation fallback
+  const abbrOnlyEvent = {
+    competitions: [
+      {
+        competitors: [
+          { homeAway: 'home', team: { id: '1', abbreviation: 'BAL' } },
+          { homeAway: 'away', team: { id: '2', abbreviation: 'JAX' } },
+        ],
+      },
+    ],
+  }
+  const abbrOnlyInfo = getGameHighlightInfo(abbrOnlyEvent)
+  assert.equal(abbrOnlyInfo.isDirect, false)
+  assert.ok(abbrOnlyInfo.title.includes('JAX vs BAL'))
+
+  // Event with completely empty competitions array
+  const emptyCompsInfo = getGameHighlightInfo({ competitions: [] })
+  assert.equal(emptyCompsInfo.isDirect, false)
+  assert.ok(emptyCompsInfo.url.includes('AWAY'))
 })

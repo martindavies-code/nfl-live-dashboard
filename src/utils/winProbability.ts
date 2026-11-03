@@ -25,7 +25,7 @@ export function normalCdf(z: number): number {
  * Converts American Moneyline Odds (e.g. -395, +310) to raw implied probability.
  * Clamps inputs to prevent numeric overflows or negative probabilities.
  */
-function moneylineToImplied(mlVal?: string | number | null): number | null {
+export function moneylineToImplied(mlVal?: string | number | null): number | null {
   if (mlVal === undefined || mlVal === null) return null
   const cleanStr = String(mlVal).replace('+', '').trim()
   const num = parseInt(cleanStr, 10)
@@ -241,10 +241,8 @@ export function calculateWinProbability({
       const total = rawHome + rawAway
       if (total > 0 && Math.abs(total - 100) > 0.05) {
         rawHome = (rawHome / total) * 100
-        rawAway = 100 - rawHome
-      } else {
-        rawAway = 100 - rawHome
       }
+      rawAway = 100 - rawHome
     } else {
       rawAway = 100 - rawHome
     }
@@ -479,8 +477,10 @@ export function isFourthQuarterThriller(
   const period = status?.period ?? 0
   if (period !== 4) return false
 
-  const homeScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'home')?.score || '0', 10)
-  const awayScore = parseInt(comp?.competitors?.find((c) => c.homeAway === 'away')?.score || '0', 10)
+  const homeComp = comp?.competitors?.find((c) => c.homeAway === 'home') || comp?.competitors?.[0]
+  const awayComp = comp?.competitors?.find((c) => c.homeAway === 'away') || comp?.competitors?.[1]
+  const homeScore = parseInt(homeComp?.score || '0', 10)
+  const awayScore = parseInt(awayComp?.score || '0', 10)
   if (Math.abs(homeScore - awayScore) > 8) return false
 
   const winProb = getEventWinProbability(event)

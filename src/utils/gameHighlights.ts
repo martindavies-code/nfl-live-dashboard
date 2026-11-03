@@ -1,7 +1,6 @@
 import type { NFLEvent } from '../types/nfl'
 import {
   getRegisteredHighlight,
-  normalizeHighlightAbbr,
   type RegisteredHighlight,
 } from '../data/highlightsRegistry.ts'
 import { sanitizePatriotsName, sanitizePatriotsAbbreviation } from './nflHelpers.ts'
@@ -50,17 +49,11 @@ export function getGameHighlightInfo(event?: NFLEvent | null): GameHighlightInfo
     seasonYear,
     seasonType,
     weekNumber,
-    rawAwayAbbr,
-    rawHomeAbbr
-  ) || getRegisteredHighlight(
-    seasonYear,
-    seasonType,
-    weekNumber,
-    normalizeHighlightAbbr(awayAbbr),
-    normalizeHighlightAbbr(homeAbbr)
+    awayAbbr,
+    homeAbbr
   )
 
-  if (registered && registered.videoId) {
+  if (registered?.videoId) {
     return {
       url: `https://www.youtube.com/watch?v=${registered.videoId}`,
       isDirect: true,

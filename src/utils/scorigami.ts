@@ -138,13 +138,8 @@ export function getGameSecondsRemaining(
   if (period < 1) return 3600
 
   // Regulation quarters 1-4 (15 minutes / 900s each)
-  if (period >= 1 && period <= 4) {
-    const quartersRemaining = 4 - period
-    return Math.max(0, quartersRemaining * 900 + clock)
-  }
-
-  // Overtime (periods 5+)
-  return Math.max(0, clock)
+  const quartersRemaining = Math.max(0, 4 - period)
+  return Math.max(0, quartersRemaining * 900 + clock)
 }
 
 // ---------------------------------------------------------------------------
