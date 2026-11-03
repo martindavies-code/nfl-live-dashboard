@@ -772,7 +772,11 @@ export const Dashboard: React.FC = () => {
             <Database className="h-4 w-4 text-amber-400 shrink-0" />
             <span className="leading-snug">
               <strong>Offline Resiliency Active:</strong> Displaying verified real NFL scoreboard data from {activeSource.name}
-              {activeSource.cachedTimestamp && ` (recorded at ${new Date(activeSource.cachedTimestamp).toLocaleTimeString()})`}.
+              {activeSource.cachedTimestamp && (
+                <span className="font-semibold text-amber-100">
+                  {' '}(snapshot from {new Date(activeSource.cachedTimestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })})
+                </span>
+              )}. Feeds currently unreachable.
             </span>
           </div>
           <button
@@ -882,7 +886,7 @@ export const Dashboard: React.FC = () => {
                 <Server className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                 <span className="font-mono text-xs tabular-nums">
                   {activeSource.isCached
-                    ? 'Offline Cache'
+                    ? `Cached (${activeSource.cachedTimestamp ? new Date(activeSource.cachedTimestamp).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Offline'})`
                     : activeSource.name.includes('Fastly')
                     ? 'Fastly CDN'
                     : activeSource.name.includes('Akamai')
@@ -1289,11 +1293,11 @@ export const Dashboard: React.FC = () => {
               </h3>
               <p className="mt-1 text-xs text-slate-400 max-w-sm">
                 {filter === 'redzone'
-                  ? 'No teams are currently driving inside the 20-yard line. Games will automatically appear here the moment an offense crosses the 20, or toggle Simulation Mode to watch a live drive!'
+                  ? 'No teams are currently driving inside the 20-yard line. Games will automatically appear here the moment an offense crosses the 20.'
                   : filter === 'halftime'
                   ? 'No games are currently in intermission between the 2nd and 3rd quarters. Games will appear here automatically when the 2nd quarter clock reaches 0:00.'
                   : filter === 'live'
-                  ? 'No games are currently in progress right now. Try switching to "All" or toggle Simulation Mode to preview live field animations.'
+                  ? 'No games are currently in progress right now. Try switching to "All" to view scheduled or final games.'
                   : 'No games match your query.'}
               </p>
               <button

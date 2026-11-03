@@ -200,7 +200,7 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
                     Authoritative NFL Power Rankings
                   </span>
                   <span className="text-xs font-mono px-2 py-0.5 rounded bg-indigo-900/60 text-indigo-200 border border-indigo-700/50">
-                    Week {latestEdition.week} Verified
+                    Week {latestEdition.week} • Verified {latestEdition.verifiedOn}
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 mt-2 leading-relaxed">

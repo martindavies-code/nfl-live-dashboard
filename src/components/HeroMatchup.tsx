@@ -40,7 +40,7 @@ import {
   Tv,
   ExternalLink,
 } from 'lucide-react'
-import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
+import { getScorigamiInfo, getGameSecondsRemaining, TOTAL_UNIQUE_SCORIGAMIS } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
 import {
   getTeamPowerRank,
@@ -149,6 +149,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
   const winnerComp = isHomeWinner ? homeComp : isAwayWinner ? awayComp : null
   const loserComp = isHomeWinner ? awayComp : isAwayWinner ? homeComp : null
 
+  const bettingOdds = useMemo(() => getBettingOddsInfo(competition?.odds, homeAbbr, awayAbbr), [competition?.odds, homeAbbr, awayAbbr])
+
   // Memoize performance-heavy calculations unconditionally before any return
   const scorigamiInfo = useMemo(() => {
     return getScorigamiInfo(
@@ -157,9 +159,10 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
       secondsLeft,
       state,
       homeAbbr,
-      awayAbbr
+      awayAbbr,
+      bettingOdds
     )
-  }, [homeScoreParsed, awayScoreParsed, secondsLeft, state, homeAbbr, awayAbbr])
+  }, [homeScoreParsed, awayScoreParsed, secondsLeft, state, homeAbbr, awayAbbr, bettingOdds])
 
   const broadcastDetails = useMemo(() => {
     return getGameBroadcastDetails(event)
@@ -187,7 +190,6 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
   const kickoffCountdown = useMemo(() => formatKickoffCountdown(event?.date), [event?.date])
   const awayRecord = useMemo(() => parseWinLossRecord(awayComp?.records?.[0]?.summary), [awayComp?.records])
   const homeRecord = useMemo(() => parseWinLossRecord(homeComp?.records?.[0]?.summary), [homeComp?.records])
-  const bettingOdds = useMemo(() => getBettingOddsInfo(competition?.odds, homeAbbr, awayAbbr), [competition?.odds, homeAbbr, awayAbbr])
   const calculatedWinProb = useMemo(() => calculateWinProbability({
     homeCompetitor: homeComp,
     awayCompetitor: awayComp,
@@ -434,8 +436,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                   className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-bold border ${matchupTier.badgeClass}`}
                   title={`Published Power Ranking Matchup: ${matchupTier.label}`}
                 >
-                  <Sparkles className="h-3 w-3" />
-                  <span>{matchupTier.label}</span>
+                  <Sparkles className="h-3 w-3 shrink-0" />
+                  <span className="sm:hidden">{matchupTier.shortLabel || matchupTier.label}</span>
+                  <span className="hidden sm:inline">{matchupTier.label}</span>
                 </span>
               )}
             </div>
@@ -844,7 +847,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs font-mono text-sky-400 hover:underline inline-flex items-center gap-0.5"
-                      title={`${latestEdition.source.title} (${latestEdition.source.publisher})`}
+                      title={`${latestEdition.source.title} (${latestEdition.source.publisher}) — Verified ${latestEdition.verifiedOn}`}
                     >
                       <span>{latestEdition.source.publisher}</span>
                       <ExternalLink className="h-2.5 w-2.5" />
@@ -1077,7 +1080,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 <div className="flex items-center gap-1.5">
                   <Sparkles className={`h-3.5 w-3.5 ${scorigamiInfo.isCurrentScorigami ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
                   <span className="font-bold text-slate-300">
-                    {scorigamiInfo.isCurrentScorigami ? '✨ Live Scorigami in Progress' : 'Historical Scorigami Chance'}
+                    {isFinal
+                      ? (scorigamiInfo.isCurrentScorigami ? '✨ Final Scorigami Achieved!' : 'Final Scorigami')
+                      : (scorigamiInfo.isCurrentScorigami ? '✨ Live Scorigami in Progress' : 'Historical Scorigami Chance')}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1104,25 +1109,37 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
 
               {showScorigamiDetails && (
                 <div className="mt-2.5 pt-2 border-t border-white/[0.06] space-y-1.5 text-xs text-slate-400">
-                  {scorigamiInfo.mostLikelyNovel && (
+                  {isFinal ? (
+                    <div className="flex items-center justify-between">
+                      <span>Scorigami Result:</span>
+                      <strong className="font-mono font-bold text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-700/40">
+                        {scorigamiInfo.isCurrentScorigami ? `Yes, #${TOTAL_UNIQUE_SCORIGAMIS + 1} in NFL History` : 'No (Already Occurred)'}
+                      </strong>
+                    </div>
+                  ) : scorigamiInfo.mostLikelyNovel ? (
                     <div className="flex items-center justify-between">
                       <span>Most Likely Scorigami:</span>
                       <strong className="font-mono font-bold text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-700/40">
                         {scorigamiInfo.mostLikelyLabel}
                       </strong>
                     </div>
-                  )}
+                  ) : null}
                   <div>
-                    <span className="font-semibold text-slate-300">When: </span>
+                    <span className="font-semibold text-slate-300">{isFinal ? 'Result: ' : 'When: '}</span>
                     {scorigamiInfo.whenScenario}
                   </div>
-                  {scorigamiInfo.lastGameSummary && (
+                  {state === 'pre' ? (
+                    <div className="border-t border-white/[0.06] pt-1.5 text-slate-400">
+                      <span className="font-semibold text-slate-300">Target Score: </span>
+                      <span className="text-indigo-200 font-medium">Never occurred — would be a first in NFL history</span>
+                    </div>
+                  ) : scorigamiInfo.lastGameSummary ? (
                     <div className="border-t border-white/[0.06] pt-1.5 text-slate-400">
                       <span className="font-semibold text-slate-300">Last Occurred: </span>
                       <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
                       <span className="text-slate-500 ml-1 font-mono text-xs">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               )}
             </div>

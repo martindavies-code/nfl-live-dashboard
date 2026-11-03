@@ -255,7 +255,11 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
               ) : upcomingEvents.includes(primeAlertEvent) ? (
                 <span className="text-sky-300 font-medium">• Kickoff {formatLocalizedKickoff(primeAlertEvent.date)}</span>
               ) : (
-                <span className="text-slate-300 font-medium">• Final: {primeAlertEvent.status?.type?.detail || 'Completed'}</span>
+                <span className="text-slate-300 font-medium">
+                  • {primeAlertEvent.status?.type?.detail?.startsWith('Final')
+                    ? primeAlertEvent.status.type.detail
+                    : `Final: ${primeAlertEvent.status?.type?.detail || 'Completed'}`}
+                </span>
               )}
             </p>
           )}

@@ -30,7 +30,7 @@ import {
   CheckCircle2,
   Calendar,
 } from 'lucide-react'
-import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
+import { getScorigamiInfo, getGameSecondsRemaining, TOTAL_UNIQUE_SCORIGAMIS } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
 import {
   getTeamPowerRank,
@@ -106,13 +106,15 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const secondsLeft = getGameSecondsRemaining(status, state)
   const homeAbbr = sanitizePatriotsAbbreviation(homeComp?.team?.abbreviation) || 'Home'
   const awayAbbr = sanitizePatriotsAbbreviation(awayComp?.team?.abbreviation) || 'Away'
+  const bettingOdds = getBettingOddsInfo(competition.odds, homeAbbr, awayAbbr)
   const scorigamiInfo = getScorigamiInfo(
     safeParseInt(homeComp?.score, 0),
     safeParseInt(awayComp?.score, 0),
     secondsLeft,
     state,
     homeAbbr,
-    awayAbbr
+    awayAbbr,
+    bettingOdds
   )
 
   // Check possession with helper (only active during live games)
@@ -151,7 +153,6 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const kickoffCountdown = formatKickoffCountdown(event.date)
   const awayRecord = parseWinLossRecord(awayComp?.records?.[0]?.summary)
   const homeRecord = parseWinLossRecord(homeComp?.records?.[0]?.summary)
-  const bettingOdds = getBettingOddsInfo(competition.odds, homeAbbr, awayAbbr)
   const venueText = competition.venue
     ? `${competition.venue.fullName || ''}${competition.venue.address?.city ? `, ${competition.venue.address.city}` : ''}`.trim()
     : ''
@@ -603,10 +604,14 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               </span>
               <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">US Announcing Crew</span>
             </div>
-            {broadcastDetails.announcers.verified && (
+            {broadcastDetails.announcers.verified ? (
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 shrink-0">
                 <Check className="h-2.5 w-2.5" />
                 Verified
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/[0.08] shrink-0">
+                Unverified
               </span>
             )}
           </div>
@@ -629,28 +634,41 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           <div className="flex items-center justify-between gap-2">
             <span className="font-bold text-slate-200 flex items-center gap-1">
               <Sparkles className="h-3 w-3 text-indigo-400" />
-              {scorigamiInfo.isCurrentScorigami ? 'Live Scorigami Active' : 'Scorigami Chance'}
+              {isFinal
+                ? (scorigamiInfo.isCurrentScorigami ? '✨ Final Scorigami' : 'Final Scorigami')
+                : (scorigamiInfo.isCurrentScorigami ? 'Live Scorigami Active' : 'Scorigami Chance')}
             </span>
             <span className="font-mono font-bold text-xs bg-indigo-950/80 text-indigo-300 px-2 py-0.5 rounded border border-indigo-700/40">
               {scorigamiInfo.chanceLabel}
             </span>
           </div>
-          {scorigamiInfo.mostLikelyNovel && (
+          {isFinal ? (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400">Scorigami Result:</span>
+              <span className="font-mono font-bold text-indigo-200">
+                {scorigamiInfo.isCurrentScorigami ? `Yes, #${TOTAL_UNIQUE_SCORIGAMIS + 1} unique score in NFL history` : 'No, previously occurred'}
+              </span>
+            </div>
+          ) : scorigamiInfo.mostLikelyNovel ? (
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">Most Likely:</span>
               <span className="font-mono font-bold text-indigo-200">{scorigamiInfo.mostLikelyLabel}</span>
             </div>
-          )}
+          ) : null}
           <div className="text-xs text-slate-400">
-            <span className="text-slate-300 font-semibold">Scenario: </span>
+            <span className="text-slate-300 font-semibold">{isFinal ? 'Result: ' : 'Scenario: '}</span>
             {scorigamiInfo.whenScenario}
           </div>
-          {scorigamiInfo.lastGameSummary && (
+          {state === 'pre' ? (
+            <div className="text-xs text-slate-400 border-t border-white/[0.04] pt-1">
+              Target score: <span className="text-indigo-200 font-medium">Never occurred — would be a first in NFL history</span>
+            </div>
+          ) : scorigamiInfo.lastGameSummary ? (
             <div className="text-xs text-slate-400 border-t border-white/[0.04] pt-1">
               Last: <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
               <span className="text-slate-500 ml-1">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
             </div>
-          )}
+          ) : null}
         </div>
       )}
 

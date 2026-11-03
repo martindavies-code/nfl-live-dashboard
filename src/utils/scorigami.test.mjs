@@ -70,6 +70,42 @@ test('Pre-game Scorigami projection calculates realistic ~6% novelty chance and 
   assert.ok(pre.chancePct > 0.04 && pre.chancePct < 0.10)
   assert.ok(pre.mostLikelyNovel !== null)
   assert.match(pre.whenScenario, /Pre-game projection: Occurs if final score reaches/)
+  // Bug 2: Pre-game must NEVER associate 0-0's 1943 history with an unplayed matchup
+  assert.equal(pre.lastGameSummary, null, 'Pre-game must not show 0-0 historical summary')
+  assert.equal(pre.currentOccurrences, 0, 'Pre-game currentOccurrences must be 0')
+  assert.equal(pre.lastSeenYear, null, 'Pre-game lastSeenYear must be null')
+})
+
+test('Pre-game Scorigami projection scales with game total (Over/Under) and spread', () => {
+  // 1. Missing / null odds falls back cleanly to baseline
+  const preBaseline = getScorigamiInfo(0, 0, 3600, 'pre', 'CIN', 'ATL', null)
+  assert.ok(preBaseline.mostLikelyNovel !== null)
+
+  // 2. Low-scoring game total (O/U 35.0) vs High-scoring game total (O/U 56.0)
+  const lowTotal = getScorigamiInfo(0, 0, 3600, 'pre', 'CHI', 'MIN', { overUnder: 35.0, spread: 0 })
+  const highTotal = getScorigamiInfo(0, 0, 3600, 'pre', 'MIA', 'BUF', { overUnder: 56.0, spread: 0 })
+
+  assert.ok(lowTotal.mostLikelyNovel !== null)
+  assert.ok(highTotal.mostLikelyNovel !== null)
+
+  const [lowHi, lowLo] = (lowTotal.mostLikelyNovel || '0-0').split('-').map(Number)
+  const [highHi, highLo] = (highTotal.mostLikelyNovel || '0-0').split('-').map(Number)
+
+  // High total matchup must project higher total points than low total matchup
+  assert.ok(
+    highHi + highLo > lowHi + lowLo,
+    `High total projected score (${highTotal.mostLikelyNovel}) must exceed low total projected score (${lowTotal.mostLikelyNovel})`
+  )
+
+  // 3. Heavy favorite spread (Home favored by 14 points vs Even spread)
+  const heavyFav = getScorigamiInfo(0, 0, 3600, 'pre', 'KC', 'CAR', { overUnder: 48.0, spread: -14.0 })
+  assert.ok(heavyFav.mostLikelyNovel !== null)
+
+  // 4. Over/Under passed as string or object with overUnderValue
+  const stringTotal = getScorigamiInfo(0, 0, 3600, 'pre', 'KC', 'CAR', { overUnder: '48.5', spread: -3.5 })
+  assert.ok(stringTotal.mostLikelyNovel !== null)
+  const valueTotal = getScorigamiInfo(0, 0, 3600, 'pre', 'KC', 'CAR', { overUnderValue: 48.5, spreadValue: -3.5 })
+  assert.equal(stringTotal.mostLikelyNovel, valueTotal.mostLikelyNovel)
 })
 
 test('Live game Scorigami projection accurately reports novel score needs', () => {

@@ -12,7 +12,16 @@
 // -----------------------------------------------------------------------------
 
 import { HISTORICAL_OCCURRED, TOTAL_UNIQUE_SCORIGAMIS, type HistoricalScoreRecord } from './scorigamiHistoricalData.ts'
-import { isHalftimeSituation, isOvertimeSituation, sanitizePatriotsName } from './nflHelpers.ts'
+import { isHalftimeSituation, isOvertimeSituation } from './nflHelpers.ts'
+
+export { TOTAL_UNIQUE_SCORIGAMIS }
+
+export interface ScorigamiOddsInput {
+  overUnder?: number | string | null
+  spread?: number | null
+  overUnderValue?: number | null
+  spreadValue?: number | null
+}
 
 export interface ScorigamiInfo {
   /** True if the current score pair has never occurred in NFL history */
@@ -85,7 +94,7 @@ export function formatLastGameSummary(
   if (!winner || !loser || !isoDate) return null
   const [hi, lo] = scoreKey.split('-')
   const formattedDate = formatHistoricalDate(isoDate)
-  return `${sanitizePatriotsName(winner)} ${hi}, ${sanitizePatriotsName(loser)} ${lo} on ${formattedDate}`
+  return `${winner} ${hi}, ${loser} ${lo} on ${formattedDate}`
 }
 
 /**
@@ -203,6 +212,30 @@ const PRECOMPUTED_DRIVE_DISTRIBUTIONS: Float64Array[] = (() => {
  * Returns precomputed distribution array with zero memory allocation.
  * Runs in O(1) constant time.
  */
+/**
+ * 1D Dynamic Programming: Compute the probability distribution of additional points
+ * scored over a given number of remaining offensive drives.
+ * Interpolates smoothly between precomputed distributions for fractional drive counts.
+ * Runs in O(1) constant time with zero heap allocations when integral.
+ */
+export function getInterpolatedDriveDistribution(drives: number): Float64Array {
+  const clamped = Math.max(1, Math.min(16, Number.isFinite(drives) ? drives : 11.5))
+  const low = Math.floor(clamped)
+  const high = Math.min(16, Math.ceil(clamped))
+  if (low === high) {
+    return PRECOMPUTED_DRIVE_DISTRIBUTIONS[low]
+  }
+  const weightHigh = clamped - low
+  const weightLow = 1 - weightHigh
+  const dLow = PRECOMPUTED_DRIVE_DISTRIBUTIONS[low]
+  const dHigh = PRECOMPUTED_DRIVE_DISTRIBUTIONS[high]
+  const out = new Float64Array(100)
+  for (let i = 0; i < 100; i++) {
+    out[i] = weightLow * dLow[i] + weightHigh * dHigh[i]
+  }
+  return out
+}
+
 export function getDrivePointsDistribution(drives: number): Float64Array {
   const numDrives = Math.max(1, Math.min(16, Number.isFinite(drives) ? Math.round(drives) : 1))
   return PRECOMPUTED_DRIVE_DISTRIBUTIONS[numDrives]
@@ -217,6 +250,7 @@ export function getDrivePointsDistribution(drives: number): Float64Array {
  * @param gameState 'pre' | 'in' | 'post'
  * @param homeAbbr Optional home team abbreviation (e.g. 'KC') for clear scenario text
  * @param awayAbbr Optional away team abbreviation (e.g. 'DET') for clear scenario text
+ * @param odds Optional pre-game betting odds for total/spread scaling
  */
 export function getScorigamiInfo(
   homeScore: number,
@@ -224,7 +258,8 @@ export function getScorigamiInfo(
   secondsLeft: number,
   gameState: 'pre' | 'in' | 'post',
   homeAbbr: string = 'Home',
-  awayAbbr: string = 'Away'
+  awayAbbr: string = 'Away',
+  odds?: ScorigamiOddsInput | null
 ): ScorigamiInfo {
   const safeH = Math.max(0, Number.isFinite(homeScore) ? Math.round(homeScore) : 0)
   const safeA = Math.max(0, Number.isFinite(awayScore) ? Math.round(awayScore) : 0)
@@ -233,13 +268,14 @@ export function getScorigamiInfo(
   const key = makeScoreKey(safeH, safeA)
   const histRecord = HISTORICAL_OCCURRED[key]
   const isCurrentScorigami = !histRecord
-  const currentOccurrences = histRecord ? histRecord[0] : 0
-  const lastSeenYear = histRecord ? histRecord[1] : null
-  const lastDateIso = histRecord ? histRecord[2] : null
+  // In pre-game, 0-0 is an unplayed placeholder, not an actual game score
+  const currentOccurrences = gameState === 'pre' ? 0 : (histRecord ? histRecord[0] : 0)
+  const lastSeenYear = gameState === 'pre' ? null : (histRecord ? histRecord[1] : null)
+  const lastDateIso = gameState === 'pre' ? null : (histRecord ? histRecord[2] : null)
   const lastDate = lastDateIso ? formatHistoricalDate(lastDateIso) : null
-  const lastWinner = histRecord ? sanitizePatriotsName(histRecord[3]) : null
-  const lastLoser = histRecord ? sanitizePatriotsName(histRecord[4]) : null
-  const lastGameSummary = histRecord
+  const lastWinner = gameState === 'pre' ? null : (histRecord ? histRecord[3] : null)
+  const lastLoser = gameState === 'pre' ? null : (histRecord ? histRecord[4] : null)
+  const lastGameSummary = (gameState !== 'pre' && histRecord)
     ? formatLastGameSummary(key, lastWinner, lastLoser, lastDateIso)
     : null
 
@@ -268,13 +304,36 @@ export function getScorigamiInfo(
   }
 
   // 2. Pre-game or Live Game: Project future scoring drives using DP convolution
-  // An average NFL game has ~11.5 drives per team across 3,600 regulation seconds
-  const drivesLeft = gameState === 'pre'
-    ? 11.5
-    : Math.max(0.5, (safeSeconds / 3600) * 11.5)
+  let drivesLeftH = 11.5
+  let drivesLeftA = 11.5
 
-  const distH = getDrivePointsDistribution(drivesLeft)
-  const distA = getDrivePointsDistribution(drivesLeft)
+  if (gameState === 'pre') {
+    const rawTotal = odds?.overUnderValue ?? (typeof odds?.overUnder === 'number' ? odds.overUnder : typeof odds?.overUnder === 'string' ? parseFloat(odds.overUnder) : null)
+    const total = typeof rawTotal === 'number' && Number.isFinite(rawTotal) && rawTotal > 0 ? rawTotal : null
+    const rawSpread = odds?.spreadValue ?? odds?.spread
+    const spread = typeof rawSpread === 'number' && Number.isFinite(rawSpread) ? rawSpread : 0
+
+    if (total !== null) {
+      // In ESPN odds, spread is negative when home team is favored (e.g. -3.5)
+      // Home implied total = (Total - Spread) / 2
+      // Away implied total = (Total + Spread) / 2
+      const impliedHome = Math.max(0, (total - spread) / 2)
+      const impliedAway = Math.max(0, (total + spread) / 2)
+      // Baseline NFL average total (45.0 points = 11.5 drives per team across 3,600s)
+      drivesLeftH = Math.max(4, Math.min(16, 11.5 * (impliedHome / 22.5)))
+      drivesLeftA = Math.max(4, Math.min(16, 11.5 * (impliedAway / 22.5)))
+    } else {
+      drivesLeftH = 11.5
+      drivesLeftA = 11.5
+    }
+  } else {
+    const timeScaled = Math.max(0.5, (safeSeconds / 3600) * 11.5)
+    drivesLeftH = timeScaled
+    drivesLeftA = timeScaled
+  }
+
+  const distH = getInterpolatedDriveDistribution(drivesLeftH)
+  const distA = getInterpolatedDriveDistribution(drivesLeftA)
 
   let totalProb = 0
   let scorigamiProb = 0
@@ -287,7 +346,7 @@ export function getScorigamiInfo(
     p: number
   }> = []
 
-  const maxPts = Math.min(65, Math.ceil(drivesLeft * 5.5))
+  const maxPts = Math.min(65, Math.ceil(Math.max(drivesLeftH, drivesLeftA) * 5.5))
   for (let dh = 0; dh < maxPts; dh++) {
     const ph = distH[dh]
     if (ph < 1e-6) continue

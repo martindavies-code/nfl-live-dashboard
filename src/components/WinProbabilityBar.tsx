@@ -349,7 +349,9 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
           ) : isHomeFavored || isAwayFavored ? (
             <span className="flex items-center gap-1 truncate text-xs">
               <TrendingUp className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-              <span className="text-slate-400 font-medium shrink-0">Projected:</span>
+              <span className="text-slate-400 font-medium shrink-0">
+                {gameState === 'post' ? 'Result:' : 'Projected:'}
+              </span>
               <strong className="text-white font-bold truncate">
                 <span className="hidden sm:inline">{favoredName}</span>
                 <span className="sm:hidden">{favoredAbbr}</span>
