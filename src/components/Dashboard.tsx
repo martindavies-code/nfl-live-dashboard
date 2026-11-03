@@ -98,7 +98,7 @@ const AutoSyncTicker: React.FC<AutoSyncTickerProps> = React.memo(({
           }`}
         />
       </div>
-      <span className="text-slate-300 font-mono text-[11px] tabular-nums">
+      <span className="text-slate-300 font-mono text-xs tabular-nums">
         Sync in <strong className="text-white">{countdown}s</strong>
       </span>
     </div>
@@ -778,7 +778,7 @@ export const Dashboard: React.FC = () => {
           <button
             onClick={() => loadData(true)}
             disabled={isRefreshing}
-            className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[11px] transition-colors shrink-0 disabled:opacity-50 self-start sm:self-auto"
+            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs transition-colors shrink-0 disabled:opacity-50 min-h-[44px] sm:min-h-[36px] flex items-center justify-center self-start sm:self-auto"
           >
             {isRefreshing ? 'Reconnecting...' : 'Retry Live Feeds'}
           </button>
@@ -815,7 +815,7 @@ export const Dashboard: React.FC = () => {
                     <span className="sm:hidden">NFL Command</span>
                     <span className="hidden sm:inline">NFL Live Command</span>
                   </h1>
-                  <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium tracking-normal mt-0.5 hidden xs:block whitespace-nowrap">
+                  <p className="text-xs text-slate-400 font-medium tracking-normal mt-0.5 hidden xs:block whitespace-nowrap">
                     <span className="hidden md:inline">{seasonYear} Season • </span>Real-Time Field Tracker
                   </p>
                 </div>
@@ -880,7 +880,7 @@ export const Dashboard: React.FC = () => {
                 aria-label={`Active Data Source: ${activeSource.name}. Click to view redundant sources.`}
               >
                 <Server className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                <span className="font-mono text-[11px]">
+                <span className="font-mono text-xs tabular-nums">
                   {activeSource.isCached
                     ? 'Offline Cache'
                     : activeSource.name.includes('Fastly')
@@ -892,7 +892,7 @@ export const Dashboard: React.FC = () => {
                     : activeSource.name.replace(/^ESPN\s+/, '').replace(/\s*\(.*\)/, '') || 'Live Feed'}
                 </span>
                 {activeSource.responseTimeMs > 0 && !activeSource.isCached && (
-                  <span className="font-mono text-[10px] text-emerald-400/70">
+                  <span className="font-mono text-xs text-emerald-400/70 tabular-nums">
                     • {activeSource.responseTimeMs}ms
                   </span>
                 )}
@@ -1167,7 +1167,7 @@ export const Dashboard: React.FC = () => {
                         return next
                       })
                     }}
-                    className={`flex items-center justify-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[40px] sm:min-h-[30px] cursor-pointer w-full sm:w-auto ${
+                    className={`flex items-center justify-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[42px] sm:min-h-[36px] cursor-pointer w-full sm:w-auto ${
                       globalExpandedTab === 'radar'
                         ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
                         : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1191,7 +1191,7 @@ export const Dashboard: React.FC = () => {
                         return next
                       })
                     }}
-                    className={`flex items-center justify-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[40px] sm:min-h-[30px] cursor-pointer w-full sm:w-auto ${
+                    className={`flex items-center justify-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[42px] sm:min-h-[36px] cursor-pointer w-full sm:w-auto ${
                       globalExpandedTab === 'broadcast'
                         ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 shadow-sm'
                         : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1215,7 +1215,7 @@ export const Dashboard: React.FC = () => {
                         return next
                       })
                     }}
-                    className={`flex items-center justify-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[40px] sm:min-h-[30px] cursor-pointer w-full sm:w-auto ${
+                    className={`flex items-center justify-center gap-1.5 rounded-md px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs font-semibold transition-all min-h-[42px] sm:min-h-[36px] cursor-pointer w-full sm:w-auto ${
                       globalExpandedTab === 'scorigami'
                         ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/50 shadow-sm'
                         : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1247,7 +1247,7 @@ export const Dashboard: React.FC = () => {
                     <button
                       onClick={() => setSearchQuery('')}
                       aria-label="Clear search query"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-7 sm:w-7 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>

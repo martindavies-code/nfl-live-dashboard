@@ -336,24 +336,10 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               <span className="xs:hidden">LIVE</span>
             </span>
           ) : isFinal ? (
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/60 px-2.5 py-1 text-xs font-semibold text-slate-300 shrink-0">
-                <CheckCircle2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                FINAL RECAP
-              </span>
-              <a
-                href={highlightInfo.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-md bg-red-600/20 hover:bg-red-600/30 text-red-300 hover:text-white border border-red-500/40 px-2.5 py-1 text-xs font-bold transition-all shadow-sm cursor-pointer group"
-                title={`Watch official NFL YouTube game highlights (${highlightInfo.isDirect ? 'Direct Official Video' : 'Official NFL Channel'})`}
-                aria-label={`Watch official NFL YouTube highlights for ${awayDisplayName} at ${homeDisplayName}`}
-              >
-                <YouTubeIcon className="h-3.5 w-3.5 text-red-400 group-hover:scale-110 transition-transform" />
-                <span>Watch Highlights</span>
-                <ExternalLink className="h-3 w-3 text-red-300/80" />
-              </a>
-            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/60 px-2.5 py-1 text-xs font-semibold text-slate-300 shrink-0">
+              <CheckCircle2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+              FINAL RECAP
+            </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-950/80 px-2 sm:px-2.5 py-1 text-xs font-semibold text-indigo-300 border border-indigo-800/50 min-w-0">
               <Calendar className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
@@ -368,7 +354,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
           {!isMultiThreat && onToggleAutoRedZone && (
             <button
               onClick={onToggleAutoRedZone}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2 sm:px-2.5 py-1 text-xs font-semibold border transition-all min-h-[36px] sm:min-h-[28px] ${
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 py-1.5 sm:py-1 text-xs font-semibold border transition-all min-h-[44px] sm:min-h-[36px] ${
                 autoRedZone
                   ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 shadow-sm'
                   : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
@@ -388,7 +374,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
           {/* 1-Click Share Snapshot Button */}
           <button
             onClick={handleCopySnapshot}
-            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold border transition-all min-h-[36px] sm:min-h-[28px] ${
+            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 py-1.5 sm:py-1 text-xs font-semibold border transition-all min-h-[44px] sm:min-h-[36px] ${
               isCopied
                 ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
                 : 'bg-sky-500/15 border-sky-500/40 text-sky-200 hover:bg-sky-500/25 hover:text-white'
@@ -455,7 +441,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
             </div>
 
             {venueText && (
-              <span className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-400 min-w-0 max-w-full sm:max-w-[280px] truncate" title={venueText}>
+              <span className="flex items-center gap-1 text-xs text-slate-400 min-w-0 max-w-full sm:max-w-[280px] truncate" title={venueText}>
                 <MapPin className="h-3 w-3 text-slate-500 flex-shrink-0" />
                 <span className="truncate">{venueText}</span>
               </span>
@@ -521,7 +507,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                       {sanitizePatriotsAbbreviation(awayComp?.team?.abbreviation)}
                     </span>
                     {isAwayWinner && (
-                      <span className="inline-flex items-center gap-1 rounded bg-emerald-950/80 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/40 shadow-sm shrink-0">
+                      <span className="inline-flex items-center gap-1 rounded bg-emerald-950/80 px-1.5 py-0.5 text-xs font-bold text-emerald-300 border border-emerald-500/40 shadow-sm shrink-0">
                         <Check className="h-3 w-3 text-emerald-400" />
                         WIN
                       </span>
@@ -613,7 +599,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                       {sanitizePatriotsAbbreviation(homeComp?.team?.abbreviation)}
                     </span>
                     {isHomeWinner && (
-                      <span className="inline-flex items-center gap-1 rounded bg-emerald-950/80 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/40 shadow-sm shrink-0">
+                      <span className="inline-flex items-center gap-1 rounded bg-emerald-950/80 px-1.5 py-0.5 text-xs font-bold text-emerald-300 border border-emerald-500/40 shadow-sm shrink-0">
                         <Check className="h-3 w-3 text-emerald-400" />
                         WIN
                       </span>
@@ -673,7 +659,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                     href={highlightInfo.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold bg-red-600/15 hover:bg-red-600/25 text-red-300 hover:text-white border border-red-500/35 transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-red-400 min-h-[36px] sm:min-h-[28px]"
+                    className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold bg-red-600/15 hover:bg-red-600/25 text-red-300 hover:text-white border border-red-500/35 transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-red-400 min-h-[44px] sm:min-h-[36px]"
                     title={`Watch official NFL game highlights on YouTube (${highlightInfo.isDirect ? 'Direct Video' : 'Official NFL Channel'})`}
                     aria-label={`Watch official NFL highlights on YouTube for ${awayDisplayName} at ${homeDisplayName}`}
                   >
@@ -685,7 +671,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                   <button
                     type="button"
                     onClick={() => setShowFinalField((prev) => !prev)}
-                    className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400 min-h-[36px] sm:min-h-[28px]"
+                    className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400 min-h-[44px] sm:min-h-[36px]"
                     aria-expanded={showFinalField}
                     aria-label={showFinalField ? "Hide field radar" : "Show field radar"}
                   >
@@ -699,7 +685,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               <div className="overflow-x-auto -mx-1 px-1">
                 <table className="w-full text-left text-xs tabular-nums border-collapse" aria-label="Game quarter scoring table">
                   <thead>
-                    <tr className="border-b border-white/[0.08] text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                    <tr className="border-b border-white/[0.08] text-xs font-mono text-slate-400 uppercase tracking-wider">
                       <th scope="col" className="sticky left-0 bg-[#0c1220] z-10 py-2 pr-3 font-semibold text-slate-300">Team</th>
                       {Array.from({ length: lineScorePeriods }).map((_, idx) => (
                         <th key={`period-header-${idx}`} scope="col" className="py-2 px-2.5 text-center font-bold">
@@ -731,7 +717,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                             {awayAbbr}
                           </span>
                           {isAwayWinner && (
-                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 px-1 py-0.2 rounded border border-emerald-500/40">
+                            <span className="text-xs font-bold text-emerald-400 bg-emerald-950/80 px-1 py-0.2 rounded border border-emerald-500/40">
                               WIN
                             </span>
                           )}
@@ -770,7 +756,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                             {homeAbbr}
                           </span>
                           {isHomeWinner && (
-                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 px-1 py-0.2 rounded border border-emerald-500/40">
+                            <span className="text-xs font-bold text-emerald-400 bg-emerald-950/80 px-1 py-0.2 rounded border border-emerald-500/40">
                               WIN
                             </span>
                           )}
@@ -835,7 +821,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 <button
                   type="button"
                   onClick={() => setShowPregameField((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400"
+                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400 min-h-[44px] sm:min-h-[36px]"
                   aria-expanded={showPregameField}
                   aria-label={showPregameField ? "Hide field layout preview" : "View field layout preview"}
                 >
@@ -849,7 +835,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 {/* Column 1: Tale of the Tape (Rankings & Records) */}
                 <div className="rounded-lg bg-white/[0.02] border border-white/[0.05] p-3.5 flex flex-col justify-between space-y-3">
                   <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
-                    <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                    <span className="text-xs uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
                       <Swords className="h-3.5 w-3.5 text-amber-400" />
                       Tale of the Tape
                     </span>
@@ -857,7 +843,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                       href={latestEdition.source.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[10px] font-mono text-sky-400 hover:underline inline-flex items-center gap-0.5"
+                      className="text-xs font-mono text-sky-400 hover:underline inline-flex items-center gap-0.5"
                       title={`${latestEdition.source.title} (${latestEdition.source.publisher})`}
                     >
                       <span>{latestEdition.source.publisher}</span>
@@ -873,7 +859,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                         </span>
                         <span className="font-bold text-white">{awayAbbr}</span>
                         {awayRankDetail.change !== 0 && (
-                          <span className={`text-[10px] font-mono font-bold ${awayRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          <span className={`text-xs font-mono font-bold ${awayRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                             {awayRankDetail.change > 0 ? `▲+${awayRankDetail.change}` : `▼${awayRankDetail.change}`}
                           </span>
                         )}
@@ -890,7 +876,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                         </span>
                         <span className="font-bold text-white">{homeAbbr}</span>
                         {homeRankDetail.change !== 0 && (
-                          <span className={`text-[10px] font-mono font-bold ${homeRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          <span className={`text-xs font-mono font-bold ${homeRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                             {homeRankDetail.change > 0 ? `▲+${homeRankDetail.change}` : `▼${homeRankDetail.change}`}
                           </span>
                         )}
@@ -903,9 +889,9 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
 
                   {/* Pre-Game Win Expectancy Mini-Bar */}
                   <div className="space-y-1 pt-1 border-t border-white/[0.04]">
-                    <div className="flex items-center justify-between text-[11px] font-mono">
+                    <div className="flex items-center justify-between text-xs font-mono">
                       <span className="font-semibold text-slate-300">{awayAbbr} {calculatedWinProb.awayPct}%</span>
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider">Win Expectancy</span>
+                      <span className="text-xs text-slate-500 uppercase tracking-wider">Win Expectancy</span>
                       <span className="font-semibold text-slate-300">{calculatedWinProb.homePct}% {homeAbbr}</span>
                     </div>
                     <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden flex" role="progressbar" aria-valuenow={calculatedWinProb.awayPct} aria-valuemin={0} aria-valuemax={100} aria-label={`Win expectancy: ${awayAbbr} ${calculatedWinProb.awayPct}%, ${homeAbbr} ${calculatedWinProb.homePct}%`}>
@@ -930,24 +916,24 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 {/* Column 2: Vegas Consensus & Market Line */}
                 <div className="rounded-lg bg-white/[0.02] border border-white/[0.05] p-3.5 flex flex-col justify-between space-y-3">
                   <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
-                    <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                    <span className="text-xs uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
                       <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
                       Vegas Consensus
                     </span>
-                    <span className="text-[10px] font-mono text-slate-500">
+                    <span className="text-xs font-mono text-slate-500">
                       {bettingOdds.provider || 'Sportsbook'}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded bg-white/[0.03] p-2 border border-white/[0.04]">
-                      <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider">Point Spread</span>
+                      <span className="block text-xs font-medium text-slate-400 uppercase tracking-wider">Point Spread</span>
                       <span className="block font-mono font-bold text-sm sm:text-base text-white mt-0.5">
                         {bettingOdds.handicap || 'Line TBD'}
                       </span>
                     </div>
                     <div className="rounded bg-white/[0.03] p-2 border border-white/[0.04]">
-                      <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider">Total (Over/Under)</span>
+                      <span className="block text-xs font-medium text-slate-400 uppercase tracking-wider">Total (Over/Under)</span>
                       <span className="block font-mono font-bold text-sm sm:text-base text-white mt-0.5">
                         {bettingOdds.overUnder || 'O/U TBD'}
                       </span>
@@ -956,7 +942,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
 
                   {/* Scorigami Novelty Forecast */}
                   <div className="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
-                    <span className="text-slate-400 flex items-center gap-1 text-[11px]">
+                    <span className="text-slate-400 flex items-center gap-1 text-xs">
                       <Sparkles className="h-3 w-3 text-indigo-400" />
                       Scorigami Forecast
                     </span>
@@ -969,18 +955,18 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 {/* Column 3: Venue & Broadcast Operations */}
                 <div className="rounded-lg bg-white/[0.02] border border-white/[0.05] p-3.5 flex flex-col justify-between space-y-2.5">
                   <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
-                    <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                    <span className="text-xs uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
                       <Tv className="h-3.5 w-3.5 text-sky-400" />
                       Broadcast & Venue
                     </span>
-                    <span className="text-[10px] font-mono font-bold text-sky-300 bg-sky-950/60 px-1.5 py-0.2 rounded border border-sky-800/40">
+                    <span className="text-xs font-mono font-bold text-sky-300 bg-sky-950/60 px-1.5 py-0.2 rounded border border-sky-800/40">
                       {broadcastDetails.usTv}
                     </span>
                   </div>
 
                   <div className="space-y-1.5 text-xs">
                     <div>
-                      <span className="text-[10px] uppercase font-semibold text-slate-400 block tracking-wider">US Commentary Duo</span>
+                      <span className="text-xs uppercase font-semibold text-slate-400 block tracking-wider">US Commentary Duo</span>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="font-bold text-white truncate">{broadcastDetails.announcers.leadDuo}</span>
                         {broadcastDetails.announcers.verified && (
@@ -992,14 +978,14 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                     </div>
 
                     {broadcastDetails.announcers.sideline && (
-                      <div className="text-[11px] text-slate-400 truncate">
+                      <div className="text-xs text-slate-400 truncate">
                         <span className="text-slate-500">Sideline: </span>
                         <span className="text-slate-300">{broadcastDetails.announcers.sideline}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-white/[0.04] text-slate-400">
+                  <div className="flex items-center justify-between text-xs pt-1.5 border-t border-white/[0.04] text-slate-400">
                     <span className="truncate flex items-center gap-1">
                       <MapPin className="h-3 w-3 text-slate-500 shrink-0" />
                       {venueText || 'NFL Stadium'}
@@ -1107,7 +1093,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                   <button
                     type="button"
                     onClick={() => setShowScorigamiDetails((prev) => !prev)}
-                    className="text-xs font-semibold text-sky-400 hover:text-sky-300 underline underline-offset-2 focus:outline-none cursor-pointer"
+                    className="inline-flex items-center px-2.5 py-1 min-h-[36px] rounded text-xs font-semibold text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 focus:outline-none focus:ring-1 focus:ring-sky-400 cursor-pointer"
                     aria-expanded={showScorigamiDetails}
                     aria-label={showScorigamiDetails ? "Collapse Scorigami details" : "Expand Scorigami details"}
                   >
@@ -1134,7 +1120,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                     <div className="border-t border-white/[0.06] pt-1.5 text-slate-400">
                       <span className="font-semibold text-slate-300">Last Occurred: </span>
                       <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
-                      <span className="text-slate-500 ml-1 font-mono text-[11px]">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
+                      <span className="text-slate-500 ml-1 font-mono text-xs">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
                     </div>
                   )}
                 </div>
@@ -1153,13 +1139,13 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-rose-400">US Announcing Crew</span>
-                <span className="text-[11px] font-mono font-bold text-sky-300 bg-sky-950/60 px-1.5 py-0.2 rounded border border-sky-800/40">
+                <span className="text-xs uppercase font-bold tracking-wider text-rose-400">US Announcing Crew</span>
+                <span className="text-xs font-mono font-bold text-sky-300 bg-sky-950/60 px-1.5 py-0.2 rounded border border-sky-800/40">
                   {broadcastDetails.usTv}
                 </span>
                 {broadcastDetails.announcers.verified ? (
                   <span
-                    className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-400 shrink-0"
+                    className="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-400 shrink-0"
                     title={`Fact-checked ${broadcastDetails.announcers.verifiedOn ?? ''} — ${broadcastDetails.announcers.sources.map((s) => s.label).join('; ')}`}
                   >
                     <Check className="h-3 w-3" aria-hidden="true" />
@@ -1167,7 +1153,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                   </span>
                 ) : (
                   <span
-                    className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-400 shrink-0"
+                    className="inline-flex items-center gap-0.5 text-xs font-semibold text-amber-400 shrink-0"
                     title="Announce team not yet confirmed by the network — names are never guessed"
                   >
                     <Clock className="h-3 w-3" aria-hidden="true" />
@@ -1183,7 +1169,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
 
           {broadcastDetails.announcers.sideline && (
             <div className="flex items-center gap-1.5 shrink-0 pl-9 sm:pl-0 text-slate-300 text-xs">
-              <span className="text-slate-400 font-semibold uppercase text-[9px] tracking-wider px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.08]">
+              <span className="text-slate-400 font-semibold uppercase text-xs tracking-wider px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.08]">
                 Sideline
               </span>
               <span className="font-medium text-slate-200">{broadcastDetails.announcers.sideline}</span>

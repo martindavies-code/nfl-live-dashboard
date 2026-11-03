@@ -63,7 +63,7 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Close data sources modal"
           >
             <X className="h-5 w-5" />
@@ -86,7 +86,7 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
         {/* Active Source Card */}
         <div className="mb-4 rounded-xl border border-sky-500/40 bg-sky-950/20 p-4">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500" />
@@ -137,16 +137,16 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-slate-200">{src.name}</span>
                       {isActive && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded-full">
                           <CheckCircle2 className="h-3 w-3" /> Live Feed
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{src.description}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{src.description}</p>
                   </div>
                 </div>
                 <div className="text-right shrink-0 ml-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 border border-slate-700/50">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 border border-slate-700/50">
                     CORS Wildcard ( * )
                   </span>
                 </div>
@@ -172,18 +172,18 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
                     Verified Offline Cache (Local Storage)
                   </span>
                   {isCached && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-500/40 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-500/40 px-2 py-0.5 rounded-full">
                       <Zap className="h-3 w-3" /> Serving
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-400 mt-0.5">
                   Stores last known authentic NFL scoreboard if all 5 live feeds are temporarily unreachable
                 </p>
               </div>
             </div>
             <div className="text-right shrink-0 ml-2">
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800/80 text-amber-300/80 border border-slate-700/50">
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800/80 text-amber-300/80 border border-slate-700/50">
                 Offline Backup
               </span>
             </div>
@@ -195,11 +195,11 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
             return (
               <div className="mt-4 rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
                     <Award className="h-4 w-4 text-amber-400" />
                     Authoritative NFL Power Rankings
                   </span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-900/60 text-indigo-200 border border-indigo-700/50">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-indigo-900/60 text-indigo-200 border border-indigo-700/50">
                     Week {latestEdition.week} Verified
                   </span>
                 </div>
@@ -228,14 +228,14 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({
           <button
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition-colors disabled:opacity-50 min-h-[44px]"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             <span>Test & Ping All Feeds</span>
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors"
+            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors min-h-[44px] flex items-center justify-center"
           >
             Close
           </button>

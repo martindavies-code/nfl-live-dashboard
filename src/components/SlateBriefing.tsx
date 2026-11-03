@@ -162,11 +162,11 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
         {/* Narrative Orientation: Answer the core question immediately */}
         <div className="space-y-1.5 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 border border-sky-500/30 px-2 py-0.5 text-[11px] font-bold text-sky-300 uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 border border-sky-500/30 px-2 py-0.5 text-xs font-bold text-sky-300 uppercase tracking-wider">
               <Zap className="h-3 w-3 text-sky-400" />
               SLATE BRIEFING
             </span>
-            <span className="text-[11px] text-slate-400 font-semibold">
+            <span className="text-xs text-slate-400 font-semibold">
               {weekLabel} Slate
             </span>
           </div>
@@ -217,7 +217,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
               </span>
               <span className="text-white font-medium flex items-center gap-1.5 flex-wrap">
                 <span
-                  className={`font-mono text-[10px] px-1 py-0.2 rounded border tabular-nums shrink-0 ${primeAwayRankStyle.pillClass}`}
+                  className={`font-mono text-xs px-1.5 py-0.2 rounded border tabular-nums shrink-0 ${primeAwayRankStyle.pillClass}`}
                   title={`Published Power Rank #${primeAwayRank}`}
                   aria-label={`Power Rank #${primeAwayRank}`}
                 >
@@ -227,7 +227,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
                 <span className="text-slate-400">({primeAway?.score ?? '-'})</span>
                 <span className="text-slate-500 font-mono">@</span>
                 <span
-                  className={`font-mono text-[10px] px-1 py-0.2 rounded border tabular-nums shrink-0 ${primeHomeRankStyle.pillClass}`}
+                  className={`font-mono text-xs px-1.5 py-0.2 rounded border tabular-nums shrink-0 ${primeHomeRankStyle.pillClass}`}
                   title={`Published Power Rank #${primeHomeRank}`}
                   aria-label={`Power Rank #${primeHomeRank}`}
                 >
@@ -237,7 +237,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
                 <span className="text-slate-400">({primeHome?.score ?? '-'})</span>
               </span>
               {primeTier.isMarquee && (
-                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border ${primeTier.badgeClass}`}>
+                <span className={`inline-flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded border ${primeTier.badgeClass}`}>
                   <Sparkles className="h-2.5 w-2.5" />
                   <span>{primeTier.label}</span>
                 </span>
@@ -269,7 +269,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
                 href={getGameHighlightInfo(primeAlertEvent).url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-lg bg-red-600/15 hover:bg-red-600/25 text-red-300 hover:text-white border border-red-500/35 px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer min-h-[44px] sm:min-h-[32px]"
+                className="flex items-center gap-1.5 rounded-lg bg-red-600/15 hover:bg-red-600/25 text-red-300 hover:text-white border border-red-500/35 px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer min-h-[44px] sm:min-h-[36px]"
                 title="Watch official NFL game highlights on YouTube"
                 aria-label={`Watch official NFL YouTube highlights for ${primeAwayAbbr} vs ${primeHomeAbbr}`}
               >
@@ -281,7 +281,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
             {onSpotlightEvent && (
               <button
                 onClick={() => onSpotlightEvent(primeAlertEvent.id)}
-                className="flex items-center gap-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/35 px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer min-h-[44px] sm:min-h-[32px]"
+                className="flex items-center gap-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/35 px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer min-h-[44px] sm:min-h-[36px]"
               >
                 <Compass className="h-3.5 w-3.5 text-sky-400" />
                 <span>Inspect in Spotlight Radar</span>

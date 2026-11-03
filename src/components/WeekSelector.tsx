@@ -154,7 +154,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
           onClick={handleReturnToLive}
           title="Jump directly to current live week (Shortcut: 0 or W)"
           aria-label={`Jump back to Live Week ${liveWeek}`}
-          className="ml-1.5 sm:ml-2 flex h-10 sm:h-9 shrink-0 items-center gap-1.5 rounded-lg bg-red-500/15 border border-red-500/40 px-2.5 sm:px-2.5 text-[11px] font-bold text-red-300 hover:bg-red-500/25 transition-all hover:border-red-400/60 focus:outline-none focus:ring-2 focus:ring-red-400 animate-pulse"
+          className="ml-1.5 sm:ml-2 flex h-10 sm:h-9 shrink-0 items-center gap-1.5 rounded-lg bg-red-500/15 border border-red-500/40 px-2.5 sm:px-2.5 text-xs font-bold text-red-300 hover:bg-red-500/25 transition-all hover:border-red-400/60 focus:outline-none focus:ring-2 focus:ring-red-400 animate-pulse"
         >
           <Radio className="h-3 w-3 text-red-400 shrink-0" />
           <span className="whitespace-nowrap">Live: W{liveWeek}</span>
@@ -176,14 +176,14 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
               <span className="font-bold text-sm uppercase tracking-wide text-white">
                 {seasonYear} NFL Calendar
               </span>
-              <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-white/[0.08] text-slate-400">
+              <span className="text-xs uppercase font-semibold px-1.5 py-0.5 rounded bg-white/[0.08] text-slate-400">
                 {isPlayoffs ? 'Postseason' : 'Regular Season'}
               </span>
             </div>
             <button
               onClick={() => setIsOpen(false)}
               aria-label="Close week selector"
-              className="text-slate-400 hover:text-white p-1 rounded-md hover:bg-white/[0.06] transition-colors"
+              className="text-slate-400 hover:text-white p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md hover:bg-white/[0.06] transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
@@ -219,7 +219,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
           {/* Tab Content: Regular Season Weeks (1 - 18) */}
           {activeTab === 'regular' && (
             <div className="mt-3">
-              <div className="flex items-center justify-between text-[11px] text-slate-400 mb-2 px-1">
+              <div className="flex items-center justify-between text-xs text-slate-400 mb-2 px-1">
                 <span>Select Week (1–18):</span>
                 {liveSeasonType === 2 && (
                   <span className="flex items-center gap-1 text-emerald-400 font-medium">
@@ -252,7 +252,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
                     >
                       <span>W{w}</span>
                       {isLive && (
-                        <span className="text-[9px] font-black uppercase text-emerald-400">Live</span>
+                        <span className="text-xs font-black uppercase text-emerald-400">Live</span>
                       )}
                     </button>
                   )
@@ -264,7 +264,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
           {/* Tab Content: NFL Playoffs (5 Rounds) */}
           {activeTab === 'playoffs' && (
             <div className="mt-3 space-y-2">
-              <div className="text-[11px] text-slate-400 mb-1 px-1">
+              <div className="text-xs text-slate-400 mb-1 px-1">
                 Select Playoff Round or Super Bowl:
               </div>
 
@@ -294,16 +294,16 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
                         <div className="font-bold text-xs flex items-center gap-1.5">
                           <span>{round.name}</span>
                           {isSuperBowl && (
-                            <span className="text-[10px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-400 text-black">
+                            <span className="text-xs font-black uppercase px-1.5 py-0.2 rounded bg-amber-400 text-black">
                               Lombardi Trophy
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-400">{round.detail}</p>
+                        <p className="text-xs text-slate-400">{round.detail}</p>
                       </div>
                     </div>
 
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-white/[0.08] text-slate-300">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-white/[0.08] text-slate-300">
                       Round {round.weekNumber}
                     </span>
                   </button>
@@ -321,7 +321,7 @@ export const WeekSelector: React.FC<WeekSelectorProps> = ({
               <Radio className="h-3 w-3" />
               <span>Reset to Current Live Week (W{liveWeek})</span>
             </button>
-            <span className="text-[10px] text-slate-500">Keys: [ / ]</span>
+            <span className="text-xs text-slate-500">Keys: [ / ]</span>
           </div>
         </div>
       )}

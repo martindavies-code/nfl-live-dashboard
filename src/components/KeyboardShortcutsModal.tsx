@@ -98,7 +98,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
 
         {/* Footer */}
         <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
-          <span>Press <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 font-mono text-[10px] text-sky-300">Esc</kbd> anytime to dismiss</span>
+          <span>Press <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 font-mono text-xs text-sky-300">Esc</kbd> anytime to dismiss</span>
           <button
             onClick={onClose}
             className="rounded-lg bg-sky-600 px-4 py-2 font-semibold text-white hover:bg-sky-500 transition-colors focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:outline-none min-h-[44px]"

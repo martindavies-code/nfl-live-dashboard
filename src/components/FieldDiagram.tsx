@@ -246,37 +246,37 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
       {!isCompact && (
         <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 sm:gap-2 border-b border-white/[0.06] bg-[#080d16] px-3 sm:px-3.5 py-2 sm:py-2.5">
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <span className="hidden sm:inline text-[11px] font-extrabold uppercase tracking-wider text-slate-400 whitespace-nowrap">
+            <span className="hidden sm:inline text-xs font-extrabold uppercase tracking-wider text-slate-400 whitespace-nowrap">
               Field Position Radar
             </span>
-            <span className="sm:hidden text-[10px] font-extrabold uppercase tracking-wider text-slate-400 whitespace-nowrap">
+            <span className="sm:hidden text-xs font-extrabold uppercase tracking-wider text-slate-400 whitespace-nowrap">
               Radar
             </span>
             {inRedZone && (
-              <span className="rounded bg-rose-500/25 px-1.5 sm:px-2 py-0.5 text-[10px] font-black text-rose-300 border border-rose-500/40 animate-pulse whitespace-nowrap">
+              <span className="rounded bg-rose-500/25 px-1.5 sm:px-2 py-0.5 text-xs font-black text-rose-300 border border-rose-500/40 animate-pulse whitespace-nowrap">
                 🔥 <span className="hidden sm:inline">RED ZONE</span>
               </span>
             )}
             {isHalftime && (
-              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30 whitespace-nowrap">
+              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-xs font-bold text-amber-300 border border-amber-500/30 whitespace-nowrap">
                 HALFTIME
               </span>
             )}
           </div>
 
           {isHalftime ? (
-            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-semibold shrink-0">
               <span className="text-amber-300 font-mono whitespace-nowrap">AT HALFTIME</span>
               <span className="text-slate-500 hidden sm:inline">•</span>
               <span className="text-slate-300 whitespace-nowrap hidden sm:inline">2nd Half Kickoff Upcoming</span>
             </div>
           ) : hasSituation ? (
             <div className="flex items-center gap-1 sm:gap-2 text-xs font-semibold shrink-0 flex-wrap">
-              <span className="text-amber-300 font-mono font-bold bg-amber-950/60 border border-amber-500/40 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs whitespace-nowrap shrink-0">
+              <span className="text-amber-300 font-mono font-bold bg-amber-950/60 border border-amber-500/40 px-1.5 sm:px-2 py-0.5 rounded text-xs whitespace-nowrap shrink-0">
                 {situation?.downDistanceText || `${situation?.shortDownDistanceText || 'Current Drive'}`}
               </span>
               <span className="text-slate-500 shrink-0">•</span>
-              <span className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full bg-amber-500/20 px-1.5 sm:px-2.5 py-0.5 text-[10px] sm:text-xs font-black text-amber-200 border border-amber-500/40 shadow-sm shrink-0 whitespace-nowrap">
+              <span className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full bg-amber-500/20 px-1.5 sm:px-2.5 py-0.5 text-xs font-black text-amber-200 border border-amber-500/40 shadow-sm shrink-0 whitespace-nowrap">
                 <strong className="text-white">{offensiveAbbr}</strong>
                 <span className="hidden sm:inline">DRIVING</span>
                 <span className="text-xs sm:text-base font-extrabold text-amber-400">{direction === 'right' ? '➔' : '◀'}</span>
@@ -936,7 +936,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
               {activePlay ? (
                 <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                   <span
-                    className="inline-flex items-center px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-black uppercase tracking-wider shrink-0 shadow-sm"
+                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-black uppercase tracking-wider shrink-0 shadow-sm"
                     style={{
                       backgroundColor: `${getPlayColor(activePlay.category)}25`,
                       color: getPlayColor(activePlay.category),
@@ -979,7 +979,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
             {/* Right Side: Down/Distance & Dismiss Button */}
             <div className="flex items-center gap-1.5 shrink-0 ml-auto">
               {Boolean(typeof activePlay?.down === 'number' && activePlay.down > 0 && typeof activePlay.distance === 'number') && (
-                <span className="hidden xs:inline-flex text-[10px] sm:text-[11px] font-bold text-slate-300 bg-white/[0.05] px-1.5 py-0.5 rounded border border-white/[0.08]">
+                <span className="hidden xs:inline-flex text-xs font-bold text-slate-300 bg-white/[0.05] px-1.5 py-0.5 rounded border border-white/[0.08]">
                   {activePlay!.down === 1 ? '1st' : activePlay!.down === 2 ? '2nd' : activePlay!.down === 3 ? '3rd' : '4th'} & {activePlay!.distance === 0 ? 'Goal' : activePlay!.distance}
                 </span>
               )}
@@ -988,7 +988,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 <button
                   type="button"
                   onClick={handleDismissPlay}
-                  className="text-slate-400 hover:text-white px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none"
+                  className="text-slate-400 hover:text-white px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none min-h-[36px] sm:min-h-0"
                   aria-label="Deselect play and view entire drive trail"
                   title="Deselect play (view full drive)"
                 >
@@ -1001,7 +1001,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
 
           {/* Dedicated Play Narrative Row - 100% full width, ZERO truncation */}
           <div
-            className="mt-1.5 pt-1.5 border-t border-white/[0.06] text-[12px] sm:text-[13px] leading-relaxed"
+            className="mt-1.5 pt-1.5 border-t border-white/[0.06] text-xs sm:text-sm leading-relaxed"
             aria-live="polite"
             aria-atomic="true"
           >
@@ -1010,7 +1010,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
                 {activePlay.text || `${getPlayCategoryLabel(activePlay.category)} for ${activePlay.statYardage} yards.`}
               </p>
             ) : (
-              <p className="text-slate-200 text-[12px] sm:text-[13px] leading-relaxed select-text break-words">
+              <p className="text-slate-200 text-xs sm:text-sm leading-relaxed select-text break-words">
                 <span className="text-amber-400 font-bold mr-1.5">Latest Play:</span>
                 {effectiveDrivePlays[effectiveDrivePlays.length - 1]?.text || situation?.lastPlay?.text || 'Viewing complete drive trail.'}
               </p>
@@ -1021,7 +1021,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
 
       {/* Direct In-place Context Strip */}
       {isCompact ? (
-        <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#060a12] px-3 py-1.5 text-[11px] font-mono text-slate-400">
+        <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#060a12] px-3 py-1.5 text-xs font-mono text-slate-400">
           <div className="flex items-center gap-2 min-w-0">
             {isHalftime ? (
               <span className="flex items-center gap-1.5 text-amber-300 font-bold">
@@ -1047,7 +1047,7 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
 
           <div className="flex items-center gap-2 shrink-0 ml-auto">
             {effectiveDrivePlays.length > 0 && (
-              <div className="flex items-center gap-1.5 text-[10px] mr-1">
+              <div className="flex items-center gap-1.5 text-xs mr-1">
                 <span className="flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#38bdf8] shrink-0" />
                   <span className="text-sky-300 font-semibold">Pass</span>
@@ -1061,11 +1061,11 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
             {gameState !== 'post' && (
               <>
                 {isRegularPlay && (
-                  <span className="text-slate-400 text-[10px] hidden sm:inline">
+                  <span className="text-slate-400 text-xs hidden sm:inline">
                     {isGoalToGo ? 'Goal to Go' : `Target: +${distance}y`}
                   </span>
                 )}
-                <span className="text-[10px] font-bold text-amber-400 tracking-wider">
+                <span className="text-xs font-bold text-amber-400 tracking-wider">
                   {direction === 'right' ? `${offensiveAbbr} ➔` : `◀ ${offensiveAbbr}`}
                 </span>
               </>
@@ -1098,25 +1098,25 @@ export const FieldDiagram: React.FC<FieldDiagramProps> = memo(({
           {/* Color-Coded Play Trail Legend matching user doodle */}
           {effectiveDrivePlays.length > 0 && (
             <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap ml-auto">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 hidden sm:inline">
+              <span className="text-xs font-mono uppercase tracking-wider text-slate-400 hidden sm:inline">
                 Legend:
               </span>
-              <span className="flex items-center gap-1 text-[11px]">
+              <span className="flex items-center gap-1 text-xs">
                 <span className="h-2 w-2 rounded-full bg-[#38bdf8] shrink-0 shadow-[0_0_6px_rgba(56,189,248,0.6)]" />
                 <span className="text-sky-300 font-semibold">Pass</span>
               </span>
-              <span className="flex items-center gap-1 text-[11px]">
+              <span className="flex items-center gap-1 text-xs">
                 <span className="h-2 w-2 rounded-full bg-[#f43f5e] shrink-0 shadow-[0_0_6px_rgba(244,63,94,0.6)]" />
                 <span className="text-rose-300 font-semibold">Run</span>
               </span>
               {effectiveDrivePlays.some((p) => p.category === 'sack') && (
-                <span className="flex items-center gap-1 text-[11px]">
+                <span className="flex items-center gap-1 text-xs">
                   <span className="h-2 w-2 rounded-full bg-[#a855f7] shrink-0 shadow-[0_0_6px_rgba(168,85,247,0.6)]" />
                   <span className="text-purple-300 font-semibold">Sack</span>
                 </span>
               )}
               {effectiveDrivePlays.some((p) => p.category === 'penalty') && (
-                <span className="flex items-center gap-1 text-[11px]">
+                <span className="flex items-center gap-1 text-xs">
                   <span className="h-2 w-2 rounded-full bg-[#f59e0b] shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.6)]" />
                   <span className="text-amber-300 font-semibold">Penalty</span>
                 </span>

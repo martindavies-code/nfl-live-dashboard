@@ -217,7 +217,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
       }`}>
         <div className="flex items-center gap-2">
           {event.season?.type === 3 && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/40">
+            <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-300 border border-amber-500/40">
               <Trophy className="h-3 w-3 text-amber-400" />
               {getWeekLabel(3, event.week?.number)}
             </span>
@@ -229,25 +229,10 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               LIVE
             </span>
           ) : isFinal ? (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/80 px-2.5 py-0.5 text-xs font-bold text-slate-300 shadow-sm">
-                <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
-                FINAL{isOvertimeSituation(event) || status?.type?.detail?.includes('OT') ? ' / OT' : ''}
-              </span>
-              <a
-                href={highlightInfo.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 rounded-md bg-red-600/15 hover:bg-red-600/25 text-red-300 hover:text-white border border-red-500/35 px-2 py-0.5 text-[11px] font-bold transition-all shadow-sm group cursor-pointer"
-                title={`Watch official NFL game highlights on YouTube (${highlightInfo.isDirect ? 'Direct Recap Video' : 'Official NFL Channel'})`}
-                aria-label={`Watch official NFL YouTube highlights for ${awayAbbr} at ${homeAbbr}`}
-              >
-                <YouTubeIcon className="h-3 w-3 text-red-400 group-hover:scale-110 transition-transform" />
-                <span>Highlights</span>
-                <ExternalLink className="h-2.5 w-2.5 text-red-300/70" />
-              </a>
-            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/80 px-2.5 py-0.5 text-xs font-bold text-slate-300 shadow-sm">
+              <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+              FINAL{isOvertimeSituation(event) || status?.type?.detail?.includes('OT') ? ' / OT' : ''}
+            </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-950/70 px-2.5 py-0.5 text-xs font-semibold text-indigo-300 border border-indigo-500/35 shadow-sm">
               <Calendar className="h-3 w-3 text-indigo-400 shrink-0" />
@@ -279,7 +264,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
         <div className="flex items-center gap-2">
           {matchupTier.isMarquee && (
             <span
-              className={`hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border ${matchupTier.badgeClass}`}
+              className={`hidden sm:inline-flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded border ${matchupTier.badgeClass}`}
               title={`Consensus Published Matchup: ${matchupTier.label}`}
             >
               <Sparkles className="h-2.5 w-2.5" />
@@ -289,7 +274,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
 
           {/* RED ZONE BADGE */}
           {isLive && isRedZone && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-rose-600/30 border border-rose-500/60 px-2 py-0.5 text-[10px] font-black tracking-wider text-rose-200 animate-pulse shadow-sm shadow-rose-950">
+            <span className="inline-flex items-center gap-1 rounded-md bg-rose-600/30 border border-rose-500/60 px-2 py-0.5 text-xs font-black tracking-wider text-rose-200 animate-pulse shadow-sm shadow-rose-950">
               <Flame className="h-3 w-3 text-rose-400 fill-rose-400" />
               RED ZONE
             </span>
@@ -298,7 +283,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           {/* LATE THRILLER BADGE (4th Quarter or Overtime with Win Probability in Doubt) */}
           {isLive && !isRedZone && (isOvertimeSituation(event) || (status?.period && status.period > 4) || isFourthQuarterThriller(event)) && (
             <span
-              className="inline-flex items-center gap-1 rounded-md bg-amber-500/25 border border-amber-500/50 px-2 py-0.5 text-[10px] font-black tracking-wider text-amber-200 animate-pulse shadow-sm shadow-amber-950"
+              className="inline-flex items-center gap-1 rounded-md bg-amber-500/25 border border-amber-500/50 px-2 py-0.5 text-xs font-black tracking-wider text-amber-200 animate-pulse shadow-sm shadow-amber-950"
               title={isOvertimeSituation(event) || (status?.period && status.period > 4) ? 'Overtime Thriller' : '4th Quarter Thriller: Win Probability in Doubt'}
             >
               <Flame className="h-3 w-3 text-amber-400 fill-amber-400" />
@@ -308,7 +293,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
 
           {/* SELECTED BADGE */}
           {isSpotlighted && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-sky-500/25 border border-sky-400/60 px-2 py-0.5 text-[10px] font-bold text-sky-200 shadow-sm shadow-sky-950">
+            <span className="inline-flex items-center gap-1 rounded-md bg-sky-500/25 border border-sky-400/60 px-2 py-0.5 text-xs font-bold text-sky-200 shadow-sm shadow-sky-950">
               <Sparkles className="h-3 w-3 text-sky-300 fill-sky-300" />
               SPOTLIGHTED
             </span>
@@ -321,7 +306,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                 e.stopPropagation()
                 onSpotlight(event.id)
               }}
-              className="flex items-center gap-1 rounded-md bg-white/[0.06] hover:bg-sky-500 hover:text-white px-2.5 py-1 text-xs font-semibold text-slate-300 transition-colors border border-white/[0.08] cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400 min-h-[36px] sm:min-h-[28px]"
+              className="flex items-center gap-1 rounded-md bg-white/[0.06] hover:bg-sky-500 hover:text-white px-2.5 py-1 text-xs font-semibold text-slate-300 transition-colors border border-white/[0.08] cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400 min-h-[44px] sm:min-h-[36px]"
               title="Spotlight this matchup at the top"
               aria-label={`Spotlight ${awayComp?.team?.name} at ${homeComp?.team?.name}`}
             >
@@ -372,7 +357,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span
-                  className={`font-mono text-[10px] px-1 py-0.2 rounded border tabular-nums shrink-0 ${awayRankStyle.pillClass}`}
+                  className={`font-mono text-xs px-1.5 py-0.2 rounded border tabular-nums shrink-0 ${awayRankStyle.pillClass}`}
                   title={`Published Power Rank #${awayRank}`}
                   aria-label={`Power rank #${awayRank}`}
                 >
@@ -393,7 +378,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                   {awayComp?.team?.abbreviation === 'NE' ? 'FNE' : awayComp?.team?.abbreviation}
                 </span>
                 {isFinal && isAwayWinner && (
-                  <span className="inline-flex items-center text-[10px] font-black uppercase text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-1.5 py-0.2 rounded shrink-0 shadow-sm">
+                  <span className="inline-flex items-center text-xs font-black uppercase text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-1.5 py-0.2 rounded shrink-0 shadow-sm">
                     WIN
                   </span>
                 )}
@@ -467,7 +452,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span
-                  className={`font-mono text-[10px] px-1 py-0.2 rounded border tabular-nums shrink-0 ${homeRankStyle.pillClass}`}
+                  className={`font-mono text-xs px-1.5 py-0.2 rounded border tabular-nums shrink-0 ${homeRankStyle.pillClass}`}
                   title={`Published Power Rank #${homeRank}`}
                   aria-label={`Power rank #${homeRank}`}
                 >
@@ -488,7 +473,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                   {homeComp?.team?.abbreviation === 'NE' ? 'FNE' : homeComp?.team?.abbreviation}
                 </span>
                 {isFinal && isHomeWinner && (
-                  <span className="inline-flex items-center text-[10px] font-black uppercase text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-1.5 py-0.2 rounded shrink-0 shadow-sm">
+                  <span className="inline-flex items-center text-xs font-black uppercase text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-1.5 py-0.2 rounded shrink-0 shadow-sm">
                     WIN
                   </span>
                 )}
@@ -535,7 +520,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                   <Sparkles className="h-3 w-3 text-amber-400" />
                   {matchupTier.label}
                 </span>
-                <span className={`font-mono text-[11px] font-semibold px-1.5 py-0.5 rounded border ${
+                <span className={`font-mono text-xs font-semibold px-1.5 py-0.5 rounded border ${
                   kickoffCountdown.isImminent
                     ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                     : 'bg-sky-950/60 text-sky-300 border-sky-800/40'
@@ -544,9 +529,9 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded bg-white/[0.03] p-2 border border-white/[0.04] space-y-1">
-                  <span className="text-[10px] uppercase font-semibold text-slate-400 block tracking-wider">Tale of the Tape</span>
+                  <span className="text-xs uppercase font-semibold text-slate-400 block tracking-wider">Tale of the Tape</span>
                   <div className="flex items-center justify-between">
                     <span className="text-white font-bold">#{awayRank} {awayAbbr}</span>
                     <span className="font-mono text-slate-400">{awayRecord.summary}</span>
@@ -558,7 +543,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                 </div>
 
                 <div className="rounded bg-white/[0.03] p-2 border border-white/[0.04] space-y-1">
-                  <span className="text-[10px] uppercase font-semibold text-slate-400 block tracking-wider">Consensus Line</span>
+                  <span className="text-xs uppercase font-semibold text-slate-400 block tracking-wider">Consensus Line</span>
                   <div className="font-mono font-bold text-slate-200 truncate">
                     {bettingOdds.handicap || 'EVEN'}
                   </div>
@@ -568,7 +553,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-white/[0.04]">
+              <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-white/[0.04]">
                 <span className="truncate">{venueText || 'NFL Stadium'}</span>
                 <span className="font-semibold text-slate-300 ml-1 shrink-0">{broadcastDetails.usTv}</span>
               </div>
@@ -596,11 +581,11 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               </span>
             </div>
             {isRedZone ? (
-              <span className="text-[10px] font-bold text-rose-400 shrink-0 flex items-center gap-1">
+              <span className="text-xs font-bold text-rose-400 shrink-0 flex items-center gap-1">
                 <Flame className="h-3 w-3 fill-rose-400" /> Red Zone
               </span>
             ) : situation?.possession && situation?.possessionText && !downAndDistance.includes(situation.possessionText) ? (
-              <span className="text-[11px] text-slate-400 truncate text-right">
+              <span className="text-xs text-slate-400 truncate text-right">
                 Ball on <strong className="text-white">{situation.possessionText}</strong>
               </span>
             ) : null}
@@ -613,14 +598,14 @@ export const GameCard: React.FC<GameCardProps> = memo(({
         <div id={broadcastPanelId} className="mx-4 mb-3 p-3 rounded-lg border border-sky-500/20 bg-[#070b14]/95 space-y-2 text-xs" role="region" aria-label="US Announcing crew details">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="inline-flex items-center gap-1 rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-bold text-sky-300 border border-sky-500/30">
+              <span className="inline-flex items-center gap-1 rounded bg-sky-500/20 px-1.5 py-0.5 text-xs font-bold text-sky-300 border border-sky-500/30">
                 <Mic className="h-3 w-3 text-sky-400" />
                 {broadcastDetails.usTv}
               </span>
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">US Announcing Crew</span>
+              <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">US Announcing Crew</span>
             </div>
             {broadcastDetails.announcers.verified && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 shrink-0">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 shrink-0">
                 <Check className="h-2.5 w-2.5" />
                 Verified
               </span>
@@ -632,7 +617,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </span>
           </div>
           {broadcastDetails.announcers.sideline && (
-            <div className="text-[11px] text-slate-400">
+            <div className="text-xs text-slate-400">
               Sideline: <span className="text-slate-300 font-medium">{broadcastDetails.announcers.sideline}</span>
             </div>
           )}
@@ -652,17 +637,17 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             </span>
           </div>
           {scorigamiInfo.mostLikelyNovel && (
-            <div className="flex items-center justify-between text-[11px]">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">Most Likely:</span>
               <span className="font-mono font-bold text-indigo-200">{scorigamiInfo.mostLikelyLabel}</span>
             </div>
           )}
-          <div className="text-[11px] text-slate-400">
+          <div className="text-xs text-slate-400">
             <span className="text-slate-300 font-semibold">Scenario: </span>
             {scorigamiInfo.whenScenario}
           </div>
           {scorigamiInfo.lastGameSummary && (
-            <div className="text-[11px] text-slate-400 border-t border-white/[0.04] pt-1">
+            <div className="text-xs text-slate-400 border-t border-white/[0.04] pt-1">
               Last: <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
               <span className="text-slate-500 ml-1">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
             </div>
@@ -698,7 +683,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           <button
             type="button"
             onClick={(e) => handleToggleTab('radar', e)}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-medium text-xs transition-colors cursor-pointer min-h-[40px] sm:min-h-[30px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-medium text-xs transition-colors cursor-pointer min-h-[44px] sm:min-h-[34px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               isRadarActive
                 ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -719,7 +704,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           <button
             type="button"
             onClick={(e) => handleToggleTab('broadcast', e)}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-medium text-xs transition-colors cursor-pointer min-h-[40px] sm:min-h-[30px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-medium text-xs transition-colors cursor-pointer min-h-[44px] sm:min-h-[34px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               isBroadcastActive
                 ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -736,7 +721,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           <button
             type="button"
             onClick={(e) => handleToggleTab('scorigami', e)}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-medium text-xs transition-colors cursor-pointer min-h-[40px] sm:min-h-[30px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-medium text-xs transition-colors cursor-pointer min-h-[44px] sm:min-h-[34px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               isScorigamiActive
                 ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-semibold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -756,7 +741,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-semibold text-xs text-red-300 hover:text-white hover:bg-red-600/20 transition-colors cursor-pointer min-h-[40px] sm:min-h-[30px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 shrink-0"
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-semibold text-xs text-red-300 hover:text-white hover:bg-red-600/20 transition-colors cursor-pointer min-h-[44px] sm:min-h-[34px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 shrink-0"
               title={`Watch official NFL game highlights on YouTube (${highlightInfo.isDirect ? 'Direct Video' : 'Official NFL Channel'})`}
               aria-label={`Watch official NFL YouTube highlights for ${awayAbbr} at ${homeAbbr}`}
             >

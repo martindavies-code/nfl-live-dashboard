@@ -82,7 +82,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
         className="w-full select-none"
         aria-label={`Win probability: ${homeAbbr} ${homePct.toFixed(1)}%, ${awayAbbr} ${awayPct.toFixed(1)}%`}
       >
-        <div className="flex items-center justify-between text-[11px] font-bold mb-1.5">
+        <div className="flex items-center justify-between text-xs font-bold mb-1.5">
           <div className="flex items-center gap-1.5">
             <span
               className="h-2 w-2 rounded-full shrink-0 ring-1 ring-white/30"
@@ -97,7 +97,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
             </span>
           </div>
 
-          <span className="text-[10px] font-sans font-bold text-slate-400 uppercase tracking-wider">
+          <span className="text-xs font-sans font-bold text-slate-400 uppercase tracking-wider">
             WIN PROB
           </span>
 
@@ -132,7 +132,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
 
         {/* Compact pre-game handicap and total strip if available */}
         {formattedOdds && (
-          <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1.5 px-0.5 tabular-nums">
+          <div className="flex items-center justify-between text-xs text-slate-400 mt-1.5 px-0.5 tabular-nums">
             <span className="text-slate-300 font-semibold">{handicap || ''}</span>
             <span className="text-slate-400">{overUnderText || ''}</span>
           </div>
@@ -177,7 +177,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
                 style={{ backgroundColor: homeColor }}
               />
             )}
-            <span className="font-extrabold text-[11px] sm:text-xs text-white tracking-wide leading-tight">
+            <span className="font-extrabold text-xs text-white tracking-wide leading-tight">
               {homeAbbr}
             </span>
           </div>
@@ -191,7 +191,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
 
         {/* Center Win Probability Pill */}
         <div className="flex flex-col items-center shrink-0 px-0.5 sm:px-1">
-          <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.05] border border-white/[0.08] px-1 sm:px-1.5 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-300">
+          <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.05] border border-white/[0.08] px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider text-slate-300">
             <Activity className="h-3 w-3 text-sky-400 hidden xs:inline" />
             WIN PROB
           </span>
@@ -210,7 +210,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
             {awayPct.toFixed(1)}%
           </span>
           <div className="relative flex items-center gap-1 sm:gap-1.5 shrink-0">
-            <span className="font-extrabold text-[11px] sm:text-xs text-white tracking-wide leading-tight">
+            <span className="font-extrabold text-xs text-white tracking-wide leading-tight">
               {awayAbbr}
             </span>
             {safeAwayComp.team?.logo ? (
@@ -312,7 +312,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
       </div>
 
       {/* Bar Scale Labels (25%, 50%, 75%) mathematically aligned with bar ticks */}
-      <div className="relative mt-1.5 h-4 w-full text-[11px] text-slate-400 select-none tabular-nums">
+      <div className="relative mt-1.5 h-4 w-full text-xs text-slate-400 select-none tabular-nums">
         <span className="absolute left-0 text-slate-400 font-semibold">{homeAbbr}</span>
         <span className="absolute left-[25%] -translate-x-1/2">25%</span>
         <span className="absolute left-1/2 -translate-x-1/2 font-bold text-slate-200">50%</span>
@@ -321,10 +321,10 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
       </div>
 
       {/* Pre-Game Betting Handicap / Over-Under or Projected Insight Strip */}
-      <div className="mt-2 flex items-center justify-between gap-1.5 text-[11px] sm:text-xs text-slate-300 border-t border-white/[0.06] pt-1.5">
+      <div className="mt-2 flex items-center justify-between gap-1.5 text-xs text-slate-300 border-t border-white/[0.06] pt-1.5">
         <div className="truncate min-w-0 mr-1 flex items-center gap-1.5">
           {formattedOdds ? (
-            <span className="flex items-center gap-1.5 truncate text-[11px] sm:text-xs" title={`Pre-Game Betting Odds: ${formattedOdds}`}>
+            <span className="flex items-center gap-1.5 truncate text-xs" title={`Pre-Game Betting Odds: ${formattedOdds}`}>
               <Scale className="h-3.5 w-3.5 text-sky-400 shrink-0" />
               {handicap && (
                 <span className="inline-flex items-center gap-1 shrink-0">
@@ -347,7 +347,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
               )}
             </span>
           ) : isHomeFavored || isAwayFavored ? (
-            <span className="flex items-center gap-1 truncate text-[11px] sm:text-xs">
+            <span className="flex items-center gap-1 truncate text-xs">
               <TrendingUp className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
               <span className="text-slate-400 font-medium shrink-0">Projected:</span>
               <strong className="text-white font-bold truncate">
@@ -356,10 +356,10 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
               </strong>
             </span>
           ) : (
-            <span className="text-slate-400 font-medium truncate text-[11px] sm:text-xs">Even matchup (50/50)</span>
+            <span className="text-slate-400 font-medium truncate text-xs">Even matchup (50/50)</span>
           )}
         </div>
-        <span className="text-[11px] font-semibold text-slate-400 uppercase shrink-0 bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/[0.06] whitespace-nowrap">
+        <span className="text-xs font-semibold text-slate-400 uppercase shrink-0 bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/[0.06] whitespace-nowrap">
           {modelSource}
         </span>
       </div>
