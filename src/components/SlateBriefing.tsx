@@ -8,13 +8,15 @@ import {
   formatLocalizedKickoff,
   sanitizePatriotsAbbreviation,
 } from '../utils/nflHelpers'
-import { Flame, Compass, ArrowRight, Zap, Sparkles } from 'lucide-react'
+import { Flame, Compass, ArrowRight, Zap, Sparkles, ExternalLink } from 'lucide-react'
 import {
   getTeamPowerRank,
   getMatchupTierInfo,
   getPowerRankTierStyle,
 } from '../utils/powerRankings'
 import { isFourthQuarterThriller, getEventWinProbability } from '../utils/winProbability'
+import { getGameHighlightInfo } from '../utils/gameHighlights'
+import { YouTubeIcon } from './YouTubeIcon'
 
 interface SlateBriefingProps {
   events: NFLEvent[]
@@ -260,16 +262,32 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
         </div>
 
         {/* Executive Action: Direct Spotlight Route */}
-        {primeAlertEvent && onSpotlightEvent && (
+        {primeAlertEvent && (
           <div className="flex items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/[0.06] shrink-0">
-            <button
-              onClick={() => onSpotlightEvent(primeAlertEvent.id)}
-              className="flex items-center gap-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/35 px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer min-h-[44px] sm:min-h-[32px]"
-            >
-              <Compass className="h-3.5 w-3.5 text-sky-400" />
-              <span>Inspect in Spotlight Radar</span>
-              <ArrowRight className="h-3 w-3" />
-            </button>
+            {finalEvents.includes(primeAlertEvent) && (
+              <a
+                href={getGameHighlightInfo(primeAlertEvent).url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-lg bg-red-600/15 hover:bg-red-600/25 text-red-300 hover:text-white border border-red-500/35 px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer min-h-[44px] sm:min-h-[32px]"
+                title="Watch official NFL game highlights on YouTube"
+                aria-label={`Watch official NFL YouTube highlights for ${primeAwayAbbr} vs ${primeHomeAbbr}`}
+              >
+                <YouTubeIcon className="h-3.5 w-3.5 text-red-400" />
+                <span>Highlights</span>
+                <ExternalLink className="h-3 w-3 text-red-300/70" />
+              </a>
+            )}
+            {onSpotlightEvent && (
+              <button
+                onClick={() => onSpotlightEvent(primeAlertEvent.id)}
+                className="flex items-center gap-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/35 px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer min-h-[44px] sm:min-h-[32px]"
+              >
+                <Compass className="h-3.5 w-3.5 text-sky-400" />
+                <span>Inspect in Spotlight Radar</span>
+                <ArrowRight className="h-3 w-3" />
+              </button>
+            )}
           </div>
         )}
       </div>

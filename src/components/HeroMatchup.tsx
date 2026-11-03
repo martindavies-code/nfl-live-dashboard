@@ -51,6 +51,8 @@ import {
 } from '../utils/powerRankings'
 import { calculateWinProbability, getBettingOddsInfo } from '../utils/winProbability'
 import { sanitizeUrl, FALLBACK_LOGO } from '../utils/normalizer'
+import { getGameHighlightInfo } from '../utils/gameHighlights'
+import { YouTubeIcon } from './YouTubeIcon'
 
 export interface HeroMatchupProps {
   readonly event: NFLEvent
@@ -200,6 +202,8 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
     return formatDownAndDistance(situation)
   }, [situation])
 
+  const highlightInfo = useMemo(() => getGameHighlightInfo(event), [event])
+
   // Sanitized Logo URLs
   const awayLogoUrl = useMemo(() => {
     return sanitizeUrl(awayComp?.team?.logo, FALLBACK_LOGO)
@@ -332,10 +336,24 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               <span className="xs:hidden">LIVE</span>
             </span>
           ) : isFinal ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/60 px-2.5 py-1 text-xs font-semibold text-slate-300 shrink-0">
-              <CheckCircle2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-              FINAL RECAP
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/60 px-2.5 py-1 text-xs font-semibold text-slate-300 shrink-0">
+                <CheckCircle2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                FINAL RECAP
+              </span>
+              <a
+                href={highlightInfo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-md bg-red-600/20 hover:bg-red-600/30 text-red-300 hover:text-white border border-red-500/40 px-2.5 py-1 text-xs font-bold transition-all shadow-sm cursor-pointer group"
+                title={`Watch official NFL YouTube game highlights (${highlightInfo.isDirect ? 'Direct Official Video' : 'Official NFL Channel'})`}
+                aria-label={`Watch official NFL YouTube highlights for ${awayDisplayName} at ${homeDisplayName}`}
+              >
+                <YouTubeIcon className="h-3.5 w-3.5 text-red-400 group-hover:scale-110 transition-transform" />
+                <span>Watch Highlights</span>
+                <ExternalLink className="h-3 w-3 text-red-300/80" />
+              </a>
+            </div>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-950/80 px-2 sm:px-2.5 py-1 text-xs font-semibold text-indigo-300 border border-indigo-800/50 min-w-0">
               <Calendar className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
@@ -650,16 +668,31 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowFinalField((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400 min-h-[36px] sm:min-h-[28px]"
-                  aria-expanded={showFinalField}
-                  aria-label={showFinalField ? "Hide field radar" : "Show field radar"}
-                >
-                  <Compass className="h-3.5 w-3.5 text-sky-400" />
-                  <span>{showFinalField ? 'Hide Field Radar' : 'View Field Radar'}</span>
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <a
+                    href={highlightInfo.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold bg-red-600/15 hover:bg-red-600/25 text-red-300 hover:text-white border border-red-500/35 transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-red-400 min-h-[36px] sm:min-h-[28px]"
+                    title={`Watch official NFL game highlights on YouTube (${highlightInfo.isDirect ? 'Direct Video' : 'Official NFL Channel'})`}
+                    aria-label={`Watch official NFL highlights on YouTube for ${awayDisplayName} at ${homeDisplayName}`}
+                  >
+                    <YouTubeIcon className="h-3.5 w-3.5 text-red-400" />
+                    <span>Watch Highlights</span>
+                    <ExternalLink className="h-3 w-3 text-red-300/80" />
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowFinalField((prev) => !prev)}
+                    className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400 min-h-[36px] sm:min-h-[28px]"
+                    aria-expanded={showFinalField}
+                    aria-label={showFinalField ? "Hide field radar" : "Show field radar"}
+                  >
+                    <Compass className="h-3.5 w-3.5 text-sky-400" />
+                    <span>{showFinalField ? 'Hide Field Radar' : 'View Field Radar'}</span>
+                  </button>
+                </div>
               </div>
 
               {/* High-Density Line Score Table */}

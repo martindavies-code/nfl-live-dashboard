@@ -15,7 +15,8 @@
     "preaudit:announcers": "npm run update:announcers",
     "audit:announcers": "node --experimental-strip-types scripts/audit-announcers.mjs",
     "fetch:announcers": "node --experimental-strip-types scripts/fetch-announcers.mjs",
-    "update:power-rankings": "node --experimental-strip-types scripts/update-power-rankings.mjs"
+    "update:power-rankings": "node --experimental-strip-types scripts/update-power-rankings.mjs",
+    "update:highlights": "node scripts/update-highlights.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

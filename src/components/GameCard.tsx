@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react'
+import React, { useState, useMemo, memo } from 'react'
 import type { NFLEvent } from '../types/nfl'
 import { FieldDiagram } from './FieldDiagram'
 import { WinProbabilityBar } from './WinProbabilityBar'
@@ -29,6 +29,7 @@ import {
   Check,
   CheckCircle2,
   Calendar,
+  ExternalLink,
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
@@ -38,6 +39,8 @@ import {
   getPowerRankTierStyle,
 } from '../utils/powerRankings'
 import { getBettingOddsInfo, isFourthQuarterThriller } from '../utils/winProbability'
+import { getGameHighlightInfo } from '../utils/gameHighlights'
+import { YouTubeIcon } from './YouTubeIcon'
 
 interface GameCardProps {
   event: NFLEvent
@@ -60,6 +63,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
 }) => {
   const [prevGlobalTab, setPrevGlobalTab] = useState(globalExpandedTab)
   const [localTab, setLocalTab] = useState<'radar' | 'broadcast' | 'scorigami' | null | undefined>(undefined)
+  const highlightInfo = useMemo(() => getGameHighlightInfo(event), [event])
 
   // Reset local override when dashboard global expanded tab changes
   if (globalExpandedTab !== prevGlobalTab) {
@@ -225,10 +229,25 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               LIVE
             </span>
           ) : isFinal ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/80 px-2.5 py-0.5 text-xs font-bold text-slate-300 shadow-sm">
-              <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
-              FINAL{isOvertimeSituation(event) || status?.type?.detail?.includes('OT') ? ' / OT' : ''}
-            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-800/90 border border-slate-700/80 px-2.5 py-0.5 text-xs font-bold text-slate-300 shadow-sm">
+                <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+                FINAL{isOvertimeSituation(event) || status?.type?.detail?.includes('OT') ? ' / OT' : ''}
+              </span>
+              <a
+                href={highlightInfo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 rounded-md bg-red-600/15 hover:bg-red-600/25 text-red-300 hover:text-white border border-red-500/35 px-2 py-0.5 text-[11px] font-bold transition-all shadow-sm group cursor-pointer"
+                title={`Watch official NFL game highlights on YouTube (${highlightInfo.isDirect ? 'Direct Recap Video' : 'Official NFL Channel'})`}
+                aria-label={`Watch official NFL YouTube highlights for ${awayAbbr} at ${homeAbbr}`}
+              >
+                <YouTubeIcon className="h-3 w-3 text-red-400 group-hover:scale-110 transition-transform" />
+                <span>Highlights</span>
+                <ExternalLink className="h-2.5 w-2.5 text-red-300/70" />
+              </a>
+            </div>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-950/70 px-2.5 py-0.5 text-xs font-semibold text-indigo-300 border border-indigo-500/35 shadow-sm">
               <Calendar className="h-3 w-3 text-indigo-400 shrink-0" />
@@ -729,6 +748,23 @@ export const GameCard: React.FC<GameCardProps> = memo(({
             <Sparkles className={`h-3.5 w-3.5 ${isScorigamiActive ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
             <span>Scorigami</span>
           </button>
+
+          {/* Highlights Tab (When Game is Concluded) */}
+          {isFinal && (
+            <a
+              href={highlightInfo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 sm:py-1 font-semibold text-xs text-red-300 hover:text-white hover:bg-red-600/20 transition-colors cursor-pointer min-h-[40px] sm:min-h-[30px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 shrink-0"
+              title={`Watch official NFL game highlights on YouTube (${highlightInfo.isDirect ? 'Direct Video' : 'Official NFL Channel'})`}
+              aria-label={`Watch official NFL YouTube highlights for ${awayAbbr} at ${homeAbbr}`}
+            >
+              <YouTubeIcon className="h-3.5 w-3.5 text-red-400" />
+              <span>Highlights</span>
+              <ExternalLink className="h-2.5 w-2.5 text-red-300/70" />
+            </a>
+          )}
         </div>
       </div>
     </article>
