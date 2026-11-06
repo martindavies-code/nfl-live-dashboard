@@ -115,6 +115,14 @@ async function pMap(items, fn, concurrency = 3) {
   return results
 }
 
+async function currentWeek(year, seasonType) {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${year}&seasontype=${seasonType}`
+  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } })
+  if (!res.ok) throw new Error(`ESPN API returned ${res.status}`)
+  const data = await res.json()
+  return data?.week?.number || 1
+}
+
 async function main() {
   const year = 2026
   const seasonType = 2
@@ -122,7 +130,7 @@ async function main() {
 
   const weeksToScan = targetWeekArg
     ? [parseInt(targetWeekArg.split('=')[1], 10)]
-    : [1, 2, 3, 4, 5, 6, 7, 8]
+    : Array.from({ length: await currentWeek(year, seasonType) }, (_, i) => i + 1)
 
   console.log(`[Highlights Ingestion] Scanning official highlights for ${year} weeks:`, weeksToScan)
 
@@ -181,6 +189,36 @@ async function main() {
     )
   }
 
+  // Merge with the existing registry: a fresh verified match overwrites the same
+  // key, but previously verified entries are never deleted, and weeks that were
+  // not scanned (or whose scrape failed) are preserved as-is.
+  let existing = {}
+  try {
+    const srcText = fs.readFileSync(REGISTRY_FILE, 'utf8')
+    const entryRe =
+      /'([^']+)':\s*\{\s*videoId:\s*'([^']+)',\s*title:\s*'((?:[^'\\]|\\.)*)',\s*kickoffUtc:\s*'([^']*)',?\s*\}/g
+    let m
+    while ((m = entryRe.exec(srcText))) {
+      existing[m[1]] = { videoId: m[2], title: m[3].replace(/\\'/g, "'"), kickoffUtc: m[4] }
+    }
+  } catch {
+    existing = {}
+  }
+
+  const merged = { ...existing }
+  for (const wk of Object.keys(allEntriesByWeek)) {
+    for (const item of allEntriesByWeek[wk]) {
+      merged[item.key] = { videoId: item.videoId, title: item.title, kickoffUtc: item.kickoffUtc }
+    }
+  }
+
+  const byWeek = {}
+  for (const [key, val] of Object.entries(merged)) {
+    const wk = parseInt(key.split('_')[2], 10)
+    if (!Number.isFinite(wk)) continue
+    ;(byWeek[wk] = byWeek[wk] || []).push({ key, ...val })
+  }
+
   // Generate updated TypeScript registry file
   let code = `import { sanitizePatriotsAbbreviation } from '../utils/nflHelpers.ts'
 
@@ -201,9 +239,9 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
 `
 
   let totalEntries = 0
-  const sortedWeeks = Object.keys(allEntriesByWeek).map(Number).sort((a, b) => a - b)
+  const sortedWeeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b)
   for (const week of sortedWeeks) {
-    const list = allEntriesByWeek[week]
+    const list = byWeek[week]
     if (!list || list.length === 0) continue
     // Sort games chronologically by kickoffUtc
     list.sort((a, b) => (a.kickoffUtc || '').localeCompare(b.kickoffUtc || ''))
