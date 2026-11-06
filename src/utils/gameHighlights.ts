@@ -73,8 +73,8 @@ export function getGameHighlightInfo(event?: NFLEvent | null): GameHighlightInfo
   return {
     url: searchUrl,
     isDirect: false,
-    title: `${awayName} vs ${homeName} Highlights | Official NFL Channel`,
-    label: 'Watch Highlights',
+    title: `${awayName} vs ${homeName} Highlights | Pending verification on the official NFL channel`,
+    label: 'Highlights Pending',
     channelUrl: OFFICIAL_NFL_YOUTUBE_CHANNEL,
   }
 }
