@@ -676,7 +676,7 @@ export const ANNOUNCER_REGISTRY: readonly VerifiedGameCrew[] = [
   {
     season: 2026, week: 9, away: 'NYG', home: 'PHI', kickoffUtc: '2026-11-08T18:00Z',
     network: 'FOX',
-    playByPlay: 'Joe Davis', analysts: ['Greg Olsen Pam Oliver'], sideline: [],
+    playByPlay: 'Joe Davis', analysts: ['Greg Olsen'], sideline: ['Pam Oliver'],
     sources: [{ label: 'Yahoo Sports / Akron Beacon Journal — NFL schedule and announcer pairings for Week 9', url: 'https://sports.yahoo.com/articles/nfl-week-9-announcers-tv-110113252.html' }],
     verifiedOn: '2026-11-05',
   },
