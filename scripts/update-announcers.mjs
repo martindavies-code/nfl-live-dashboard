@@ -112,7 +112,15 @@ function teamsIn(text) {
  */
 function parseCrew(text) {
   if (!text || TBA_RE.test(text)) return null
-  const people = text
+  // Sources sometimes drop the comma between role segments, e.g.
+  // "Greg Olsen (analyst) Pam Oliver (reporter)". Insert a separator before any
+  // capitalised name that is immediately followed by a role tag, so the two
+  // people are not merged into one bogus analyst name.
+  const normalisedText = text.replace(
+    /\)\s+(?=[A-Z][A-Za-z.'’-]+(?:\s+[A-Za-z.'’-]+){0,3}\s*\((?:play-by-play|play by play|analyst|reporter|sideline)[^)]*\))/gi,
+    '), '
+  )
+  const people = normalisedText
     .split(/,|;|\s+&\s+|\s+and\s+/i)
     .map((part) => {
       const role = (part.match(/\(([^)]*)\)/) || [])[1] || ''

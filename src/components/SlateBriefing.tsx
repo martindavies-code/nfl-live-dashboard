@@ -268,7 +268,7 @@ export const SlateBriefing: React.FC<SlateBriefingProps> = memo(({
         {/* Executive Action: Direct Spotlight Route */}
         {primeAlertEvent && (
           <div className="flex items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/[0.06] shrink-0">
-            {finalEvents.includes(primeAlertEvent) && (
+            {finalEvents.includes(primeAlertEvent) && getGameHighlightInfo(primeAlertEvent).isDirect && (
               <a
                 href={getGameHighlightInfo(primeAlertEvent).url}
                 target="_blank"

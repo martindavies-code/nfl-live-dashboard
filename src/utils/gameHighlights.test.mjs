@@ -7,7 +7,7 @@ test('gameHighlights: getGameHighlightInfo defensively handles nullish and empty
   assert.equal(typeof nullResult.url, 'string')
   assert.ok(nullResult.url.startsWith('https://www.youtube.com/@nfl/search?query='))
   assert.equal(nullResult.isDirect, false)
-  assert.equal(nullResult.label, 'Watch Highlights')
+  assert.equal(nullResult.label, 'Highlights Pending')
   assert.equal(nullResult.channelUrl, 'https://www.youtube.com/@nfl')
 
   const emptyEventResult = getGameHighlightInfo({ id: 'empty' })
@@ -55,11 +55,11 @@ test('gameHighlights: resolves fallback search scoped to official @nfl YouTube c
         competitors: [
           {
             homeAway: 'home',
-            team: { id: '1', displayName: 'Baltimore Ravens', name: 'Ravens', abbreviation: 'BAL' },
+            team: { id: '1', displayName: 'Atlanta Falcons', name: 'Falcons', abbreviation: 'ATL' },
           },
           {
             homeAway: 'away',
-            team: { id: '2', displayName: 'Jacksonville Jaguars', name: 'Jaguars', abbreviation: 'JAX' },
+            team: { id: '2', displayName: 'Cincinnati Bengals', name: 'Bengals', abbreviation: 'CIN' },
           },
         ],
       },
@@ -68,12 +68,13 @@ test('gameHighlights: resolves fallback search scoped to official @nfl YouTube c
 
   const info = getGameHighlightInfo(futureEvent)
   assert.equal(info.isDirect, false)
+  assert.equal(info.label, 'Highlights Pending')
   assert.equal(info.videoId, undefined)
   assert.equal(info.thumbnailUrl, undefined)
   assert.ok(info.url.startsWith('https://www.youtube.com/@nfl/search?query='))
   // Verifies the query targets the official NFL channel for the exact matchup
-  assert.ok(info.url.includes('Jacksonville%20Jaguars'))
-  assert.ok(info.url.includes('Baltimore%20Ravens'))
+  assert.ok(info.url.includes('Cincinnati%20Bengals'))
+  assert.ok(info.url.includes('Atlanta%20Falcons'))
   assert.ok(info.url.includes('Game%20Highlights'))
 })
 
@@ -118,15 +119,15 @@ test('gameHighlights: handles postseason games and Patriots name sanitization', 
     competitions: [
       {
         competitors: [
-          { homeAway: 'home', team: { id: '1', name: 'Ravens', abbreviation: 'BAL' } },
-          { homeAway: 'away', team: { id: '2', name: 'Jaguars', abbreviation: 'JAX' } },
+          { homeAway: 'home', team: { id: '1', name: 'Falcons', abbreviation: 'ATL' } },
+          { homeAway: 'away', team: { id: '2', name: 'Bengals', abbreviation: 'CIN' } },
         ],
       },
     ],
   }
   const nameOnlyInfo = getGameHighlightInfo(nameOnlyEvent)
   assert.equal(nameOnlyInfo.isDirect, false)
-  assert.ok(nameOnlyInfo.title.includes('Jaguars vs Ravens'))
+  assert.ok(nameOnlyInfo.title.includes('Bengals vs Falcons'))
 
   // Event with only abbreviation fallback
   const abbrOnlyEvent = {

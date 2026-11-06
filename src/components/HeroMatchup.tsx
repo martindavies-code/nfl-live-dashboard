@@ -658,6 +658,17 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
+                  {!highlightInfo.isDirect && (
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold bg-white/[0.04] text-slate-500 border border-white/[0.06] cursor-default min-h-[44px] sm:min-h-[36px]"
+                      title="Verified official NFL highlights are not yet available for this game"
+                      aria-label={`Official NFL highlights for ${awayDisplayName} at ${homeDisplayName} are not yet available`}
+                    >
+                      <YouTubeIcon className="h-3.5 w-3.5 text-slate-500" />
+                      <span>Highlights Pending</span>
+                    </span>
+                  )}
+                  {highlightInfo.isDirect && (
                   <a
                     href={highlightInfo.url}
                     target="_blank"
@@ -670,6 +681,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                     <span>Watch Highlights</span>
                     <ExternalLink className="h-3 w-3 text-red-300/80" />
                   </a>
+                  )}
 
                   <button
                     type="button"

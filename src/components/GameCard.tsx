@@ -766,7 +766,17 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           </button>
 
           {/* Highlights Tab (When Game is Concluded) */}
-          {isFinal && (
+          {isFinal && !highlightInfo.isDirect && (
+            <span
+              className="w-full min-w-0 flex items-center justify-center gap-1 sm:gap-1.5 rounded-md px-1 sm:px-2 py-1.5 sm:py-1 font-medium text-slate-500 min-h-[38px] sm:min-h-[32px] cursor-default"
+              title="Verified official NFL highlights are not yet available for this game"
+              aria-label={`Official NFL YouTube highlights for ${awayAbbr} at ${homeAbbr} are not yet available`}
+            >
+              <YouTubeIcon className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+              <span className="truncate">Highlights Pending</span>
+            </span>
+          )}
+          {isFinal && highlightInfo.isDirect && (
             <a
               href={highlightInfo.url}
               target="_blank"
