@@ -291,6 +291,20 @@ export const Dashboard: React.FC = () => {
     [handleSetSpotlight]
   )
 
+  // Brand home action: returns to the top of the page and refreshes the live scoreboard.
+  // Shares the refresh guard with the manual Refresh button so the two never stack requests.
+  const handleBrandHome = useCallback(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
+    playTactileClick(isMuted)
+    if (isRefreshing) {
+      setSrAnnouncement('Returned to top. Scoreboard refresh already in progress.')
+      return
+    }
+    setSrAnnouncement('Returned to top. Refreshing live scoreboard.')
+    loadData(true)
+  }, [isMuted, isRefreshing, loadData])
+
   const handleToggleRadar = useCallback(() => {
     setGlobalExpandedTab((prev) => (prev === 'radar' ? null : 'radar'))
   }, [])
@@ -807,23 +821,31 @@ export const Dashboard: React.FC = () => {
           <div className="flex h-14 sm:h-16 items-center justify-between gap-2.5 sm:gap-4">
             {/* Logo, Brand & Desktop Week Navigation */}
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                <div
-                  className="flex h-8.5 w-8.5 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-700 to-indigo-900 shadow-lg shadow-indigo-950/40 ring-1 ring-white/20 select-none"
-                  aria-hidden="true"
+              <h1 className="shrink-0">
+                <button
+                  type="button"
+                  onClick={handleBrandHome}
+                  className="flex items-center gap-2 sm:gap-3 min-h-[44px] rounded-xl select-none focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  title="Back to top and refresh live scores"
+                  aria-label="NFL Command. Back to top and refresh live scores."
                 >
-                  <span className="text-sm sm:text-xl">🏈</span>
-                </div>
-                <div className="min-w-0">
-                  <h1 className="font-bold title-page tracking-tight text-white uppercase whitespace-nowrap">
-                    <span className="sm:hidden">NFL Command</span>
-                    <span className="hidden sm:inline">NFL Live Command</span>
-                  </h1>
-                  <p className="text-xs text-slate-400 font-medium tracking-normal mt-0.5 hidden xs:block whitespace-nowrap">
-                    <span className="hidden md:inline">{seasonYear} Season • </span>Real-Time Field Tracker
-                  </p>
-                </div>
-              </div>
+                  <span
+                    className="flex h-8.5 w-8.5 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-700 to-indigo-900 shadow-lg shadow-indigo-950/40 ring-1 ring-white/20"
+                    aria-hidden="true"
+                  >
+                    <span className="text-sm sm:text-xl">🏈</span>
+                  </span>
+                  <span className="min-w-0 text-left">
+                    <span className="block font-bold title-page tracking-tight text-white uppercase whitespace-nowrap">
+                      <span className="sm:hidden">NFL Command</span>
+                      <span className="hidden sm:inline">NFL Live Command</span>
+                    </span>
+                    <span className="block text-xs text-slate-400 font-medium tracking-normal mt-0.5 hidden xs:block whitespace-nowrap">
+                      <span className="hidden md:inline">{seasonYear} Season • </span>Real-Time Field Tracker
+                    </span>
+                  </span>
+                </button>
+              </h1>
 
               {/* Vertical Divider (Desktop Only) */}
               <div className="hidden sm:block h-6 w-px bg-white/10 shrink-0" aria-hidden="true" />
@@ -929,19 +951,20 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Dedicated Week Navigation Bar (< sm screens only) */}
-          <div className="sm:hidden flex items-center justify-center pb-2.5 pt-0.5 border-t border-white/[0.05]">
-            <WeekSelector
-              currentSeasonType={selectedSeasonType}
-              currentWeek={selectedWeek}
-              liveSeasonType={liveSeasonType}
-              liveWeek={liveWeek}
-              seasonYear={seasonYear}
-              onSelectWeek={handleSelectWeek}
-            />
-          </div>
         </div>
       </header>
+
+      {/* Mobile Week Navigation (in normal flow so it scrolls away; desktop week nav stays inline in the sticky header) */}
+      <div className="sm:hidden flex items-center justify-center py-2 border-b border-white/[0.05]">
+        <WeekSelector
+          currentSeasonType={selectedSeasonType}
+          currentWeek={selectedWeek}
+          liveSeasonType={liveSeasonType}
+          liveWeek={liveWeek}
+          seasonYear={seasonYear}
+          onSelectWeek={handleSelectWeek}
+        />
+      </div>
 
       {/* MAIN CONTAINER */}
       <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-8 lg:px-12 py-5 sm:py-7 space-y-6 sm:space-y-8 focus:outline-none">
@@ -1371,4 +1394,4 @@ export const Dashboard: React.FC = () => {
       )}
     </div>
   )
-}
+        }
