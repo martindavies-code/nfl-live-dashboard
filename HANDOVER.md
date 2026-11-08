@@ -1,28 +1,30 @@
-# HANDOVER — 2026-11-06 announcer deploy fix + highlights pipeline repair
+# HANDOVER — 2026-11-08 mobile scroll & header fixes
 
-Merged via PR #1 (squash, commit e9959f2): "fix: deploy Week 9 announcer crews and repair highlights pipeline".
+Branch `fix/mobile-header-scroll`, single scoped change set in `src/components/Dashboard.tsx`.
 
-## What was wrong
+## What Martin asked for (WhatsApp, 8 Nov 2026)
 
-1. **Week 9 crews never reached the live site.** The weekly announcer audit bot committed verified crews with `[skip ci]`, which suppressed *all* workflows — including Deploy to GitHub Pages. Data was on `main`, the live site stayed on the 3 Nov build and showed "Crew TBA" for every Sunday game.
-2. **Highlights link opened the generic NFL YouTube channel.** `scripts/update-highlights.mjs` only scanned hardcoded weeks 1–8, and it *regenerated* the whole registry from scanned weeks — running it for one week wiped the others. With no verified entry, the UI fell back to a channel-search URL that mobile YouTube opens as the plain channel page.
-3. **NYG@PHI crew was merged into one name** ("Greg Olsen Pam Oliver") because the Yahoo source omits a comma between role segments.
+1. Mobile week selector (W9 row) should scroll away instead of staying pinned.
+2. Keep the brand (NFL Command logo) plus sound and refresh controls frozen while scrolling.
+3. Tapping the logo should take you back to the top of the page and refresh.
+4. Investigate why Chrome on Android never hides the URL bar on scroll.
 
 ## What changed
 
-- `weekly-announcer-audit.yml` now dispatches the Pages deploy explicitly after committing registry updates (`[skip ci]` retained so the bot push does not re-trigger the audit itself).
-- New `weekly-highlights-update.yml`: daily 13:00 UTC ingestion of verified official highlights; commits **without** `[skip ci]` so updates deploy.
-- `update-highlights.mjs` scans up to the current ESPN week and merges per key; it never deletes previously verified entries.
-- `update-announcers.mjs` splits role segments even when the source drops the comma.
-- Registries: verified JAX@BAL Week 9 video added; NYG@PHI corrected (Olsen analyst, Oliver sideline).
-- UI shows an honest **"Highlights Pending"** state when no verified video exists, instead of a link dressed up as game highlights.
+- **Mobile week nav moved out of the sticky `<header>`** into normal flow between header and `<main>`, so it scrolls away with the page. The desktop week selector is unchanged (still inline in the sticky header at `sm` and up).
+- **Sticky header now keeps only the brand bar**: logo, sound toggle, refresh (plus desktop-only controls). Unchanged mechanism (`sticky top-0 z-50`).
+- **Logo is now a real `<button>` inside the `<h1>`**: tap scrolls to top (`smooth`, or `auto` when the OS requests reduced motion) and triggers the same guarded manual refresh as the Refresh button. If a refresh is already in flight it only scrolls, so the two controls never stack duplicate requests. Screen-reader announcement on activation; 44px touch target; focus ring preserved.
+
+## URL bar investigation (no code change possible)
+
+Measured the live page (8 Nov): the document scrolls at the root (`document.scrollingElement` = HTML, no inner scroll containers, no overflow/height locks on html/body/#root, no touch/wheel handlers). Those are the only app-side conditions that can block Chrome Android's toolbar auto-hide, and the app passes all of them. The URL bar is controlled by Chrome itself and cannot be forced from a page. If it still never hides for Martin while other sites hide it on the same phone, the difference is in his Chrome (there are public reports of Chrome 136+/Android 15 breaking toolbar auto-hide), not in this app.
 
 ## Verified before merge
 
-- 242/242 node tests, `tsc` + `vite` production build, live `audit:announcers` (all games within 72h verified).
-- All 11 files byte-verified against locally tested copies; every Week 9 crew cross-checked against the cited Yahoo/ABJ article; JAX@BAL video title-confirmed via YouTube.
+- `npm run lint` (oxlint), full `npm test` suite, `tsc` + production `vite build` all pass.
+- Live verification on production after deploy (mobile viewport): week bar scrolls away, brand row stays pinned, logo tap returns to top and refreshes.
 
 ## Watchouts
 
-- Week 10+ crews legitimately stay "Crew TBA" until networks publish pairings (usually Tue/Wed). Do not fill from memory.
-- GitHub's upload UI now prefixes batch-position numbers into real filenames ("2-file.ext"). Prefer the in-place editor, or rename immediately after upload.
+- The brand cluster is now a button: nested interactive markup must never be added inside it.
+- If Martin still reports the URL bar not hiding, do not add layout hacks (100vh wrappers, scroll containers) — those make it worse. The remaining lever is a PWA manifest with `display: standalone` (installed from Add to Home screen), which has no URL bar at all. Not implemented; needs his go-ahead.
