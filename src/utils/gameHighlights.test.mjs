@@ -46,6 +46,9 @@ test('gameHighlights: resolves exact verified YouTube highlight link for registe
 })
 
 test('gameHighlights: resolves fallback search scoped to official @nfl YouTube channel for unregistered games', () => {
+  // Fictional teams: this test must exercise the unregistered-game fallback
+  // forever, so it cannot use a real matchup (the automated highlights
+  // registry adds real matchups weekly and silently breaks that assumption).
   const futureEvent = {
     id: 'future-game',
     season: { year: 2026, type: 2 },
@@ -55,11 +58,11 @@ test('gameHighlights: resolves fallback search scoped to official @nfl YouTube c
         competitors: [
           {
             homeAway: 'home',
-            team: { id: '1', displayName: 'Atlanta Falcons', name: 'Falcons', abbreviation: 'ATL' },
+            team: { id: '1', displayName: 'North Pole Yetis', name: 'Yetis', abbreviation: 'NPY' },
           },
           {
             homeAway: 'away',
-            team: { id: '2', displayName: 'Cincinnati Bengals', name: 'Bengals', abbreviation: 'CIN' },
+            team: { id: '2', displayName: 'South Pole Penguins', name: 'Penguins', abbreviation: 'SPP' },
           },
         ],
       },
@@ -73,8 +76,8 @@ test('gameHighlights: resolves fallback search scoped to official @nfl YouTube c
   assert.equal(info.thumbnailUrl, undefined)
   assert.ok(info.url.startsWith('https://www.youtube.com/@nfl/search?query='))
   // Verifies the query targets the official NFL channel for the exact matchup
-  assert.ok(info.url.includes('Cincinnati%20Bengals'))
-  assert.ok(info.url.includes('Atlanta%20Falcons'))
+  assert.ok(info.url.includes('South%20Pole%20Penguins'))
+  assert.ok(info.url.includes('North%20Pole%20Yetis'))
   assert.ok(info.url.includes('Game%20Highlights'))
 })
 
@@ -119,15 +122,15 @@ test('gameHighlights: handles postseason games and Patriots name sanitization', 
     competitions: [
       {
         competitors: [
-          { homeAway: 'home', team: { id: '1', name: 'Falcons', abbreviation: 'ATL' } },
-          { homeAway: 'away', team: { id: '2', name: 'Bengals', abbreviation: 'CIN' } },
+          { homeAway: 'home', team: { id: '1', name: 'Yetis', abbreviation: 'NPY' } },
+          { homeAway: 'away', team: { id: '2', name: 'Penguins', abbreviation: 'SPP' } },
         ],
       },
     ],
   }
   const nameOnlyInfo = getGameHighlightInfo(nameOnlyEvent)
   assert.equal(nameOnlyInfo.isDirect, false)
-  assert.ok(nameOnlyInfo.title.includes('Bengals vs Falcons'))
+  assert.ok(nameOnlyInfo.title.includes('Penguins vs Yetis'))
 
   // Event with only abbreviation fallback
   const abbrOnlyEvent = {
