@@ -1,5 +1,5 @@
 import type { NFLEvent, NFLCompetitor, NFLSituation, NFLStatus, NFLOdds } from '../types/nfl'
-import { safeParseInt, isHalftimeSituation, isOvertimeSituation, sanitizePatriotsName, sanitizePatriotsAbbreviation } from './nflHelpers.ts'
+import { safeParseInt, isHalftimeSituation, isOvertimeSituation, sanitizePatriotsName, sanitizePatriotsAbbreviation, isGameFinished } from './nflHelpers.ts'
 
 /**
  * Standard Normal Cumulative Distribution Function (Abramowitz & Stegun 7.1.26)
@@ -486,4 +486,99 @@ export function isFourthQuarterThriller(
   const winProb = getEventWinProbability(event)
   const maxWinPct = Math.max(winProb.homePct, winProb.awayPct)
   return maxWinPct < maxWinPctThreshold
+}
+
+// =============================================================================
+// Live Slate Ordering
+// =============================================================================
+
+/**
+ * Orders a week/slate for the live directory:
+ *  1. Live games first, ranked by competitiveness - closest win probability,
+ *     then smallest score margin, preserving feed order on ties.
+ *  2. Upcoming games next, preserving feed (kickoff) order.
+ *  3. Finished games last, preserving feed order (same contract as
+ *     sortEventsFinishedLast, which this composes rather than replaces).
+ *
+ * A 16-point fourth-quarter blowout no longer outranks a one-score game
+ * purely because of feed position. Manual spotlight pins and hero selection
+ * are unaffected - they resolve games by id/power ranking, not list order.
+ *
+ * Margin guard: a live game's effective closeness can never be tighter than
+ * a clock-weighted factor x its score margin (the same margin means more
+ * late in a game), so a missing or stale win probability cannot make a
+ * blowout look competitive. With no probability and no score data at all,
+ * games fall back to stable feed order.
+ */
+const MARGIN_GUARD_FACTOR = 2.5
+// Each additional quarter makes the same score margin count more:
+// Q1 2.5x, Q2 3.5x, Q3 4.5x, Q4/OT 5.5x.
+const MARGIN_GUARD_PERIOD_STEP = 1
+const MARGIN_GUARD_MAX_PERIOD = 4
+
+function marginGuardFactor(period: number): number {
+  const quarter = Math.min(Math.max(period, 1), MARGIN_GUARD_MAX_PERIOD)
+  return MARGIN_GUARD_FACTOR + (quarter - 1) * MARGIN_GUARD_PERIOD_STEP
+}
+
+function compareAsc(a: number, b: number): number {
+  return a < b ? -1 : a > b ? 1 : 0
+}
+
+function parseSlateScore(val: string | number | undefined | null): number {
+  if (typeof val === 'number') return Number.isFinite(val) ? val : NaN
+  const parsed = parseInt(String(val ?? ''), 10)
+  return Number.isFinite(parsed) ? parsed : NaN
+}
+
+export function sortLiveEventsByCompetitiveness(events: NFLEvent[]): NFLEvent[] {
+  if (!Array.isArray(events) || events.length <= 1) return events ? [...events] : []
+
+  const decorated = events.map((event, index) => {
+    const comp = event?.competitions?.[0]
+    const state = event?.status?.type?.state || comp?.status?.type?.state || 'pre'
+    const finished = isGameFinished(event)
+    const live = state === 'in' && !finished
+
+    let probCloseness = Number.POSITIVE_INFINITY
+    let margin = Number.POSITIVE_INFINITY
+    let period = 1
+    if (live) {
+      const rawPeriod = event?.status?.period ?? comp?.status?.period
+      if (typeof rawPeriod === 'number' && Number.isFinite(rawPeriod)) period = rawPeriod
+      try {
+        const wp = getEventWinProbability(event)
+        if (wp && Number.isFinite(wp.homePct) && Number.isFinite(wp.awayPct)) {
+          probCloseness = Math.abs(wp.homePct - wp.awayPct)
+        }
+      } catch {
+        // Win probability unavailable - the margin guard still applies.
+      }
+      const homeCompetitor = comp?.competitors?.find((c) => c.homeAway === 'home')
+      const awayCompetitor = comp?.competitors?.find((c) => c.homeAway === 'away')
+      // parseScore, not safeParseInt: missing scores must stay missing (a blank
+      // score is not the same as a genuine 0-0 kickoff tie).
+      const homeScore = parseSlateScore(homeCompetitor?.score)
+      const awayScore = parseSlateScore(awayCompetitor?.score)
+      if (Number.isFinite(homeScore) && Number.isFinite(awayScore)) {
+        margin = Math.abs(homeScore - awayScore)
+      }
+    }
+
+    const closeness = Math.max(probCloseness, margin * marginGuardFactor(period))
+
+    return { event, index, group: finished ? 2 : live ? 0 : 1, closeness, margin }
+  })
+
+  // Explicit comparisons: Infinity/NaN closeness values must not produce
+  // NaN comparator results (Infinity - Infinity = NaN breaks sort stability).
+  decorated.sort(
+    (a, b) =>
+      a.group - b.group ||
+      compareAsc(a.closeness, b.closeness) ||
+      compareAsc(a.margin, b.margin) ||
+      a.index - b.index
+  )
+
+  return decorated.map((entry) => entry.event)
 }
