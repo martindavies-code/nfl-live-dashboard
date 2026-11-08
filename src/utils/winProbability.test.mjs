@@ -516,3 +516,137 @@ test('winProbability: complete branch coverage for odds, normalCdf, and event co
   assert.equal(stringOU.overUnder, 'O/U 47.5')
 })
 
+
+// ---------------------------------------------------------------------------
+// sortLiveEventsByCompetitiveness: live-directory ordering
+// ---------------------------------------------------------------------------
+
+import { sortLiveEventsByCompetitiveness } from './winProbability.ts'
+
+function makeLiveEvent(id, { homeScore = 0, awayScore = 0, homeProb, period = 4, clock = 600 } = {}) {
+  const competition = {
+    competitors: [
+      { id: `${id}-h`, homeAway: 'home', score: String(homeScore), team: { displayName: `Home ${id}`, abbreviation: 'H' } },
+      { id: `${id}-a`, homeAway: 'away', score: String(awayScore), team: { displayName: `Away ${id}`, abbreviation: 'A' } },
+    ],
+  }
+  if (typeof homeProb === 'number') {
+    competition.situation = {
+      lastPlay: { probability: { homeWinPercentage: homeProb, awayWinPercentage: 1 - homeProb } },
+    }
+  }
+  return {
+    id,
+    name: `Game ${id}`,
+    status: { type: { state: 'in', completed: false }, period, clock },
+    competitions: [competition],
+  }
+}
+
+function makeUpcomingEvent(id) {
+  return {
+    id,
+    name: `Game ${id}`,
+    status: { type: { state: 'pre', completed: false } },
+    competitions: [{ competitors: [
+      { id: `${id}-h`, homeAway: 'home', score: '0', team: { displayName: `Home ${id}`, abbreviation: 'H' } },
+      { id: `${id}-a`, homeAway: 'away', score: '0', team: { displayName: `Away ${id}`, abbreviation: 'A' } },
+    ] }],
+  }
+}
+
+function makeFinishedEvent(id) {
+  return {
+    id,
+    name: `Game ${id}`,
+    status: { type: { state: 'post', completed: true } },
+    competitions: [{ competitors: [
+      { id: `${id}-h`, homeAway: 'home', score: '24', team: { displayName: `Home ${id}`, abbreviation: 'H' } },
+      { id: `${id}-a`, homeAway: 'away', score: '17', team: { displayName: `Away ${id}`, abbreviation: 'A' } },
+    ] }],
+  }
+}
+
+test('sortLiveEventsByCompetitiveness: a blowout no longer outranks a close game', () => {
+  // Martin's reported case: NYJ 12 - KC 28 in Q4 at KC 99.6% sat above a tight game.
+  const blowout = makeLiveEvent('kc-nyj', { homeScore: 28, awayScore: 12, homeProb: 0.996 })
+  const close = makeLiveEvent('dal-ind', { homeScore: 20, awayScore: 17, homeProb: 0.55 })
+
+  const sorted = sortLiveEventsByCompetitiveness([blowout, close])
+  assert.deepEqual(sorted.map((e) => e.id), ['dal-ind', 'kc-nyj'])
+})
+
+test('sortLiveEventsByCompetitiveness: stale close probability cannot make a blowout competitive', () => {
+  // Margin guard: even if the probability feed is stale and says 55/45,
+  // a 16-point margin still ranks below a genuinely tight 3-point game.
+  const staleBlowout = makeLiveEvent('stale', { homeScore: 28, awayScore: 12, homeProb: 0.55 })
+  const close = makeLiveEvent('tight', { homeScore: 20, awayScore: 17, homeProb: 0.55 })
+
+  const sorted = sortLiveEventsByCompetitiveness([staleBlowout, close])
+  assert.deepEqual(sorted.map((e) => e.id), ['tight', 'stale'])
+})
+
+test('sortLiveEventsByCompetitiveness: missing probability falls back to score margin', () => {
+  const wideNoProb = makeLiveEvent('wide', { homeScore: 24, awayScore: 3 })
+  const tightNoProb = makeLiveEvent('tight', { homeScore: 20, awayScore: 17 })
+
+  const sorted = sortLiveEventsByCompetitiveness([wideNoProb, tightNoProb])
+  assert.deepEqual(sorted.map((e) => e.id), ['tight', 'wide'])
+})
+
+test('sortLiveEventsByCompetitiveness: missing score data falls back to stable feed order', () => {
+  const noDataA = makeLiveEvent('nodata-a', { homeScore: '', awayScore: '-' })
+  const noDataB = makeLiveEvent('nodata-b', { homeScore: 'TBD', awayScore: 'TBD' })
+  const close = makeLiveEvent('close', { homeScore: 21, awayScore: 20, homeProb: 0.52 })
+
+  const sorted = sortLiveEventsByCompetitiveness([noDataA, noDataB, close])
+  // Games with usable data rank first; dataless games keep their feed order at the back.
+  assert.deepEqual(sorted.map((e) => e.id), ['close', 'nodata-a', 'nodata-b'])
+})
+
+test('sortLiveEventsByCompetitiveness: live first, upcoming feed order preserved, finished last', () => {
+  const finished = makeFinishedEvent('done')
+  const upcomingA = makeUpcomingEvent('next-a')
+  const liveBlowout = makeLiveEvent('blowout', { homeScore: 35, awayScore: 0, homeProb: 0.999 })
+  const liveClose = makeLiveEvent('thriller', { homeScore: 27, awayScore: 24, homeProb: 0.51 })
+  const upcomingB = makeUpcomingEvent('next-b')
+
+  const sorted = sortLiveEventsByCompetitiveness([finished, upcomingA, liveBlowout, liveClose, upcomingB])
+  assert.deepEqual(sorted.map((e) => e.id), ['thriller', 'blowout', 'next-a', 'next-b', 'done'])
+})
+
+test('sortLiveEventsByCompetitiveness: equal competitiveness preserves feed order and input is not mutated', () => {
+  const a = makeLiveEvent('a', { homeScore: 21, awayScore: 17, homeProb: 0.6 })
+  const b = makeLiveEvent('b', { homeScore: 14, awayScore: 10, homeProb: 0.6 })
+  const input = [a, b]
+
+  const sorted = sortLiveEventsByCompetitiveness(input)
+  assert.deepEqual(sorted.map((e) => e.id), ['a', 'b'])
+  assert.deepEqual(input.map((e) => e.id), ['a', 'b'])
+  assert.notEqual(sorted, input)
+
+  assert.deepEqual(sortLiveEventsByCompetitiveness(null), [])
+  assert.deepEqual(sortLiveEventsByCompetitiveness(undefined), [])
+  assert.deepEqual(sortLiveEventsByCompetitiveness([]), [])
+})
+
+test('sortLiveEventsByCompetitiveness: clock context - early 16-point game outranks final-seconds 7-point game', () => {
+  // A 16-point Q1 game is genuinely contestable; a 7-point game with 30 seconds
+  // left is decided. Win probability reflects the clock, so the early blowout
+  // must rank as the more competitive watch.
+  const earlyBlowout = makeLiveEvent('early', { homeScore: 23, awayScore: 7, homeProb: 0.7, period: 1, clock: 600 })
+  const lateClose = makeLiveEvent('decided', { homeScore: 24, awayScore: 17, homeProb: 0.99, period: 4, clock: 30 })
+
+  const sorted = sortLiveEventsByCompetitiveness([lateClose, earlyBlowout])
+  assert.deepEqual(sorted.map((e) => e.id), ['early', 'decided'])
+})
+
+test('sortLiveEventsByCompetitiveness: margin guard weights the same margin more heavily late in the game', () => {
+  // Identical stale 50/50 probabilities and identical 7-point margins: the Q4
+  // game is nearer to decided than the Q1 game, so Q1 ranks first.
+  const q1 = makeLiveEvent('q1', { homeScore: 14, awayScore: 7, homeProb: 0.5, period: 1 })
+  const q4 = makeLiveEvent('q4', { homeScore: 21, awayScore: 14, homeProb: 0.5, period: 4 })
+
+  const sorted = sortLiveEventsByCompetitiveness([q4, q1])
+  assert.deepEqual(sorted.map((e) => e.id), ['q1', 'q4'])
+})
