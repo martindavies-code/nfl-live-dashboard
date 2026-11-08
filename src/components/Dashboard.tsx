@@ -10,8 +10,8 @@ import {
   sanitizePatriotsInEvent,
   reconcileScoreboardData,
   isGameFinished,
-  sortEventsFinishedLast,
 } from '../utils/nflHelpers'
+import { sortLiveEventsByCompetitiveness } from '../utils/winProbability'
 import { fetchNFLScoreboard, fetchEventDrivePlays, type ScoreboardQueryParams } from '../services/espnApi'
 import { HeroMatchup } from './HeroMatchup'
 import { GameCard } from './GameCard'
@@ -364,7 +364,8 @@ export const Dashboard: React.FC = () => {
 
   const events = useMemo(() => {
     const rawEvents = (data?.events || []).map(sanitizePatriotsInEvent)
-    return sortEventsFinishedLast(rawEvents)
+    // Live games rank by competitiveness (blowouts sink); finished last; feed order otherwise preserved
+    return sortLiveEventsByCompetitiveness(rawEvents)
   }, [data])
 
   // Sanitized filtered and searched events (memoized against events, filter, and searchQuery)
