@@ -652,12 +652,17 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
   },
 
   // =========================================================================
-  // 2026 Regular Season - Week 9 (1 Official NFL Highlights)
+  // 2026 Regular Season - Week 9 (2 Official NFL Highlights)
   // =========================================================================
   '2026_REG_9_JAX_BAL': {
     videoId: 'TRUoUtxPZIU',
     title: 'Jacksonville Jaguars vs Baltimore Ravens Game Highlights | 2026 NFL Season Week 9',
     kickoffUtc: '2026-11-06T01:15Z',
+  },
+  '2026_REG_9_CIN_ATL': {
+    videoId: 'IFMku2Sz3bA',
+    title: 'Cincinnati Bengals vs. Atlanta Falcons Game Highlights | 2026 NFL Season Week 9',
+    kickoffUtc: '2026-11-08T14:30Z',
   },
 
 }
