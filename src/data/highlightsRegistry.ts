@@ -652,7 +652,7 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
   },
 
   // =========================================================================
-  // 2026 Regular Season - Week 9 (2 Official NFL Highlights)
+  // 2026 Regular Season - Week 9 (14 Official NFL Highlights)
   // =========================================================================
   '2026_REG_9_JAX_BAL': {
     videoId: 'TRUoUtxPZIU',
@@ -663,6 +663,66 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     videoId: 'IFMku2Sz3bA',
     title: 'Cincinnati Bengals vs. Atlanta Falcons Game Highlights | 2026 NFL Season Week 9',
     kickoffUtc: '2026-11-08T14:30Z',
+  },
+  '2026_REG_9_DAL_IND': {
+    videoId: 'Wb-pcRK-LH8',
+    title: 'Dallas Cowboys vs. Indianapolis Colts Game Highlights | 2026 NFL Season Week 9',
+    kickoffUtc: '2026-11-08T18:00Z',
+  },
+  '2026_REG_9_CLE_NO': {
+    videoId: 'yidVkmPmxcU',
+    title: 'Cleveland Browns vs. New Orleans Saints Game Highlights | 2026 NFL Season Week 9',
+    kickoffUtc: '2026-11-08T18:00Z',
+  },
+  '2026_REG_9_NYJ_KC': {
+    videoId: 'wlsz9L78_o8',
+    title: 'New York Jets vs. Kansas City Chiefs Game Highlights | NFL 2026 Season Week 9',
+    kickoffUtc: '2026-11-08T18:00Z',
+  },
+  '2026_REG_9_DET_MIA': {
+    videoId: 'cfpgrM5JfsQ',
+    title: 'Detroit Lions vs. Miami Dolphins Game Highlights | NFL 2026 Season Week 9',
+    kickoffUtc: '2026-11-08T18:00Z',
+  },
+  '2026_REG_9_NYG_PHI': {
+    videoId: 'znF3q5lZYC4',
+    title: 'New York Giants vs. Philadelphia Eagles Game Highlights | 2026 NFL Season Week 9',
+    kickoffUtc: '2026-11-08T18:00Z',
+  },
+  '2026_REG_9_LAR_WSH': {
+    videoId: 'N9qwPsA9FI0',
+    title: 'Los Angeles Rams vs. Washington Commanders Game Highlights | NFL 2026 Season Week 9',
+    kickoffUtc: '2026-11-08T18:00Z',
+  },
+  '2026_REG_9_DEN_CAR': {
+    videoId: 'owBZ7u9L6B8',
+    title: 'Denver Broncos vs. Carolina Panthers Game Highlights | 2026 NFL Season Week 9',
+    kickoffUtc: '2026-11-08T18:00Z',
+  },
+  '2026_REG_9_HOU_LAC': {
+    videoId: '04k2ARJ05UU',
+    title: 'Houston Texans vs. Los Angeles Chargers Game Highlights | NFL 2026 Season Week 9',
+    kickoffUtc: '2026-11-08T21:05Z',
+  },
+  '2026_REG_9_GB_NE': {
+    videoId: 'ONX73PsPFD8',
+    title: 'Green Bay Packers vs. New England Patriots Game Highlights | NFL 2026 Season Week 9',
+    kickoffUtc: '2026-11-08T21:25Z',
+  },
+  '2026_REG_9_LV_SF': {
+    videoId: 'sNQJenFh30k',
+    title: 'Las Vegas Raiders vs. San Francisco 49ers Game Highlights | 2026 NFL Season Week 9',
+    kickoffUtc: '2026-11-08T21:25Z',
+  },
+  '2026_REG_9_ARI_SEA': {
+    videoId: 'de07dP1hlt8',
+    title: 'Arizona Cardinals vs. Seattle Seahawks Game Highlights | 2026 NFL Season Week 9',
+    kickoffUtc: '2026-11-08T21:25Z',
+  },
+  '2026_REG_9_TB_CHI': {
+    videoId: 'O1fZ6Zkabgc',
+    title: 'Tampa Bay Buccaneers vs Chicago Bears Game Highlights | 2026 NFL Season Week 9',
+    kickoffUtc: '2026-11-09T01:20Z',
   },
 
 }
