@@ -652,7 +652,7 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
   },
 
   // =========================================================================
-  // 2026 Regular Season - Week 9 (14 Official NFL Highlights)
+  // 2026 Regular Season - Week 9 (15 Official NFL Highlights)
   // =========================================================================
   '2026_REG_9_JAX_BAL': {
     videoId: 'TRUoUtxPZIU',
@@ -723,6 +723,11 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     videoId: 'O1fZ6Zkabgc',
     title: 'Tampa Bay Buccaneers vs Chicago Bears Game Highlights | 2026 NFL Season Week 9',
     kickoffUtc: '2026-11-09T01:20Z',
+  },
+  '2026_REG_9_BUF_MIN': {
+    videoId: '2_ruHrqYSI4',
+    title: 'Buffalo Bills vs Minnesota Vikings Highlights | 2026 NFL Season Week 9',
+    kickoffUtc: '2026-11-10T01:15Z',
   },
 
 }
