@@ -5,6 +5,11 @@
   --breakpoint-xs: 480px;
 }
 
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: #1e293b #090d16;
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -183,6 +188,5 @@
 .team-logo-dark-outline-sm {
   filter: drop-shadow(1px 0 0 #ffffff) drop-shadow(-1px 0 0 #ffffff) drop-shadow(0 1px 0 #ffffff) drop-shadow(0 -1px 0 #ffffff) drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.8)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
 }
-
 
 
