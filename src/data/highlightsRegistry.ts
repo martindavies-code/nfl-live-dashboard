@@ -231,8 +231,8 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     kickoffUtc: '2026-09-27T17:00Z',
   },
   '2026_REG_3_NE_JAX': {
-    videoId: 'Oi9HQlp-ysA',
-    title: 'New England Patriots vs Jacksonville Jaguars Game Highlights | 2026 NFL Season Week 3',
+    videoId: 'MmmSabOctE8',
+    title: 'Tom Brady Highlights (Week 3) | Jaguars vs. Patriots | NFL',
     kickoffUtc: '2026-09-27T17:00Z',
   },
   '2026_REG_3_MIN_TB': {
@@ -731,12 +731,17 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
   },
 
   // =========================================================================
-  // 2026 Regular Season - Week 10 (1 Official NFL Highlights)
+  // 2026 Regular Season - Week 10 (2 Official NFL Highlights)
   // =========================================================================
   '2026_REG_10_WSH_NYG': {
     videoId: '7UsUSgeGEqo',
     title: 'Washington Commanders vs New York Giants Highlights | 2026 NFL Season Week 10',
     kickoffUtc: '2026-11-13T01:15Z',
+  },
+  '2026_REG_10_NE_DET': {
+    videoId: 'u9ggzabBnEo',
+    title: 'New England Patriots vs. Detroit Lions Highlights | 2026 NFL Season Week 10',
+    kickoffUtc: '2026-11-15T14:30Z',
   },
 
 }
