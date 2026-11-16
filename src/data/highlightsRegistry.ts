@@ -231,8 +231,8 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     kickoffUtc: '2026-09-27T17:00Z',
   },
   '2026_REG_3_NE_JAX': {
-    videoId: 'MmmSabOctE8',
-    title: 'Tom Brady Highlights (Week 3) | Jaguars vs. Patriots | NFL',
+    videoId: 'Oi9HQlp-ysA',
+    title: 'New England Patriots vs Jacksonville Jaguars Game Highlights | 2026 NFL Season Week 3',
     kickoffUtc: '2026-09-27T17:00Z',
   },
   '2026_REG_3_MIN_TB': {
@@ -731,7 +731,7 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
   },
 
   // =========================================================================
-  // 2026 Regular Season - Week 10 (2 Official NFL Highlights)
+  // 2026 Regular Season - Week 10 (13 Official NFL Highlights)
   // =========================================================================
   '2026_REG_10_WSH_NYG': {
     videoId: '7UsUSgeGEqo',
@@ -742,6 +742,61 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     videoId: 'u9ggzabBnEo',
     title: 'New England Patriots vs. Detroit Lions Highlights | 2026 NFL Season Week 10',
     kickoffUtc: '2026-11-15T14:30Z',
+  },
+  '2026_REG_10_KC_ATL': {
+    videoId: 'IeXG9UkMiI0',
+    title: 'Kansas City Chiefs vs Atlanta Falcons Game Highlights | 2026 NFL Season Week 10',
+    kickoffUtc: '2026-11-15T18:00Z',
+  },
+  '2026_REG_10_HOU_CLE': {
+    videoId: 'DJaODmVRaUo',
+    title: 'Houston Texans vs. Cleveland Browns Highlights | 2026 NFL Season Week 10',
+    kickoffUtc: '2026-11-15T18:00Z',
+  },
+  '2026_REG_10_MIN_GB': {
+    videoId: 'l8WKDp6IfQA',
+    title: 'Minnesota Vikings vs. Green Bay Packers Highlights | 2026 NFL Season Week 10',
+    kickoffUtc: '2026-11-15T18:00Z',
+  },
+  '2026_REG_10_JAX_TEN': {
+    videoId: 'j_qGDlVME2g',
+    title: 'Jacksonville Jaguars vs. Tennessee Titans Game Highlights | NFL 2026 Season Week 10',
+    kickoffUtc: '2026-11-15T18:00Z',
+  },
+  '2026_REG_10_CAR_NO': {
+    videoId: 'kpYlWvU7zjY',
+    title: 'Carolina Panthers vs. New Orleans Saints Game Highlights | NFL 2026 Season Week 10',
+    kickoffUtc: '2026-11-15T18:00Z',
+  },
+  '2026_REG_10_MIA_IND': {
+    videoId: '8qPlVF26TS4',
+    title: 'Miami Dolphins vs Indianapolis Colts Game Highlights | 2026 NFL Season Week 10',
+    kickoffUtc: '2026-11-15T18:00Z',
+  },
+  '2026_REG_10_BUF_NYJ': {
+    videoId: 'Ix5ccUgKSh4',
+    title: 'Buffalo Bills vs. New York Jets Highlights | 2026 NFL Season Week 10',
+    kickoffUtc: '2026-11-15T18:00Z',
+  },
+  '2026_REG_10_SEA_LV': {
+    videoId: '2vwjrJF6RxQ',
+    title: 'Seattle Seahawks vs Las Vegas Raiders Game Highlights | 2026 NFL Season Week 10',
+    kickoffUtc: '2026-11-15T21:05Z',
+  },
+  '2026_REG_10_LAR_ARI': {
+    videoId: '1208aE3TLNY',
+    title: 'Los Angeles Rams vs. Arizona Cardinals Game Highlights | NFL 2026 Season Week 10',
+    kickoffUtc: '2026-11-15T21:05Z',
+  },
+  '2026_REG_10_SF_DAL': {
+    videoId: 'bqEz0JMZhOA',
+    title: 'San Francisco 49ers vs. Dallas Cowboys Highlights | NFL 2026 Season Week 10',
+    kickoffUtc: '2026-11-15T21:25Z',
+  },
+  '2026_REG_10_PIT_CIN': {
+    videoId: '9hbvNzp5qSI',
+    title: 'Pittsburgh Steelers vs Cincinnati Bengals Game Highlights | 2026 NFL Season Week 10',
+    kickoffUtc: '2026-11-16T01:20Z',
   },
 
 }
