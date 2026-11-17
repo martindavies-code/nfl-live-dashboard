@@ -731,7 +731,7 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
   },
 
   // =========================================================================
-  // 2026 Regular Season - Week 10 (13 Official NFL Highlights)
+  // 2026 Regular Season - Week 10 (14 Official NFL Highlights)
   // =========================================================================
   '2026_REG_10_WSH_NYG': {
     videoId: '7UsUSgeGEqo',
@@ -775,7 +775,7 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
   },
   '2026_REG_10_BUF_NYJ': {
     videoId: 'Ix5ccUgKSh4',
-    title: 'Buffalo Bills vs. New York Jets Highlights | 2026 NFL Season Week 10',
+    title: 'Buffalo Bills vs. New York Jets Game Highlights | 2026 NFL Season Week 10',
     kickoffUtc: '2026-11-15T18:00Z',
   },
   '2026_REG_10_SEA_LV': {
@@ -797,6 +797,11 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     videoId: '9hbvNzp5qSI',
     title: 'Pittsburgh Steelers vs Cincinnati Bengals Game Highlights | 2026 NFL Season Week 10',
     kickoffUtc: '2026-11-16T01:20Z',
+  },
+  '2026_REG_10_LAC_BAL': {
+    videoId: 'iXTg27Lenug',
+    title: 'Los Angeles Chargers vs Baltimore Ravens Game Highlights | 2026 NFL Season Week 10',
+    kickoffUtc: '2026-11-17T01:15Z',
   },
 
 }
