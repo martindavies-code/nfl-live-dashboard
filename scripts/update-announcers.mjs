@@ -140,10 +140,19 @@ function parseCrew(text) {
   return { playByPlay, analysts, sideline }
 }
 
+// Inline-layout line: "Thursday night (8:15 p.m. ET): Colts vs. Texans (Amazon Prime - Al Michaels, ...)"
+// or the regional "Red: Cardinals vs. Chiefs (Ian Eagle, Ross Tucker, Evan Washburn)". The crew sits in a
+// trailing parenthetical, optionally prefixed by "<network> - ".
+const INLINE_GAME_RE = /^(.{0,60}?):\s*([^()]+\b(?:vs\.?|at)\b[^()]+)\(([^()]*)\)\s*$/i
+// Network prefix inside the trailing parenthetical, e.g. "Amazon Prime - " or "NBC - ".
+const NETWORK_PREFIX_RE = /^(Amazon Prime(?: Video)?|NBC|CBS|FOX|ESPN(?:\s*\/\s*ABC)?|ABC|Netflix|Peacock|NFL Network|Prime Video)\s*-\s*/i
+
 /**
  * Walks the article in document order. A heading/paragraph that names two teams and a kickoff time sets the
  * current game; an "Announcer(s): ..." line (separate paragraph, or inline in the same one) supplies its crew.
- * Handles both known layouts (Yahoo <h2 class="heading"> list and the bold-title paragraph list).
+ * Handles three known layouts: the Yahoo <h2 class="heading"> list, the bold-title paragraph list (both with
+ * explicit "Announcers:" lines), and the 506sports-derived USA Today/Yahoo syndicated list where each game
+ * line carries its crew in a trailing parenthetical with no "Announcers:" label.
  */
 function parseArticle(html) {
   const $ = cheerio.load(html)
@@ -153,14 +162,29 @@ function parseArticle(html) {
     const text = clean($(el).text())
     if (!text) return
     const split = text.search(/Announcers?\s*:/i)
-    const titlePart = split >= 0 ? text.slice(0, split) : text
-    const crewPart = split >= 0 ? text.slice(split).replace(/^Announcers?\s*:\s*/i, '') : null
+
+    if (split < 0) {
+      // Inline layout: one self-contained game line with the crew in a trailing parenthetical.
+      const m = text.match(INLINE_GAME_RE)
+      if (m && m[2].length < 200) {
+        const teams = teamsIn(m[2])
+        if (teams.length === 2) {
+          const crewText = m[3].replace(NETWORK_PREFIX_RE, '')
+          const key = [teams[0], teams[1]].sort().join('|')
+          if (!pairings.has(key)) pairings.set(key, parseCrew(crewText))
+        }
+      }
+      return
+    }
+
+    const titlePart = text.slice(0, split)
+    const crewPart = text.slice(split).replace(/^Announcers?\s*:\s*/i, '')
 
     if (titlePart.length < 200 && KICKOFF_TIME_RE.test(titlePart) && /\b(at|vs\.?)\b/i.test(titlePart)) {
       const teams = teamsIn(titlePart.split(/[(,]/)[0])
       if (teams.length === 2) current = { away: teams[0], home: teams[1] }
     }
-    if (crewPart !== null && current) {
+    if (current) {
       const key = [current.away, current.home].sort().join('|')
       if (!pairings.has(key)) pairings.set(key, parseCrew(crewPart))
       current = null
@@ -175,6 +199,8 @@ async function discoverArticles(week) {
     `site:sports.yahoo.com NFL announcer schedule pairings week ${week}`,
     `beaconjournal games and announcers for week ${week} of the NFL season`,
     `site:sports.yahoo.com NFL week ${week} announcers full list`,
+    // The 506sports-derived weekly list (USA Today wires syndicated on Yahoo) uses this headline.
+    `site:sports.yahoo.com TV broadcast maps and announcers for Week ${week}`,
   ]
   const scored = new Map()
   for (const q of queries) {
