@@ -2,8 +2,12 @@ name: Weekly NFL Announcer Audit
 
 on:
   schedule:
-    # Run every Thursday and Friday at 15:00 UTC (11:00 AM ET) ahead of the weekend games
-    - cron: '0 15 * * 4,5'
+    # Run Wednesday-Friday at 15:00 UTC (11:00 AM ET). The weekly pairings list
+    # (Yahoo / 506sports-derived) has always published Mon-Wed, so a Wednesday run
+    # ingests it about a day before Thursday-night kickoff instead of ~3h before,
+    # and covers holiday weeks (e.g. Thanksgiving) whose games enter the audit's
+    # 72h missing-crew window before Thursday.
+    - cron: '0 15 * * 3,4,5'
   workflow_dispatch:
   push:
     paths:
