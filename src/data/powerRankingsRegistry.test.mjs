@@ -15,10 +15,10 @@ import {
 
 test('Power Rankings Registry: Ingestion and structure integrity', () => {
   assert.ok(Array.isArray(POWER_RANKINGS_REGISTRY), 'Registry should be an array')
-  assert.ok(POWER_RANKINGS_REGISTRY.length >= 2, 'Should contain at least Week 9 and Week 8')
+  assert.ok(POWER_RANKINGS_REGISTRY.length >= 2, 'Should contain at least the two most recent editions')
 
   const latest = getLatestPowerRankingsEdition()
-  assert.equal(latest.week, 9)
+  assert.equal(latest.week, 11)
   assert.equal(latest.season, 2026)
   assert.ok(latest.source.title.length > 0)
   assert.ok(latest.source.url.startsWith('https://'))
@@ -28,7 +28,7 @@ test('Power Rankings Registry: Ingestion and structure integrity', () => {
   const abbreviations = Object.values(NFL_TEAM_ABBREVIATIONS)
   for (const abbr of abbreviations) {
     const entry = latest.rankings[abbr]
-    assert.ok(entry, `Expected team ${abbr} to be ranked in Week 9 edition`)
+    assert.ok(entry, `Expected team ${abbr} to be ranked in the latest edition`)
     assert.ok(entry.rank >= 1 && entry.rank <= 32, `Rank for ${abbr} should be between 1 and 32`)
   }
 })
@@ -52,40 +52,40 @@ test('Power Rankings Registry: getWeeklyPowerRankingsEdition falls back cleanly 
   assert.equal(w8.week, 8)
 
   const fallback = getWeeklyPowerRankingsEdition(99, 1999)
-  assert.equal(fallback.week, 9, 'Unknown week/season should fall back to latest edition')
+  assert.equal(fallback.week, 11, 'Unknown week/season should fall back to latest edition')
 })
 
 test('Power Rankings Registry: getAuthoritativePowerRankingsMap generates complete map', () => {
-  const map = getAuthoritativePowerRankingsMap(9)
-  assert.equal(map.BUF, 1)
-  assert.equal(map.SF, 2)
-  assert.equal(map.IND, 32)
+  const map = getAuthoritativePowerRankingsMap(11)
+  assert.equal(map.SF, 1)
+  assert.equal(map.BUF, 2)
+  assert.equal(map.MIA, 32)
   assert.equal(Object.keys(map).length >= 32, true)
 
   // Backward compatibility object
-  assert.equal(NFL_POWER_RANKINGS.BUF, 1)
+  assert.equal(NFL_POWER_RANKINGS.SF, 1)
 })
 
 test('Power Rankings Registry: getTeamPowerRank handles unranked teams and Patriots alias fallback', () => {
   assert.equal(getTeamPowerRank('NONEXISTENT'), 20)
   assert.equal(getTeamPowerRank(''), 20)
   assert.equal(getTeamPowerRank(undefined), 20)
-  assert.equal(getTeamPowerRank('FNE'), 11)
-  assert.equal(getTeamPowerRank('NE'), 11)
+  assert.equal(getTeamPowerRank('FNE'), 24)
+  assert.equal(getTeamPowerRank('NE'), 24)
 })
 
 test('Power Rankings Registry: getTeamPowerRankDetail calculates change and handles missing entries', () => {
   const den = getTeamPowerRankDetail('DEN')
-  assert.equal(den.rank, 5)
-  assert.equal(den.change, 2)
-  assert.ok(den.note?.includes('Week 8 statement'))
+  assert.equal(den.rank, 6)
+  assert.equal(den.previousRank, 5)
+  assert.equal(den.change, -1)
 
   const unk = getTeamPowerRankDetail('NONEXISTENT')
   assert.equal(unk.rank, 20)
   assert.equal(unk.change, 0)
 
   const fne = getTeamPowerRankDetail('FNE')
-  assert.equal(fne.rank, 11)
+  assert.equal(fne.rank, 24)
 
   // Edge case: test with explicit week where change property is not present in entry (derives previousRank - rank or 0)
   const detW8 = getTeamPowerRankDetail('DET', 8)

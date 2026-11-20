@@ -332,11 +332,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "San Francisco 49ers"
   ],
   "12-7": [
-    24,
-    2024,
-    "2024-11-10",
-    "Minnesota Vikings",
-    "Jacksonville Jaguars"
+    25,
+    2026,
+    "2026-09-27",
+    "New York Giants",
+    "Tennessee Titans"
   ],
   "12-8": [
     2,
@@ -416,11 +416,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Arizona Cardinals"
   ],
   "13-10": [
-    171,
+    172,
     2026,
-    "2026-09-09",
-    "Seattle Seahawks",
-    "New England Patriots"
+    "2026-10-18",
+    "Cleveland Browns",
+    "Baltimore Ravens"
   ],
   "13-11": [
     3,
@@ -563,11 +563,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Las Vegas Raiders"
   ],
   "15-10": [
-    25,
-    2024,
-    "2024-10-06",
-    "Miami Dolphins",
-    "New England Patriots"
+    26,
+    2026,
+    "2026-10-04",
+    "Minnesota Vikings",
+    "Miami Dolphins"
   ],
   "15-12": [
     9,
@@ -591,11 +591,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Chicago Bears"
   ],
   "16-0": [
-    48,
-    2019,
-    "2019-10-13",
-    "Denver Broncos",
-    "Tennessee Titans"
+    49,
+    2026,
+    "2026-11-01",
+    "Tampa Bay Buccaneers",
+    "Atlanta Falcons"
   ],
   "16-3": [
     29,
@@ -633,11 +633,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Detroit Lions"
   ],
   "16-10": [
-    85,
-    2024,
-    "2024-10-20",
-    "Indianapolis Colts",
-    "Miami Dolphins"
+    87,
+    2026,
+    "2026-10-25",
+    "Pittsburgh Steelers",
+    "New Orleans Saints"
   ],
   "16-11": [
     2,
@@ -689,11 +689,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Seattle Seahawks"
   ],
   "17-3": [
-    65,
-    2025,
-    "2025-10-12",
-    "Los Angeles Rams",
-    "Baltimore Ravens"
+    66,
+    2026,
+    "2026-11-08",
+    "Seattle Seahawks",
+    "Arizona Cardinals"
   ],
   "17-5": [
     2,
@@ -745,11 +745,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Philadelphia Eagles"
   ],
   "17-12": [
-    26,
-    2020,
-    "2020-12-06",
-    "New York Giants",
-    "Seattle Seahawks"
+    27,
+    2026,
+    "2026-10-11",
+    "New York Jets",
+    "Cleveland Browns"
   ],
   "17-13": [
     110,
@@ -759,11 +759,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Seattle Seahawks"
   ],
   "17-14": [
-    200,
-    2022,
-    "2022-12-18",
-    "Los Angeles Chargers",
-    "Tennessee Titans"
+    202,
+    2026,
+    "2026-10-15",
+    "Denver Broncos",
+    "Seattle Seahawks"
   ],
   "17-15": [
     15,
@@ -850,11 +850,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Houston Texans"
   ],
   "18-16": [
-    10,
-    2025,
-    "2025-12-14",
-    "Seattle Seahawks",
-    "Indianapolis Colts"
+    11,
+    2026,
+    "2026-10-18",
+    "Arizona Cardinals",
+    "Los Angeles Rams"
   ],
   "18-17": [
     15,
@@ -906,11 +906,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Denver Broncos"
   ],
   "19-9": [
-    16,
-    2024,
-    "2024-12-22",
-    "Los Angeles Rams",
-    "New York Jets"
+    17,
+    2026,
+    "2026-11-08",
+    "Detroit Lions",
+    "Miami Dolphins"
   ],
   "19-10": [
     27,
@@ -920,11 +920,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Indianapolis Colts"
   ],
   "19-11": [
-    5,
-    2020,
-    "2020-10-04",
-    "Indianapolis Colts",
-    "Chicago Bears"
+    6,
+    2026,
+    "2026-11-08",
+    "New York Giants",
+    "Philadelphia Eagles"
   ],
   "19-12": [
     10,
@@ -948,11 +948,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Jacksonville Jaguars"
   ],
   "19-15": [
-    4,
-    1990,
-    "1990-09-23",
-    "Washington Redskins",
-    "Dallas Cowboys"
+    5,
+    2026,
+    "2026-11-01",
+    "Detroit Lions",
+    "Minnesota Vikings"
   ],
   "19-16": [
     56,
@@ -962,11 +962,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Chicago Bears"
   ],
   "19-17": [
-    62,
-    2025,
-    "2026-01-04",
-    "Atlanta Falcons",
-    "New Orleans Saints"
+    64,
+    2026,
+    "2026-10-11",
+    "Jacksonville Jaguars",
+    "Philadelphia Eagles"
   ],
   "19-18": [
     2,
@@ -997,11 +997,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Cleveland Rams"
   ],
   "20-3": [
-    66,
+    67,
     2026,
-    "2026-09-20",
-    "New England Patriots",
-    "Pittsburgh Steelers"
+    "2026-10-25",
+    "Seattle Seahawks",
+    "Kansas City Chiefs"
   ],
   "20-6": [
     57,
@@ -1046,11 +1046,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Jacksonville Jaguars"
   ],
   "20-13": [
-    123,
+    124,
     2026,
-    "2026-09-20",
-    "Denver Broncos",
-    "Jacksonville Jaguars"
+    "2026-11-08",
+    "Los Angeles Rams",
+    "Washington Commanders"
   ],
   "20-14": [
     98,
@@ -1074,11 +1074,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Los Angeles Chargers"
   ],
   "20-17": [
-    303,
+    305,
     2026,
-    "2026-09-20",
-    "Green Bay Packers",
-    "New York Jets"
+    "2026-11-15",
+    "Carolina Panthers",
+    "New Orleans Saints"
   ],
   "20-18": [
     9,
@@ -1172,11 +1172,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Dallas Cowboys"
   ],
   "21-13": [
-    52,
-    2024,
-    "2024-11-03",
-    "Minnesota Vikings",
-    "Indianapolis Colts"
+    53,
+    2026,
+    "2026-11-15",
+    "Seattle Seahawks",
+    "Las Vegas Raiders"
   ],
   "21-14": [
     101,
@@ -1207,11 +1207,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New Orleans Saints"
   ],
   "21-18": [
-    18,
-    2025,
-    "2025-09-28",
-    "New York Giants",
-    "Los Angeles Chargers"
+    19,
+    2026,
+    "2026-09-27",
+    "Cleveland Browns",
+    "Carolina Panthers"
   ],
   "21-19": [
     30,
@@ -1256,11 +1256,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Cleveland Browns"
   ],
   "22-6": [
-    7,
-    2025,
-    "2025-09-14",
-    "Atlanta Falcons",
-    "Minnesota Vikings"
+    8,
+    2026,
+    "2026-10-18",
+    "Kansas City Chiefs",
+    "Los Angeles Chargers"
   ],
   "22-7": [
     13,
@@ -1326,11 +1326,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Green Bay Packers"
   ],
   "22-17": [
-    26,
-    2024,
-    "2024-09-22",
-    "Kansas City Chiefs",
-    "Atlanta Falcons"
+    27,
+    2026,
+    "2026-10-04",
+    "Jacksonville Jaguars",
+    "Cincinnati Bengals"
   ],
   "22-18": [
     1,
@@ -1382,10 +1382,10 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New Orleans Saints"
   ],
   "23-6": [
-    22,
-    2025,
-    "2025-11-23",
-    "Green Bay Packers",
+    23,
+    2026,
+    "2026-11-09",
+    "Buffalo Bills",
     "Minnesota Vikings"
   ],
   "23-7": [
@@ -1424,18 +1424,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New York Giants"
   ],
   "23-12": [
-    9,
-    2004,
-    "2004-11-14",
-    "St. Louis Rams",
-    "Seattle Seahawks"
+    10,
+    2026,
+    "2026-10-04",
+    "Chicago Bears",
+    "New York Jets"
   ],
   "23-13": [
-    52,
-    2024,
-    "2024-11-17",
-    "Minnesota Vikings",
-    "Tennessee Titans"
+    54,
+    2026,
+    "2026-10-18",
+    "Green Bay Packers",
+    "Dallas Cowboys"
   ],
   "23-14": [
     52,
@@ -1452,18 +1452,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Los Angeles Rams"
   ],
   "23-16": [
-    53,
-    2025,
-    "2025-11-16",
-    "Baltimore Ravens",
-    "Cleveland Browns"
+    54,
+    2026,
+    "2026-09-27",
+    "Minnesota Vikings",
+    "Tampa Bay Buccaneers"
   ],
   "23-17": [
-    129,
-    2025,
-    "2025-12-28",
-    "Jacksonville Jaguars",
-    "Indianapolis Colts"
+    131,
+    2026,
+    "2026-10-19",
+    "San Francisco 49ers",
+    "Washington Commanders"
   ],
   "23-18": [
     6,
@@ -1480,11 +1480,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Tampa Bay Buccaneers"
   ],
   "23-20": [
-    217,
-    2025,
-    "2025-12-21",
-    "Carolina Panthers",
-    "Tampa Bay Buccaneers"
+    218,
+    2026,
+    "2026-11-16",
+    "Los Angeles Chargers",
+    "Baltimore Ravens"
   ],
   "23-21": [
     58,
@@ -1494,11 +1494,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Las Vegas Raiders"
   ],
   "23-22": [
-    16,
-    2024,
-    "2024-12-01",
-    "Minnesota Vikings",
-    "Arizona Cardinals"
+    17,
+    2026,
+    "2026-11-08",
+    "New Orleans Saints",
+    "Cleveland Browns"
   ],
   "23-23": [
     5,
@@ -1557,18 +1557,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Washington Commanders"
   ],
   "24-9": [
-    26,
-    2025,
-    "2025-10-20",
-    "Detroit Lions",
-    "Tampa Bay Buccaneers"
+    27,
+    2026,
+    "2026-11-01",
+    "Los Angeles Rams",
+    "Los Angeles Chargers"
   ],
   "24-10": [
-    139,
-    2025,
-    "2025-11-23",
-    "Cleveland Browns",
-    "Las Vegas Raiders"
+    140,
+    2026,
+    "2026-09-27",
+    "Kansas City Chiefs",
+    "Miami Dolphins"
   ],
   "24-11": [
     1,
@@ -1592,11 +1592,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Dallas Cowboys"
   ],
   "24-14": [
-    141,
-    2025,
-    "2025-10-13",
-    "Atlanta Falcons",
-    "Buffalo Bills"
+    142,
+    2026,
+    "2026-10-04",
+    "San Francisco 49ers",
+    "Denver Broncos"
   ],
   "24-15": [
     10,
@@ -1606,11 +1606,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Philadelphia Eagles"
   ],
   "24-16": [
-    54,
-    2023,
-    "2023-10-15",
-    "Washington Commanders",
-    "Atlanta Falcons"
+    56,
+    2026,
+    "2026-10-08",
+    "Tampa Bay Buccaneers",
+    "Dallas Cowboys"
   ],
   "24-17": [
     182,
@@ -1620,39 +1620,39 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Baltimore Ravens"
   ],
   "24-18": [
-    8,
-    2024,
-    "2024-09-29",
-    "Chicago Bears",
-    "Los Angeles Rams"
-  ],
-  "24-19": [
-    35,
-    2024,
-    "2024-12-01",
-    "Philadelphia Eagles",
-    "Baltimore Ravens"
-  ],
-  "24-20": [
-    123,
+    9,
     2026,
-    "2026-09-20",
-    "Philadelphia Eagles",
+    "2026-10-04",
+    "Baltimore Ravens",
     "Tennessee Titans"
   ],
-  "24-21": [
-    161,
-    2025,
-    "2025-11-23",
-    "Dallas Cowboys",
+  "24-19": [
+    36,
+    2026,
+    "2026-11-01",
+    "New England Patriots",
+    "Miami Dolphins"
+  ],
+  "24-20": [
+    124,
+    2026,
+    "2026-10-04",
+    "Los Angeles Rams",
     "Philadelphia Eagles"
   ],
-  "24-22": [
-    38,
+  "24-21": [
+    162,
     2026,
-    "2026-09-13",
-    "Philadelphia Eagles",
-    "Washington Commanders"
+    "2026-11-12",
+    "Washington Commanders",
+    "New York Giants"
+  ],
+  "24-22": [
+    39,
+    2026,
+    "2026-11-15",
+    "Indianapolis Colts",
+    "Miami Dolphins"
   ],
   "24-23": [
     78,
@@ -1732,11 +1732,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Indianapolis Colts"
   ],
   "25-14": [
-    5,
-    2014,
-    "2014-09-14",
-    "Arizona Cardinals",
-    "New York Giants"
+    6,
+    2026,
+    "2026-10-18",
+    "Carolina Panthers",
+    "Philadelphia Eagles"
   ],
   "25-15": [
     4,
@@ -1809,11 +1809,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Minnesota Vikings"
   ],
   "26-3": [
-    21,
-    2024,
-    "2024-09-15",
-    "Los Angeles Chargers",
-    "Carolina Panthers"
+    22,
+    2026,
+    "2026-10-11",
+    "Houston Texans",
+    "Tennessee Titans"
   ],
   "26-6": [
     16,
@@ -1907,25 +1907,25 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Washington Commanders"
   ],
   "26-19": [
-    6,
-    2025,
-    "2025-12-21",
-    "Atlanta Falcons",
-    "Arizona Cardinals"
+    8,
+    2026,
+    "2026-10-18",
+    "Pittsburgh Steelers",
+    "Tampa Bay Buccaneers"
   ],
   "26-20": [
-    59,
-    2025,
-    "2025-11-23",
-    "New England Patriots",
-    "Cincinnati Bengals"
+    60,
+    2026,
+    "2026-10-18",
+    "Tennessee Titans",
+    "Indianapolis Colts"
   ],
   "26-21": [
-    41,
-    2025,
-    "2025-09-28",
-    "Jacksonville Jaguars",
-    "San Francisco 49ers"
+    42,
+    2026,
+    "2026-11-08",
+    "Denver Broncos",
+    "Carolina Panthers"
   ],
   "26-22": [
     7,
@@ -1984,18 +1984,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Cincinnati Bengals"
   ],
   "27-6": [
-    36,
-    2023,
-    "2023-11-06",
-    "Los Angeles Chargers",
-    "New York Jets"
+    37,
+    2026,
+    "2026-11-01",
+    "Pittsburgh Steelers",
+    "Cleveland Browns"
   ],
   "27-7": [
-    96,
+    97,
     2026,
-    "2026-09-10",
-    "San Francisco 49ers",
-    "Los Angeles Rams"
+    "2026-09-28",
+    "Chicago Bears",
+    "Philadelphia Eagles"
   ],
   "27-9": [
     16,
@@ -2005,11 +2005,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Minnesota Vikings"
   ],
   "27-10": [
-    106,
-    2025,
-    "2025-12-28",
-    "Seattle Seahawks",
-    "Carolina Panthers"
+    107,
+    2026,
+    "2026-11-01",
+    "Washington Commanders",
+    "Philadelphia Eagles"
   ],
   "27-11": [
     7,
@@ -2068,11 +2068,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Cincinnati Bengals"
   ],
   "27-19": [
-    25,
-    2025,
-    "2025-11-09",
-    "Baltimore Ravens",
-    "Minnesota Vikings"
+    26,
+    2026,
+    "2026-10-29",
+    "Green Bay Packers",
+    "Carolina Panthers"
   ],
   "27-20": [
     136,
@@ -2082,11 +2082,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New York Giants"
   ],
   "27-21": [
-    97,
-    2025,
-    "2025-09-29",
-    "Miami Dolphins",
-    "New York Jets"
+    98,
+    2026,
+    "2026-10-25",
+    "New York Giants",
+    "Houston Texans"
   ],
   "27-22": [
     22,
@@ -2096,18 +2096,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Baltimore Ravens"
   ],
   "27-23": [
-    53,
-    2025,
-    "2025-10-19",
-    "Green Bay Packers",
-    "Arizona Cardinals"
+    54,
+    2026,
+    "2026-11-08",
+    "Dallas Cowboys",
+    "Indianapolis Colts"
   ],
   "27-24": [
-    244,
-    2025,
-    "2026-01-11",
-    "Buffalo Bills",
-    "Jacksonville Jaguars"
+    248,
+    2026,
+    "2026-11-15",
+    "Cleveland Browns",
+    "Houston Texans"
   ],
   "27-25": [
     11,
@@ -2124,11 +2124,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Washington Commanders"
   ],
   "27-27": [
-    6,
-    2019,
-    "2019-09-08",
-    "Arizona Cardinals",
-    "Detroit Lions"
+    7,
+    2026,
+    "2026-10-11",
+    "Washington Commanders",
+    "New York Giants"
   ],
   "28-0": [
     42,
@@ -2278,18 +2278,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Tampa Bay Buccaneers"
   ],
   "28-24": [
-    78,
-    2025,
-    "2025-12-21",
-    "New England Patriots",
-    "Baltimore Ravens"
+    79,
+    2026,
+    "2026-11-01",
+    "Denver Broncos",
+    "Kansas City Chiefs"
   ],
   "28-25": [
-    22,
-    2024,
-    "2024-09-22",
-    "Baltimore Ravens",
-    "Dallas Cowboys"
+    23,
+    2026,
+    "2026-10-25",
+    "Miami Dolphins",
+    "New York Jets"
   ],
   "28-26": [
     12,
@@ -2411,11 +2411,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Las Vegas Raiders"
   ],
   "29-20": [
-    12,
-    2024,
-    "2024-10-06",
-    "New York Giants",
-    "Seattle Seahawks"
+    13,
+    2026,
+    "2026-10-25",
+    "Atlanta Falcons",
+    "San Francisco 49ers"
   ],
   "29-21": [
     20,
@@ -2453,11 +2453,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Atlanta Falcons"
   ],
   "29-26": [
-    11,
-    2023,
-    "2023-11-12",
-    "Seattle Seahawks",
-    "Washington Commanders"
+    12,
+    2026,
+    "2026-10-04",
+    "New England Patriots",
+    "Buffalo Bills"
   ],
   "29-27": [
     20,
@@ -2523,11 +2523,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New York Jets"
   ],
   "30-10": [
-    61,
-    2025,
-    "2025-09-14",
-    "Buffalo Bills",
-    "New York Jets"
+    62,
+    2026,
+    "2026-11-15",
+    "Minnesota Vikings",
+    "Green Bay Packers"
   ],
   "30-11": [
     1,
@@ -2544,11 +2544,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Chicago Bears"
   ],
   "30-13": [
-    46,
-    2025,
-    "2025-11-09",
-    "Miami Dolphins",
-    "Buffalo Bills"
+    47,
+    2026,
+    "2026-10-04",
+    "Indianapolis Colts",
+    "Washington Commanders"
   ],
   "30-14": [
     53,
@@ -2565,11 +2565,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Houston Texans"
   ],
   "30-16": [
-    21,
-    2025,
-    "2025-10-26",
-    "Baltimore Ravens",
-    "Chicago Bears"
+    22,
+    2026,
+    "2026-10-25",
+    "Denver Broncos",
+    "Arizona Cardinals"
   ],
   "30-17": [
     55,
@@ -2614,18 +2614,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New Orleans Saints"
   ],
   "30-23": [
-    42,
-    2025,
-    "2025-12-25",
-    "Dallas Cowboys",
-    "Washington Commanders"
+    44,
+    2026,
+    "2026-10-11",
+    "Baltimore Ravens",
+    "Atlanta Falcons"
   ],
   "30-24": [
-    66,
-    2025,
-    "2025-11-23",
-    "Seattle Seahawks",
-    "Tennessee Titans"
+    67,
+    2026,
+    "2026-10-22",
+    "Chicago Bears",
+    "New England Patriots"
   ],
   "30-25": [
     3,
@@ -2635,18 +2635,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Los Angeles Rams"
   ],
   "30-26": [
-    11,
-    2022,
-    "2022-10-16",
-    "Cincinnati Bengals",
-    "New Orleans Saints"
+    12,
+    2026,
+    "2026-09-27",
+    "Denver Broncos",
+    "Los Angeles Rams"
   ],
   "30-27": [
-    97,
-    2025,
-    "2025-11-16",
-    "Carolina Panthers",
-    "Atlanta Falcons"
+    99,
+    2026,
+    "2026-10-04",
+    "Kansas City Chiefs",
+    "Las Vegas Raiders"
   ],
   "30-28": [
     43,
@@ -2705,11 +2705,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Miami Dolphins"
   ],
   "31-7": [
-    83,
+    84,
     2026,
-    "2026-09-20",
-    "Seattle Seahawks",
-    "Arizona Cardinals"
+    "2026-10-11",
+    "Green Bay Packers",
+    "Chicago Bears"
   ],
   "31-8": [
     2,
@@ -2733,11 +2733,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Denver Broncos"
   ],
   "31-12": [
-    6,
-    2024,
-    "2024-09-30",
-    "Tennessee Titans",
-    "Miami Dolphins"
+    7,
+    2026,
+    "2026-11-15",
+    "Buffalo Bills",
+    "New York Jets"
   ],
   "31-13": [
     65,
@@ -2810,18 +2810,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Detroit Lions"
   ],
   "31-23": [
-    35,
-    2023,
-    "2024-01-21",
-    "Detroit Lions",
-    "Tampa Bay Buccaneers"
+    36,
+    2026,
+    "2026-10-18",
+    "Chicago Bears",
+    "Atlanta Falcons"
   ],
   "31-24": [
-    92,
-    2025,
-    "2025-11-27",
-    "Green Bay Packers",
-    "Detroit Lions"
+    94,
+    2026,
+    "2026-10-11",
+    "Cincinnati Bengals",
+    "Miami Dolphins"
   ],
   "31-25": [
     8,
@@ -2999,11 +2999,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Jacksonville Jaguars"
   ],
   "32-26": [
-    1,
-    2024,
-    "2024-12-08",
-    "Miami Dolphins",
-    "New York Jets"
+    2,
+    2026,
+    "2026-10-04",
+    "Carolina Panthers",
+    "Detroit Lions"
   ],
   "32-27": [
     4,
@@ -3020,11 +3020,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Cleveland Browns"
   ],
   "32-29": [
-    8,
-    2024,
-    "2025-01-26",
-    "Kansas City Chiefs",
-    "Buffalo Bills"
+    9,
+    2026,
+    "2026-10-11",
+    "San Francisco 49ers",
+    "Seattle Seahawks"
   ],
   "32-30": [
     3,
@@ -3083,11 +3083,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "San Francisco 49ers"
   ],
   "33-10": [
-    15,
-    2024,
-    "2024-10-17",
-    "Denver Broncos",
-    "New Orleans Saints"
+    16,
+    2026,
+    "2026-11-05",
+    "Jacksonville Jaguars",
+    "Baltimore Ravens"
   ],
   "33-12": [
     4,
@@ -3216,18 +3216,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Cleveland Browns"
   ],
   "33-30": [
-    28,
+    30,
     2026,
-    "2026-09-20",
-    "Kansas City Chiefs",
-    "Indianapolis Colts"
+    "2026-11-01",
+    "Arizona Cardinals",
+    "Dallas Cowboys"
   ],
   "33-31": [
-    15,
-    2025,
-    "2025-10-16",
-    "Cincinnati Bengals",
-    "Pittsburgh Steelers"
+    16,
+    2026,
+    "2026-09-27",
+    "Washington Commanders",
+    "Seattle Seahawks"
   ],
   "33-32": [
     3,
@@ -3272,11 +3272,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Houston Oilers"
   ],
   "34-6": [
-    10,
-    2024,
-    "2024-11-10",
-    "Philadelphia Eagles",
-    "Dallas Cowboys"
+    11,
+    2026,
+    "2026-11-15",
+    "Los Angeles Rams",
+    "Arizona Cardinals"
   ],
   "34-7": [
     67,
@@ -3349,11 +3349,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Jacksonville Jaguars"
   ],
   "34-17": [
-    70,
-    2025,
-    "2026-01-04",
-    "New York Giants",
-    "Dallas Cowboys"
+    72,
+    2026,
+    "2026-11-08",
+    "Cincinnati Bengals",
+    "Atlanta Falcons"
   ],
   "34-18": [
     4,
@@ -3384,11 +3384,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Buffalo Bills"
   ],
   "34-22": [
-    3,
-    2018,
-    "2018-11-11",
-    "Chicago Bears",
-    "Detroit Lions"
+    4,
+    2026,
+    "2026-10-11",
+    "Pittsburgh Steelers",
+    "Indianapolis Colts"
   ],
   "34-23": [
     18,
@@ -3419,10 +3419,10 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Tennessee Titans"
   ],
   "34-27": [
-    55,
-    2025,
-    "2025-11-23",
-    "Detroit Lions",
+    56,
+    2026,
+    "2026-10-18",
+    "New Orleans Saints",
     "New York Giants"
   ],
   "34-28": [
@@ -3440,18 +3440,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Green Bay Packers"
   ],
   "34-30": [
-    12,
-    2021,
-    "2021-10-03",
-    "Washington Football Team",
-    "Atlanta Falcons"
+    13,
+    2026,
+    "2026-10-04",
+    "Dallas Cowboys",
+    "Houston Texans"
   ],
   "34-31": [
-    82,
-    2025,
-    "2026-01-10",
-    "Los Angeles Rams",
-    "Carolina Panthers"
+    84,
+    2026,
+    "2026-10-18",
+    "Houston Texans",
+    "Jacksonville Jaguars"
   ],
   "34-32": [
     4,
@@ -3496,11 +3496,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Oakland Raiders"
   ],
   "35-6": [
-    8,
-    2025,
-    "2025-11-16",
+    9,
+    2026,
+    "2026-09-27",
     "Jacksonville Jaguars",
-    "Los Angeles Chargers"
+    "New England Patriots"
   ],
   "35-7": [
     50,
@@ -3524,11 +3524,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New York Jets"
   ],
   "35-10": [
-    23,
-    2024,
-    "2025-01-04",
-    "Baltimore Ravens",
-    "Cleveland Browns"
+    24,
+    2026,
+    "2026-11-15",
+    "Detroit Lions",
+    "New England Patriots"
   ],
   "35-11": [
     2,
@@ -3538,18 +3538,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Green Bay Packers"
   ],
   "35-12": [
-    4,
-    1999,
-    "1999-12-05",
-    "Atlanta Falcons",
-    "New Orleans Saints"
+    5,
+    2026,
+    "2026-11-08",
+    "Kansas City Chiefs",
+    "New York Jets"
   ],
   "35-13": [
-    23,
+    25,
     2026,
-    "2026-09-20",
-    "San Francisco 49ers",
-    "Miami Dolphins"
+    "2026-11-15",
+    "Kansas City Chiefs",
+    "Atlanta Falcons"
   ],
   "35-14": [
     56,
@@ -3601,11 +3601,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Houston Texans"
   ],
   "35-21": [
-    38,
-    2014,
-    "2014-10-23",
-    "Denver Broncos",
-    "San Diego Chargers"
+    39,
+    2026,
+    "2026-10-25",
+    "Los Angeles Rams",
+    "Las Vegas Raiders"
   ],
   "35-22": [
     4,
@@ -3643,11 +3643,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Tampa Bay Buccaneers"
   ],
   "35-27": [
-    19,
-    2019,
-    "2019-11-17",
-    "Dallas Cowboys",
-    "Detroit Lions"
+    20,
+    2026,
+    "2026-09-27",
+    "Las Vegas Raiders",
+    "New Orleans Saints"
   ],
   "35-28": [
     23,
@@ -3741,11 +3741,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New York Giants"
   ],
   "36-10": [
-    10,
-    2024,
-    "2024-10-06",
-    "Chicago Bears",
-    "Carolina Panthers"
+    11,
+    2026,
+    "2026-11-01",
+    "Buffalo Bills",
+    "Baltimore Ravens"
   ],
   "36-13": [
     4,
@@ -3818,11 +3818,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Las Vegas Raiders"
   ],
   "36-24": [
-    3,
-    2024,
-    "2024-10-10",
-    "San Francisco 49ers",
-    "Seattle Seahawks"
+    4,
+    2026,
+    "2026-10-04",
+    "New York Giants",
+    "Arizona Cardinals"
   ],
   "36-25": [
     2,
@@ -3860,10 +3860,10 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Jacksonville Jaguars"
   ],
   "36-30": [
-    8,
-    2024,
-    "2024-12-22",
-    "Carolina Panthers",
+    9,
+    2026,
+    "2026-09-27",
+    "San Francisco 49ers",
     "Arizona Cardinals"
   ],
   "36-31": [
@@ -4119,11 +4119,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Baltimore Ravens"
   ],
   "37-34": [
-    37,
-    2024,
-    "2024-10-06",
-    "Jacksonville Jaguars",
-    "Indianapolis Colts"
+    38,
+    2026,
+    "2026-10-12",
+    "Buffalo Bills",
+    "Los Angeles Rams"
   ],
   "37-35": [
     11,
@@ -4245,11 +4245,18 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Washington Redskins"
   ],
   "38-17": [
-    45,
-    2019,
-    "2019-12-15",
-    "Tampa Bay Buccaneers",
-    "Detroit Lions"
+    46,
+    2026,
+    "2026-11-08",
+    "San Francisco 49ers",
+    "Las Vegas Raiders"
+  ],
+  "38-18": [
+    1,
+    2026,
+    "2026-11-15",
+    "Cincinnati Bengals",
+    "Pittsburgh Steelers"
   ],
   "38-19": [
     5,
@@ -4266,11 +4273,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New York Giants"
   ],
   "38-21": [
-    39,
-    2020,
-    "2021-01-03",
-    "Los Angeles Chargers",
-    "Kansas City Chiefs"
+    40,
+    2026,
+    "2026-10-26",
+    "Dallas Cowboys",
+    "Philadelphia Eagles"
   ],
   "38-22": [
     3,
@@ -4350,11 +4357,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New Orleans Saints"
   ],
   "38-33": [
-    6,
-    2024,
-    "2024-09-23",
-    "Washington Commanders",
-    "Cincinnati Bengals"
+    7,
+    2026,
+    "2026-11-01",
+    "Las Vegas Raiders",
+    "New York Jets"
   ],
   "38-34": [
     11,
@@ -4686,11 +4693,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Kansas City Chiefs"
   ],
   "40-23": [
-    3,
-    2020,
-    "2020-10-18",
-    "Atlanta Falcons",
-    "Minnesota Vikings"
+    4,
+    2026,
+    "2026-11-15",
+    "Jacksonville Jaguars",
+    "Tennessee Titans"
   ],
   "40-24": [
     7,
@@ -5050,11 +5057,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "St. Louis Rams"
   ],
   "42-7": [
-    29,
-    2017,
-    "2017-12-17",
-    "Los Angeles Rams",
-    "Seattle Seahawks"
+    30,
+    2026,
+    "2026-11-01",
+    "Jacksonville Jaguars",
+    "Indianapolis Colts"
   ],
   "42-10": [
     20,
@@ -5316,11 +5323,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New Orleans Saints"
   ],
   "43-13": [
-    4,
-    2019,
-    "2019-09-08",
-    "Tennessee Titans",
-    "Cleveland Browns"
+    5,
+    2026,
+    "2026-10-25",
+    "Tampa Bay Buccaneers",
+    "Carolina Panthers"
   ],
   "43-14": [
     8,
@@ -5426,6 +5433,13 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "2017-12-10",
     "Philadelphia Eagles",
     "Los Angeles Rams"
+  ],
+  "43-36": [
+    1,
+    2026,
+    "2026-11-01",
+    "Cincinnati Bengals",
+    "Tennessee Titans"
   ],
   "43-37": [
     4,
@@ -5568,11 +5582,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Arizona Cardinals"
   ],
   "44-22": [
-    4,
-    2025,
-    "2025-11-09",
-    "Detroit Lions",
-    "Washington Commanders"
+    5,
+    2026,
+    "2026-11-08",
+    "Houston Texans",
+    "Los Angeles Chargers"
   ],
   "44-23": [
     4,
@@ -5757,11 +5771,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "San Francisco 49ers"
   ],
   "45-17": [
-    26,
-    2025,
-    "2025-12-07",
-    "Los Angeles Rams",
-    "Arizona Cardinals"
+    27,
+    2026,
+    "2026-10-11",
+    "New England Patriots",
+    "Las Vegas Raiders"
   ],
   "45-19": [
     2,
@@ -5778,11 +5792,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Las Vegas Raiders"
   ],
   "45-21": [
-    27,
-    2025,
-    "2025-12-21",
-    "Cincinnati Bengals",
-    "Miami Dolphins"
+    28,
+    2026,
+    "2026-10-11",
+    "Detroit Lions",
+    "Arizona Cardinals"
   ],
   "45-22": [
     1,
@@ -5799,11 +5813,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "New York Giants"
   ],
   "45-24": [
-    15,
-    2011,
-    "2012-01-01",
+    16,
+    2026,
+    "2026-10-05",
     "Atlanta Falcons",
-    "Tampa Bay Buccaneers"
+    "New Orleans Saints"
   ],
   "45-25": [
     1,
@@ -5820,11 +5834,11 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "Indianapolis Colts"
   ],
   "45-27": [
-    6,
-    2009,
-    "2009-09-13",
-    "New Orleans Saints",
-    "Detroit Lions"
+    7,
+    2026,
+    "2026-11-08",
+    "Green Bay Packers",
+    "New England Patriots"
   ],
   "45-28": [
     18,
@@ -6042,6 +6056,13 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
     "1996-10-06",
     "New England Patriots",
     "Baltimore Ravens"
+  ],
+  "46-40": [
+    1,
+    2026,
+    "2026-11-15",
+    "San Francisco 49ers",
+    "Dallas Cowboys"
   ],
   "46-45": [
     1,
@@ -7690,4 +7711,4 @@ export const HISTORICAL_OCCURRED: Record<string, HistoricalScoreRecord> = {
   ]
 };
 
-export const TOTAL_UNIQUE_SCORIGAMIS = 1097;
+export const TOTAL_UNIQUE_SCORIGAMIS = 1100;

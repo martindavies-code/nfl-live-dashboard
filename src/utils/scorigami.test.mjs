@@ -182,12 +182,12 @@ test('Post-game non-scorigami displays exact last game matchup and date', () => 
   assert.ok(postCommon.lastWinner !== null)
   assert.ok(postCommon.lastLoser !== null)
   assert.ok(postCommon.lastGameSummary !== null)
-  assert.equal(postCommon.lastDateIso, '2026-09-20')
-  assert.equal(postCommon.lastDate, 'Sep 20, 2026')
-  assert.equal(postCommon.lastWinner, 'Green Bay Packers')
-  assert.equal(postCommon.lastLoser, 'New York Jets')
-  assert.equal(postCommon.lastGameSummary, 'Green Bay Packers 20, New York Jets 17 on Sep 20, 2026')
-  assert.match(postCommon.whenScenario, /Green Bay Packers 20, New York Jets 17 on Sep 20, 2026/)
+  assert.equal(postCommon.lastDateIso, '2026-11-15')
+  assert.equal(postCommon.lastDate, 'Nov 15, 2026')
+  assert.equal(postCommon.lastWinner, 'Carolina Panthers')
+  assert.equal(postCommon.lastLoser, 'New Orleans Saints')
+  assert.equal(postCommon.lastGameSummary, 'Carolina Panthers 20, New Orleans Saints 17 on Nov 15, 2026')
+  assert.match(postCommon.whenScenario, /Carolina Panthers 20, New Orleans Saints 17 on Nov 15, 2026/)
 })
 
 

@@ -1,6 +1,7 @@
 // -----------------------------------------------------------------------------
 // Scorigami: score combination novelty estimate against a fixed recorded dataset.
-// Coverage ends 24 Sep 2026. Absence is not proof of first-ever NFL novelty.
+// Coverage end is derived from the dataset itself (SCORIGAMI_DATASET_COVERAGE_END_ISO).
+// Absence is not proof of first-ever NFL novelty.
 // Estimates use independent team scoring in regulation, not a validated exact model.
 // -----------------------------------------------------------------------------
 
@@ -8,6 +9,27 @@ import { HISTORICAL_OCCURRED, TOTAL_UNIQUE_SCORIGAMIS, type HistoricalScoreRecor
 import { isHalftimeSituation, isOvertimeSituation } from './nflHelpers.ts'
 
 export { TOTAL_UNIQUE_SCORIGAMIS }
+
+const COVERAGE_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] as const
+
+function computeCoverageEndIso(): string {
+  let max = ''
+  for (const rec of Object.values(HISTORICAL_OCCURRED)) {
+    const lastDate = rec[2]
+    if (lastDate && lastDate > max) max = lastDate
+  }
+  return max
+}
+
+/** ISO date of the most recent game in the recorded dataset (e.g. "2026-11-16"). */
+export const SCORIGAMI_DATASET_COVERAGE_END_ISO: string = computeCoverageEndIso()
+
+/** Human-readable label for the dataset coverage end (e.g. "16 Nov 2026"). */
+export const SCORIGAMI_DATASET_COVERAGE_END_LABEL: string = (() => {
+  const [y, m, d] = SCORIGAMI_DATASET_COVERAGE_END_ISO.split('-').map(Number)
+  if (!y || !m || !d) return SCORIGAMI_DATASET_COVERAGE_END_ISO
+  return `${d} ${COVERAGE_MONTHS[m - 1]} ${y}`
+})()
 
 export interface ScorigamiOddsInput {
   overUnder?: number | string | null

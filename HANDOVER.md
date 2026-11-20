@@ -1,3 +1,33 @@
+# HANDOVER - 2026-11-20 dataset and power rankings refresh
+
+Branch `chore/data-refresh-2026-11-20`. Requested by Martin on WhatsApp (20 Nov 2026, "okay do that refresh") after the provenance pass disclosed the stale dataset and ranks.
+
+## What changed
+
+**Scorigami historical dataset regenerated**
+- Re-ran `scripts/buildScorigamiData.mjs` against scorigamicenter.com/data/nfl.json (generatedAt 2026-11-17T18:43Z; declared sources FiveThirtyEight nfl-elo 1920-1998, nflverse 1999-present).
+- Dataset now 1,100 unique final scores, 18,384 summed occurrences, coverage through 16 Nov 2026 (end of Week 10). Previously 1,097 / 18,267 through 24 Sep 2026.
+- Three new unique scores since the last refresh, each cross-checked against the ESPN scoreboard feed: 43-36 (CIN def. TEN, 1 Nov), 46-40 (SF def. DAL, 15 Nov), 38-18 (CIN def. PIT, 16 Nov).
+- 20-17 has now occurred 305 times, most recently CAR 20, NO 17 on 15 Nov 2026; the post-game test expectations were updated to match.
+- The coverage date is no longer a hardcoded string. `scorigami.ts` derives `SCORIGAMI_DATASET_COVERAGE_END_ISO` / `_LABEL` from the dataset, and HeroMatchup, GameCard and the rendered-check harness all consume the derived value, so the next refresh only needs the script re-run.
+- Dataset credit now reads "scorigamicenter.com; FiveThirtyEight/nflverse data", matching the source file's own declared provenance (the old "Pro Football Reference" credit is not what the dataset declares).
+
+**Power rankings: Week 11 edition ingested**
+- Source: Nate Davis (USA TODAY) via Yahoo Sports, "NFL power rankings Week 11: 49ers remain No. 1, but who is AFC's best team?", published 17 Nov 2026, verified 20 Nov 2026. https://sports.yahoo.com/articles/nfl-power-rankings-week-11-105531497.html
+- All 32 ranks parsed from the article HTML; the parenthetical previous ranks are the author's own prior edition, and `change = previousRank - rank` as before. ESPN confirms the current slate is Week 11, matching the source's label.
+- Top: SF 1, BUF 2, CHI 3, JAX 4, CIN 5 (up from 14). TB 15, DET 10. NE fell to 24 (from 11). FNE alias kept.
+- Week 9 (FanSided) and Week 8 editions retained for history; the movement tooltip's "previous published edition" refers to the author's own prior rankings, which is what the article records.
+- Note: `scripts/update-power-rankings.mjs` discovery found this article but its parser extracted 0/32 teams (Yahoo markup drift); ingestion was manual and verified. The script needs a parser fix before it can automate future editions.
+
+## Checks
+- `npm run lint` clean, `npm run build` passes, `npm test` 251/251.
+- `npm run test:matchup` 32/32 rendered checks at 1440/1024/393/360; screenshots inspected (pre-game mobile shows "USA TODAY Wk 11" rank pills and "verified through 16 Nov 2026"; final shows "Last recorded: Carolina Panthers 20, New Orleans Saints 17 on Nov 15, 2026").
+
+## Limits
+- Coverage still ends 16 Nov 2026; Week 11 games are not yet in the dataset (re-run the script after the weekend).
+- Ranks are one editorial ballot (USA TODAY), not a consensus; labelled as such.
+- No model changes, no redesign, no weekly-updater hooks.
+
 # HANDOVER - 2026-11-20 matchup card clarity and provenance pass
 
 Branch `fix/matchup-card-clarity`. Scoped to the hero matchup card and its shared win-probability bar, requested by Martin on WhatsApp (20 Nov 2026) after a duplication/data-journalism review of the pre-game card, with his follow-up instruction to "verify everything".
