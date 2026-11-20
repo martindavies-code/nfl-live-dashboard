@@ -2,7 +2,7 @@
 // Optional MATCHUP_SCREENSHOTS points outside the repository for review images.
 import puppeteer from 'puppeteer-core'
 import { spawn } from 'node:child_process'
-import { writeFile, rm, mkdir } from 'node:fs/promises'
+import { writeFile, rm, mkdir, readFile } from 'node:fs/promises'
 import assert from 'node:assert/strict'
 import path from 'node:path'
 const root = process.cwd()
@@ -10,6 +10,12 @@ const harnessHtml = path.join(root, '.matchup-check.html')
 const harnessTsx = path.join(root, '.matchup-check.tsx')
 const output = process.env.MATCHUP_SCREENSHOTS
 const html = '<html><head></head><body style="margin:0;background:#030712"><div id="root"></div><script type="module" src="/.matchup-check.tsx"></script></body></html>'
+// Derive the expected dataset coverage label from the generated data file, so a
+// dataset refresh never leaves this assertion stale.
+const histSrc = await readFile(path.join(root,'src/utils/scorigamiHistoricalData.ts'),'utf8')
+const coverageIso = [...histSrc.matchAll(/"(20\d\d-\d\d-\d\d)"/g)].map(m=>m[1]).sort().pop()
+const [cy,cm,cd] = coverageIso.split('-').map(Number)
+const COVERAGE_LABEL = `${cd} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][cm-1]} ${cy}`
 const harness = `import React from 'react'; import {createRoot} from 'react-dom/client';
 import {HeroMatchup} from './src/components/HeroMatchup';
 import {GameCard} from './src/components/GameCard'; import './src/index.css';
@@ -45,7 +51,7 @@ try {
   const text=await page.$eval('main',e=>e.innerText)
   assert.equal(errors.length,0,errors.join('\n'))
   assert.ok(!/Scorigami Achieved|Scorigami in Progress|in NFL History|in NFL history|Novel Score|Milestone:|Never occurred/.test(text),mode+' stale claim')
-  assert.ok(text.includes('verified through 24 Sep 2026'))
+  assert.ok(text.includes('verified through '+COVERAGE_LABEL),mode+': coverage label missing, expected '+COVERAGE_LABEL)
   assert.ok(!text.includes('#1,098'))
   const a11y=await page.$$eval('[aria-label^="Win probability:"]',es=>es.map(e=>e.getAttribute('aria-label')))
   if(!mode.startsWith('post')){
