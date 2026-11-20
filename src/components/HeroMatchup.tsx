@@ -371,7 +371,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
         <div className={isMultiThreat ? "flex flex-col space-y-4" : "order-1 lg:order-1 col-span-12 lg:col-span-6 flex flex-col space-y-4 sm:space-y-6"}>
           {/* Quarter & Game Clock Banner */}
           <div className="flex flex-wrap items-center justify-between gap-y-1.5 gap-x-2 border-b border-white/[0.06] pb-2.5 sm:pb-3">
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
               {isHalftime ? (
                 <span className="font-mono text-xs font-extrabold text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded border border-amber-500/40 uppercase tracking-wider flex items-center gap-1.5">
                   <Pause className="h-3.5 w-3.5 text-amber-400" />
