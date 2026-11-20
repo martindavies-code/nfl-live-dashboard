@@ -23,7 +23,7 @@ test('hasOccurred correctly identifies canonical historical NFL scores', () => {
   assert.equal(hasOccurred(3, 0), true)
   assert.equal(hasOccurred(0, 0), true)
 
-  // Scores that have NEVER occurred in 100+ years of NFL history
+  // Scores absent from the recorded dataset
   assert.equal(hasOccurred(43, 29), false)
   assert.equal(hasOccurred(36, 23), false)
   assert.equal(hasOccurred(32, 22), false)
@@ -114,7 +114,7 @@ test('Live game Scorigami projection accurately reports novel score needs', () =
   assert.equal(live.isCurrentScorigami, false)
   assert.ok(live.chancePct > 0.01)
   assert.ok(live.mostLikelyNovel !== null)
-  assert.match(live.whenScenario, /When score reaches/)
+  assert.match(live.whenScenario, /One possible unseen final score/)
   assert.match(live.whenScenario, /DET/)
   assert.match(live.whenScenario, /GB/)
 })
@@ -125,7 +125,7 @@ test('Live game at a currently novel score with time expiring detects impending 
   assert.equal(liveNovel.isCurrentScorigami, true)
   assert.ok(liveNovel.chancePct > 0.90) // very high probability to hold
   assert.equal(liveNovel.mostLikelyNovel, '25-18')
-  assert.match(liveNovel.whenScenario, /Current score \(25-18\) is a Scorigami right now if score holds!/)
+  assert.match(liveNovel.whenScenario, /Current score \(25-18\) is absent from the recorded dataset\. If it holds, the final score will also be absent\./)
 })
 
 test('Post-game non-scorigami displays historical occurrences and last year', () => {
@@ -137,13 +137,13 @@ test('Post-game non-scorigami displays historical occurrences and last year', ()
   assert.match(postCommon.whenScenario, /Final: occurred \d+x in the recorded dataset/)
 })
 
-test('Post-game genuine scorigami announces historical novelty', () => {
+test('Post-game unseen score does not claim first-ever novelty', () => {
   const postNovel = getScorigamiInfo(43, 29, 0, 'post')
   assert.equal(postNovel.isCurrentScorigami, true)
   assert.equal(postNovel.chancePct, 1)
   assert.equal(postNovel.chanceLabel, '100% — Unseen in Dataset!')
   assert.equal(postNovel.mostLikelyNovel, '43-29')
-  assert.match(postNovel.whenScenario, /Final: absent from the recorded dataset \(unique score #\d+ in it\)!/)
+  assert.match(postNovel.whenScenario, /Final: 43-29 is absent from the recorded dataset; this does not confirm a first-ever NFL score/)
 })
 
 test('Historic outlier scores and defensive resilience in Scorigami engine', () => {
@@ -190,3 +190,13 @@ test('Post-game non-scorigami displays exact last game matchup and date', () => 
   assert.match(postCommon.whenScenario, /Green Bay Packers 20, New York Jets 17 on Sep 20, 2026/)
 })
 
+
+
+test('All live unseen narratives stay dataset scoped and explain aggregate chance', () => {
+  for (const seconds of [0, 45, 900, 3600]) {
+    const info = getScorigamiInfo(43, 29, seconds, 'in', 'DET', 'TB')
+    assert.match(info.whenScenario, /recorded dataset/)
+    assert.match(info.whenScenario, /every unseen final score, not only this route/)
+    assert.doesNotMatch(info.whenScenario, /Scorigami right now|is novel|unique score #/)
+  }
+})
