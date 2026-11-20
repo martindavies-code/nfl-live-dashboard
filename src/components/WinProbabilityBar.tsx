@@ -336,7 +336,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
       </div>
 
       {/* Pre-Game Betting Handicap / Over-Under or Projected Insight Strip */}
-      <div className="mt-2 flex items-center justify-between gap-1.5 text-xs text-slate-300 border-t border-white/[0.06] pt-1.5">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-y-1 gap-x-1.5 text-xs text-slate-300 border-t border-white/[0.06] pt-1.5">
         <div className="truncate min-w-0 mr-1 flex items-center gap-1.5">
           {formattedOdds ? (
             <span className="flex items-center gap-1.5 truncate text-xs" title={`Pre-Game Betting Odds: ${formattedOdds}`}>
