@@ -44,16 +44,16 @@ function mockGame(awayAbbr, homeAbbr, options = {}) {
 }
 
 test('Power Rankings: getTeamPowerRank accurately scores known teams and aliases across published editions', () => {
-  // Current Authoritative Edition (Week 9)
-  assert.equal(getTeamPowerRank('BUF'), 1)
-  assert.equal(getTeamPowerRank('SF'), 2)
-  assert.equal(getTeamPowerRank('DET'), 3)
-  assert.equal(getTeamPowerRank('DEN'), 5)
-  assert.equal(getTeamPowerRank('KC'), 8)
-  assert.equal(getTeamPowerRank('NYG'), 15)
-  assert.equal(getTeamPowerRank('IND'), 32)
-  assert.equal(getTeamPowerRank('NE'), 11)
-  assert.equal(getTeamPowerRank('FNE'), 11) // Alias
+  // Current Authoritative Edition (Week 11, USA TODAY via Yahoo Sports, verified 2026-11-20)
+  assert.equal(getTeamPowerRank('SF'), 1)
+  assert.equal(getTeamPowerRank('BUF'), 2)
+  assert.equal(getTeamPowerRank('DET'), 10)
+  assert.equal(getTeamPowerRank('DEN'), 6)
+  assert.equal(getTeamPowerRank('KC'), 9)
+  assert.equal(getTeamPowerRank('NYG'), 21)
+  assert.equal(getTeamPowerRank('MIA'), 32)
+  assert.equal(getTeamPowerRank('NE'), 24)
+  assert.equal(getTeamPowerRank('FNE'), 24) // Alias
   assert.equal(getTeamPowerRank('UNKNOWN'), 20)
 
   // Explicit Week 8 published rankings edition
@@ -67,14 +67,14 @@ test('Power Rankings: getTeamPowerRank accurately scores known teams and aliases
 
 test('Power Rankings: getTeamPowerRankDetail returns full provenance, change, and source metadata', () => {
   const detail = getTeamPowerRankDetail('DEN')
-  assert.equal(detail.rank, 5)
-  assert.equal(detail.previousRank, 7)
-  assert.equal(detail.change, 2)
+  assert.equal(detail.rank, 6)
+  assert.equal(detail.previousRank, 5)
+  assert.equal(detail.change, -1)
   assert.ok(detail.source.publisher.includes('Yahoo Sports'))
   assert.ok(detail.source.url.startsWith('https://'))
 
   const latest = getLatestPowerRankingsEdition()
-  assert.equal(latest.week, 9)
+  assert.equal(latest.week, 11)
   assert.equal(latest.season, 2026)
 
   const w8 = getWeeklyPowerRankingsEdition(8)
@@ -103,9 +103,9 @@ test('Power Rankings: getPowerRankTierStyle assigns distinct visual styling toke
 })
 
 test('Power Rankings: getMatchupPowerScore ranks top-tier clashes higher than bottom-tier', () => {
-  const premierMatchup = mockGame('BUF', 'SF')  // #1 vs #2 = ~3
-  const midMatchup = mockGame('PIT', 'DAL')     // #13 vs #20 = ~33
-  const lowMatchup = mockGame('LAC', 'IND')     // #31 vs #32 = ~63
+  const premierMatchup = mockGame('BUF', 'SF')  // #2 vs #1 = ~3
+  const midMatchup = mockGame('PIT', 'DAL')     // #13 vs #22 = ~35
+  const lowMatchup = mockGame('LAC', 'IND')     // #29 vs #31 = ~60
 
   const scorePremier = getMatchupPowerScore(premierMatchup)
   const scoreMid = getMatchupPowerScore(midMatchup)
@@ -136,17 +136,17 @@ test('Power Rankings: If NYG is at Halftime, spotlight the best matchup by power
 
 test('Power Rankings: If NYG is not live, spotlight best matchup by power ranking', () => {
   const nygPregame = mockGame('DAL', 'NYG', { state: 'pre', id: 'nyg-pre' })
-  const premierLive = mockGame('BUF', 'SF', { state: 'in', id: 'buf-sf' }) // 1 + 2 = 3
-  const midLive = mockGame('MIN', 'HOU', { state: 'in', id: 'min-hou' }) // 7 + 24 = 31
+  const premierLive = mockGame('BUF', 'SF', { state: 'in', id: 'buf-sf' }) // 2 + 1 = 3
+  const midLive = mockGame('MIN', 'HOU', { state: 'in', id: 'min-hou' }) // 7 + 23 = 30
 
   const spotlight = getBestMatchupByPowerRanking([midLive, nygPregame, premierLive])
   assert.equal(spotlight?.id, 'buf-sf', 'Premier live matchup must be spotlighted when NYG is not live')
 })
 
 test('Power Rankings: Pre-game week spotlights best matchup by power ranking when dates are identical', () => {
-  const game1 = mockGame('BUF', 'SF', { state: 'pre', id: 'buf-sf' }) // 1 + 2 = 3
-  const game2 = mockGame('TEN', 'IND', { state: 'pre', id: 'ten-ind' }) // 28 + 32 = 60
-  const game3 = mockGame('DET', 'KC', { state: 'pre', id: 'det-kc' }) // 3 + 8 = 11
+  const game1 = mockGame('BUF', 'SF', { state: 'pre', id: 'buf-sf' }) // 2 + 1 = 3
+  const game2 = mockGame('TEN', 'IND', { state: 'pre', id: 'ten-ind' }) // 30 + 31 = 61
+  const game3 = mockGame('DET', 'KC', { state: 'pre', id: 'det-kc' }) // 10 + 9 = 19
 
   const spotlight = getBestMatchupByPowerRanking([game2, game3, game1])
   assert.equal(spotlight?.id, 'buf-sf', 'Best matchup by power ranking in pregame week must be spotlighted')
@@ -158,13 +158,13 @@ test('Power Rankings: When no games are in progress, default to the next game to
     state: 'pre',
     id: 'dal-gb',
     date: '2026-10-19T00:20:00Z',
-  }) // DAL (20) vs GB (14) = 34.14
+  }) // DAL (22) vs GB (12) = 34.22
   // Tuesday Night Game (later, but higher power ranked teams)
   const tuesdayGame = mockGame('BUF', 'SF', {
     state: 'pre',
     id: 'buf-sf',
     date: '2026-10-20T00:15:00Z',
-  }) // BUF (1) vs SF (2) = 3.01
+  }) // BUF (2) vs SF (1) = 3.02
 
   const spotlight = getBestMatchupByPowerRanking([tuesdayGame, mondayGame])
   assert.equal(spotlight?.id, 'dal-gb', 'Must spotlight Monday game because it is the next game to take place')
@@ -176,17 +176,17 @@ test('Power Rankings: If multiple games are scheduled at the same time next, spo
     state: 'pre',
     id: 'buf-sf-early',
     date: sundaySlot,
-  }) // 1 + 2 = 3
+  }) // 2 + 1 = 3
   const earlyLowRank = mockGame('LAC', 'IND', {
     state: 'pre',
     id: 'lac-ind-early',
     date: sundaySlot,
-  }) // 31 + 32 = 63
+  }) // 29 + 31 = 60
   const lateGame = mockGame('DET', 'KC', {
     state: 'pre',
     id: 'det-kc-late',
     date: '2026-10-18T20:25:00Z',
-  }) // 3 + 8 = 11
+  }) // 10 + 9 = 19
 
   const spotlight = getBestMatchupByPowerRanking([lateGame, earlyLowRank, earlyHighRank])
   assert.equal(spotlight?.id, 'buf-sf-early', 'Must spotlight the highest ranked teams among the games kicking off next')
@@ -200,8 +200,8 @@ test('Power Rankings edge cases: empty, postgame slate, halftime-only, invalid d
   // getTeamPowerRank edge cases
   assert.equal(getTeamPowerRank(), 20)
   assert.equal(getTeamPowerRank(''), 20)
-  assert.equal(getTeamPowerRank('  buf  '), 1)
-  assert.equal(getTeamPowerRank('  kc  '), 8)
+  assert.equal(getTeamPowerRank('  buf  '), 2)
+  assert.equal(getTeamPowerRank('  kc  '), 9)
   assert.equal(getTeamPowerRank('  kc  ', 8), 3)
 
   // getMatchupPowerScore edge cases with missing competitors
