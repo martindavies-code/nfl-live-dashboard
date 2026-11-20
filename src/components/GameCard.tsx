@@ -30,7 +30,7 @@ import {
   CheckCircle2,
   Calendar,
 } from 'lucide-react'
-import { getScorigamiInfo, getGameSecondsRemaining, TOTAL_UNIQUE_SCORIGAMIS } from '../utils/scorigami'
+import { getScorigamiInfo, getGameSecondsRemaining, TOTAL_UNIQUE_SCORIGAMIS, SCORIGAMI_DATASET_COVERAGE_END_LABEL } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
 import {
   getTeamPowerRank,
@@ -648,7 +648,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
           </div>
 
           <div className="text-slate-500">
-            Dataset: {TOTAL_UNIQUE_SCORIGAMIS.toLocaleString()} unique final scores, verified through 24 Sep 2026 (scorigamicenter.com / Pro Football Reference). Games after that date are not included.
+            Dataset: {TOTAL_UNIQUE_SCORIGAMIS.toLocaleString()} unique final scores, verified through {SCORIGAMI_DATASET_COVERAGE_END_LABEL} (scorigamicenter.com; FiveThirtyEight/nflverse data). Games after that date are not included.
           </div>
           {!isFinal && <div className="text-slate-500">Indicative estimate of a final score absent from this dataset. Independent team scoring, regulation only, not an exact validated probability.</div>}
           {isFinal ? (
