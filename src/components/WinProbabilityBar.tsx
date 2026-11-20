@@ -100,7 +100,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
       case 'Vegas Moneyline':
         return `Chance to win derived from the ${provider || 'listed sportsbook'} moneyline with the bookmaker margin (vig) removed. Odds come via the ESPN feed, which does not publish an odds timestamp.`
       case 'Vegas Spread':
-        return `Chance to win estimated from the ${provider || 'listed sportsbook'} point spread using a normal margin model. Odds via the ESPN feed.`
+        return `Chance to win estimated from the ${provider || 'listed sportsbook'} point spread using a normal margin model. Odds come via the ESPN feed, which does not publish an odds timestamp.`
       case 'Pregame Projection':
         return 'No market odds are available yet, so the card shows the league-average home-field baseline (53.5%).'
       case 'ESPN FPI':
@@ -116,7 +116,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
     return (
       <div
         className="w-full select-none"
-        aria-label={`Win probability: ${awayAbbr} ${awayPct.toFixed(1)}%, ${homeAbbr} ${homePct.toFixed(1)}%`}
+        aria-label={`Win probability: ${awayAbbr} ${awayPct.toFixed(1)}%, ${homeAbbr} ${homePct.toFixed(1)}% (${methodLabel})`}
       >
         <div className="flex items-center justify-between text-xs font-bold mb-1.5">
           <div className="flex items-center gap-1.5">
@@ -182,7 +182,7 @@ export const WinProbabilityBar: React.FC<WinProbabilityBarProps> = memo(({
       className={`w-full select-none ${
         bare ? 'p-0' : 'rounded-xl border border-white/[0.08] bg-[#090e18] p-3.5 shadow-sm'
       }`}
-      aria-label={`Win probability: ${awayAbbr} ${awayPct.toFixed(1)}%, ${homeAbbr} ${homePct.toFixed(1)}% (${modelSource})`}
+      aria-label={`Win probability: ${awayAbbr} ${awayPct.toFixed(1)}%, ${homeAbbr} ${homePct.toFixed(1)}% (${methodLabel})`}
     >
       {/* High-Impact Broadcast Dual Header (away left, home right: same order as the matchup rows) */}
       <div className="mb-2 flex items-center justify-between gap-1 sm:gap-2">

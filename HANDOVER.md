@@ -36,3 +36,19 @@ Branch `fix/matchup-card-clarity`. Scoped to the hero matchup card and its share
 ## Watchouts
 - The smaller game cards still have their own compact "Tale of the Tape" and a countdown badge; out of scope for this pass, same treatment would apply.
 - The ESPN odds feed carries no timestamp, so no "as of" can be shown for the line; a small visible caption under the probability bar now says so (no hover needed), and the tooltip repeats it.
+
+## Follow-through of independent review, 20 Nov 2026
+
+Branch: `fix/scorigami-consumers-accessibility`. This pass applies the same truthfulness rules to every shared consumer and rendered state, without changing the model or ingesting new editorial data.
+
+- Directory drawers now disclose the dataset cutoff and model limits, carry `est.`, and use dataset-scoped labels rather than global-history claims.
+- Hero live/final headings and shared live narratives no longer declare confirmed first-ever NFL novelty. Unseen final scores do not invent a numbered addition to the fixed dataset. Known-score dates are labelled `Last recorded`, not a claim that no later game exists.
+- Full and compact win-probability accessibility labels name the same method as the visible full bar. Spread and moneyline tooltips both disclose the absent feed timestamp.
+- Team rows wrap at intermediate desktop widths. Estimate and score pills stay intact on narrow screens, while the header row itself can wrap.
+- Provider-name spacing and browser locale date order are left as supplied; neither is a factual error.
+
+Verification: lint and production build pass, 251 unit tests pass. `npm run test:matchup` runs 32 deterministic rendered checks at 1440, 1024, 393 and 360px: moneyline, spread-only fallback, no-odds baseline, live ESPN FPI, live analytic fallback, known live score, known final and unseen final. It checks compact/full method accessibility, keyboard expansion, collapsed estimate label, stale-claim absence, cutoff disclosure and document overflow. External requests are blocked and fixture logo URLs deliberately fail, so the views also exercise missing-image handling without relying on feed availability. The harness files are removed in `finally`; screenshots are optional via `MATCHUP_SCREENSHOTS` and should point outside the repository. Requires installed Chrome, or `CHROME_PATH`.
+
+Separate post-fix review caught and corrected the final-state tooltip and `Last Occurred` wording, plus a shared live narrative that still implied first-ever novelty. Rendered screenshots were rechecked after those changes, not just after the first patch. Local fixture evidence is synthetic, not a claim that a live NFL game currently has these scores.
+
+Limits remain: historical coverage ends 24 Sep 2026, the regulation-only independent-team estimate is indicative, odds have no feed timestamp, and ranks remain the existing Week 9 edition. No weekly updater hooks were run. The compact directory countdown, score dashes and separate preview panel remain unchanged.

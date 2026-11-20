@@ -631,52 +631,52 @@ export const GameCard: React.FC<GameCardProps> = memo(({
       {/* Dynamic Expanded Section: Scorigami */}
       {isScorigamiActive && (
         <div id={scorigamiPanelId} className="mx-4 mb-3 p-3 rounded-lg border border-indigo-500/20 bg-indigo-950/20 space-y-1.5 text-xs text-slate-300" role="region" aria-label="Scorigami metrics">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-bold text-slate-200 flex items-center gap-1">
               <Sparkles className="h-3 w-3 text-indigo-400" />
               {isFinal
-                ? (scorigamiInfo.isCurrentScorigami ? '✨ Final Scorigami' : 'Final Scorigami')
-                : (scorigamiInfo.isCurrentScorigami ? 'Live Scorigami Active' : 'Scorigami Chance')}
+                ? (scorigamiInfo.isCurrentScorigami ? 'Final score absent from dataset' : 'Final score in dataset')
+                : (scorigamiInfo.isCurrentScorigami ? 'Live score absent from dataset' : 'Scorigami Chance')}
             </span>
-            <span className="font-mono font-bold text-xs bg-indigo-950/80 text-indigo-300 px-2 py-0.5 rounded border border-indigo-700/40">
+            <span className="shrink-0 whitespace-nowrap font-mono font-bold text-xs bg-indigo-950/80 text-indigo-300 px-2 py-0.5 rounded border border-indigo-700/40">
               {isFinal
                 ? (scorigamiInfo.isCurrentScorigami
-                    ? `#${(TOTAL_UNIQUE_SCORIGAMIS + 1).toLocaleString()} Novel Score`
-                    : `${scorigamiInfo.currentOccurrences}x in NFL History`)
-                : scorigamiInfo.chanceLabel}
+                    ? 'Unseen in Dataset'
+                    : `${scorigamiInfo.currentOccurrences}x in Recorded Dataset`)
+                : `${scorigamiInfo.chanceLabel} est.`}
             </span>
           </div>
 
+          <div className="text-slate-500">
+            Dataset: {TOTAL_UNIQUE_SCORIGAMIS.toLocaleString()} unique final scores, verified through 24 Sep 2026 (scorigamicenter.com / Pro Football Reference). Games after that date are not included.
+          </div>
+          {!isFinal && <div className="text-slate-500">Indicative estimate of a final score absent from this dataset. Independent team scoring, regulation only, not an exact validated probability.</div>}
           {isFinal ? (
             scorigamiInfo.isCurrentScorigami ? (
               <div className="text-xs text-emerald-300 font-medium">
-                Milestone: #{(TOTAL_UNIQUE_SCORIGAMIS + 1).toLocaleString()} unique final score in NFL history!
+                This final score is absent from the recorded dataset. It is not confirmed as a first-ever NFL score.
               </div>
             ) : (
               <div className="text-xs text-slate-400">
-                Last: <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary || (scorigamiInfo.lastSeenYear ? `in ${scorigamiInfo.lastSeenYear}` : 'previously recorded')}</strong>
+                Last recorded: <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary || (scorigamiInfo.lastSeenYear ? `in ${scorigamiInfo.lastSeenYear}` : 'previously recorded')}</strong>
               </div>
             )
           ) : (
             <>
               {scorigamiInfo.mostLikelyNovel && (
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Most Likely:</span>
-                  <span className="font-mono font-bold text-indigo-200">{scorigamiInfo.mostLikelyLabel}</span>
+                  <span className="text-slate-400">Most likely unseen score (one possible route):</span>
+                  <span className="shrink-0 whitespace-nowrap font-mono font-bold text-indigo-200">{scorigamiInfo.mostLikelyLabel}</span>
                 </div>
               )}
               <div className="text-xs text-slate-400">
                 <span className="text-slate-300 font-semibold">Scenario: </span>
                 {scorigamiInfo.whenScenario}
               </div>
-              {state === 'pre' ? (
+              {state === 'pre' ? null : scorigamiInfo.lastGameSummary ? (
                 <div className="text-xs text-slate-400 border-t border-white/[0.04] pt-1">
-                  Target score: <span className="text-indigo-200 font-medium">Never occurred — would be a first in NFL history</span>
-                </div>
-              ) : scorigamiInfo.lastGameSummary ? (
-                <div className="text-xs text-slate-400 border-t border-white/[0.04] pt-1">
-                  Last: <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
-                  <span className="text-slate-500 ml-1">({scorigamiInfo.currentOccurrences}x in NFL history)</span>
+                  Last recorded: <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
+                  <span className="text-slate-500 ml-1">({scorigamiInfo.currentOccurrences}x in recorded dataset)</span>
                 </div>
               ) : null}
             </>
