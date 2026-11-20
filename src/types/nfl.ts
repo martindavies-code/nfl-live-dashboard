@@ -164,6 +164,7 @@ export interface NFLCompetition {
       city: string
       state: string
     }
+    indoor?: boolean
   }
   drives?: {
     current?: NFLDriveInfo
@@ -238,4 +239,3 @@ export interface NFLWeekSelection {
 }
 
 export type GameFilter = 'all' | 'live' | 'redzone' | 'halftime' | 'upcoming' | 'final'
-

@@ -150,6 +150,7 @@ export interface CalculatedWinProbability {
   spreadPct: string // Absolute differential e.g. "35.4"
   favoredName: string
   modelSource: 'ESPN FPI' | 'Vegas Moneyline' | 'Vegas Spread' | 'Pregame Projection' | 'Live Analytic Model' | 'Final'
+  provider?: string | null
   handicap?: string | null
   overUnder?: number | null
   overUnderText?: string | null
@@ -213,6 +214,7 @@ export function calculateWinProbability({
     spreadPct,
     favoredName,
     modelSource,
+    provider: bettingOdds.provider,
     handicap: bettingOdds.handicap,
     overUnder: bettingOdds.overUnderValue,
     overUnderText: bettingOdds.overUnder,

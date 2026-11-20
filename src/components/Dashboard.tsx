@@ -1020,12 +1020,33 @@ export const Dashboard: React.FC = () => {
         {/* SECTION 1: HERO SPOTLIGHT (Supports Multi-Threat Red Zone Spotlights) */}
         {!isLoading && decoratedSpotlightMatchups.length > 0 && (
           decoratedSpotlightMatchups.length === 1 ? (
-            <HeroMatchup
-              event={decoratedSpotlightMatchups[0]}
-              autoRedZone={autoRedZoneSpotlight}
-              onToggleAutoRedZone={() => setAutoRedZoneSpotlight((prev) => !prev)}
-              isAutoSelectedRedZone={isAutoSelectedRedZone}
-            />
+            <div className="space-y-2">
+              {/* Page-level spotlight control: Auto Red Zone steers which games get spotlighted, so it lives outside the card */}
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setAutoRedZoneSpotlight((prev) => !prev)}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 py-1.5 text-xs font-semibold border transition-all min-h-[44px] sm:min-h-[36px] ${
+                    autoRedZoneSpotlight
+                      ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 shadow-sm'
+                      : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
+                  }`}
+                  title={
+                    autoRedZoneSpotlight
+                      ? 'Auto Red Zone is ON: automatically spotlights whichever matchup is driving inside the 20-yard line'
+                      : 'Auto Red Zone is OFF: click to automatically follow active scoring threats'
+                  }
+                  aria-pressed={autoRedZoneSpotlight}
+                >
+                  <Flame className={`h-3.5 w-3.5 ${autoRedZoneSpotlight ? 'text-rose-400 fill-rose-400 animate-pulse' : 'text-slate-500'}`} />
+                  <span>Auto Red Zone: <strong className="font-bold text-white">{autoRedZoneSpotlight ? 'ON' : 'OFF'}</strong></span>
+                </button>
+              </div>
+              <HeroMatchup
+                event={decoratedSpotlightMatchups[0]}
+                isAutoSelectedRedZone={isAutoSelectedRedZone}
+              />
+            </div>
           ) : (
             <section className="space-y-4" aria-label="Simultaneous Red Zone Spotlights">
               {/* Multi-Threat Red Zone Header Banner */}
@@ -1066,8 +1087,6 @@ export const Dashboard: React.FC = () => {
                   <HeroMatchup
                     key={`multi-spotlight-${ev.id}`}
                     event={ev}
-                    autoRedZone={autoRedZoneSpotlight}
-                    onToggleAutoRedZone={() => setAutoRedZoneSpotlight((prev) => !prev)}
                     isAutoSelectedRedZone={true}
                     threatIndex={index + 1}
                     totalThreats={decoratedSpotlightMatchups.length}

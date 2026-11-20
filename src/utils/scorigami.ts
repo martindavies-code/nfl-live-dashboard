@@ -3,7 +3,7 @@
 //
 // A "scorigami" occurs when a final NFL score (winning-losing combination) has
 // NEVER appeared before in pro football history. We use the canonical lookup
-// table of all 1,097 unique historical scores through 2026 (source: scorigamicenter.com
+// table of all 1,097 unique historical scores, verified through Sep 2026 (source: scorigamicenter.com
 // & Pro Football Reference) and dynamic programming drive-simulation to:
 //   1. Determine whether the current score is already a scorigami.
 //   2. Estimate the % chance the game ends on a never-before-seen score.
