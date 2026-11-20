@@ -1,14 +1,7 @@
 // -----------------------------------------------------------------------------
-// Scorigami: score combination novelty calculator
-//
-// A "scorigami" occurs when a final NFL score (winning-losing combination) has
-// NEVER appeared before in pro football history. We use the canonical lookup
-// table of all 1,097 unique historical scores, verified through Sep 2026 (source: scorigamicenter.com
-// & Pro Football Reference) and dynamic programming drive-simulation to:
-//   1. Determine whether the current score is already a scorigami.
-//   2. Estimate the % chance the game ends on a never-before-seen score.
-//   3. Identify the most likely novel score and precisely WHEN / HOW it occurs.
-//   4. Provide the exact date, winning team, and losing team when a score last happened.
+// Scorigami: score combination novelty estimate against a fixed recorded dataset.
+// Coverage ends 24 Sep 2026. Absence is not proof of first-ever NFL novelty.
+// Estimates use independent team scoring in regulation, not a validated exact model.
 // -----------------------------------------------------------------------------
 
 import { HISTORICAL_OCCURRED, TOTAL_UNIQUE_SCORIGAMIS, type HistoricalScoreRecord } from './scorigamiHistoricalData.ts'
@@ -24,7 +17,7 @@ export interface ScorigamiOddsInput {
 }
 
 export interface ScorigamiInfo {
-  /** True if the current score pair has never occurred in NFL history */
+  /** True if the current score pair is absent from the recorded dataset */
   isCurrentScorigami: boolean
   /** Formatted probability string e.g. "6.3%", "18.2%", "< 0.1%", "100%" */
   chanceLabel: string
@@ -34,13 +27,7 @@ export interface ScorigamiInfo {
   mostLikelyNovel: string | null
   /** Display label for the most likely novel score */
   mostLikelyLabel: string
-  /**
-   * Explanation of WHEN / HOW this scorigami occurs:
-   * e.g. "Target: 36-23 (Pre-game projection)"
-   * or "When score reaches 32-22 (Needs +18 KC, +13 LAC)"
-   * or "Current score (25-18) is a Scorigami right now if it holds!"
-   * or "Final: Occurred 303x in NFL history (last: Green Bay Packers 20, New York Jets 17 on Sep 20, 2026)"
-   */
+  /** Dataset-scoped narrative; the estimate covers all unseen final scores. */
   whenScenario: string
   /** Total historical occurrences of the current score (0 if never occurred) */
   currentOccurrences: number
@@ -107,7 +94,7 @@ export function makeScoreKey(a: number, b: number): string {
 }
 
 /**
- * Check if a score pair has ever occurred in NFL history.
+ * Check if a score pair is present in the recorded dataset.
  */
 export function hasOccurred(a: number, b: number): boolean {
   return makeScoreKey(a, b) in HISTORICAL_OCCURRED
@@ -289,7 +276,7 @@ export function getScorigamiInfo(
       mostLikelyNovel: isCurrentScorigami ? key : null,
       mostLikelyLabel: isCurrentScorigami ? `${key} ✨` : key,
       whenScenario: isCurrentScorigami
-        ? `Final: absent from the recorded dataset (unique score #${TOTAL_UNIQUE_SCORIGAMIS + 1} in it)!`
+        ? `Final: ${key} is absent from the recorded dataset; this does not confirm a first-ever NFL score`
         : `Final: occurred ${currentOccurrences}x in the recorded dataset (last: ${lastGameSummary || `in ${lastSeenYear}`})`,
       currentOccurrences,
       lastSeenYear,
@@ -385,21 +372,23 @@ export function getScorigamiInfo(
     if (top && top.dh === 0 && top.da === 0) {
       const nextAlt = candidates.find((c) => c.dh > 0 || c.da > 0)
       whenScenario = nextAlt
-        ? `Current score (${key}) is novel if it holds! Next closest: ${nextAlt.score} (Needs +${nextAlt.dh} ${homeAbbr}, +${nextAlt.da} ${awayAbbr})`
-        : `Current score (${key}) is a Scorigami right now if score holds!`
+        ? `Current score (${key}) is absent from the recorded dataset. If it holds, the final score will also be absent. Next closest: ${nextAlt.score} (Needs +${nextAlt.dh} ${homeAbbr}, +${nextAlt.da} ${awayAbbr})`
+        : `Current score (${key}) is absent from the recorded dataset. If it holds, the final score will also be absent.`
     } else if (top) {
-      whenScenario = `Current score is novel! Next target: ${top.score} (Needs +${top.dh} ${homeAbbr}, +${top.da} ${awayAbbr})`
+      whenScenario = `Current score is absent from the recorded dataset. One possible final score: ${top.score} (Needs +${top.dh} ${homeAbbr}, +${top.da} ${awayAbbr})`
     } else {
-      whenScenario = `Current score (${key}) is a Scorigami right now if score holds!`
+      whenScenario = `Current score (${key}) is absent from the recorded dataset. If it holds, the final score will also be absent.`
     }
   } else if (top) {
     const homeDiff = top.dh > 0 ? `+${top.dh} ${homeAbbr}` : ''
     const awayDiff = top.da > 0 ? `+${top.da} ${awayAbbr}` : ''
     const diffStr = [homeDiff, awayDiff].filter(Boolean).join(', ')
-    whenScenario = `When score reaches ${top.score}${diffStr ? ` (Needs: ${diffStr})` : ''}`
+    whenScenario = `One possible unseen final score is ${top.score}${diffStr ? ` (Needs: ${diffStr})` : ''}`
   } else {
     whenScenario = 'No realistic Scorigami path remaining in regulation'
   }
+
+  if (gameState === 'in') whenScenario += '; the estimate covers every unseen final score, not only this route.'
 
   return {
     isCurrentScorigami,
