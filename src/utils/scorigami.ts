@@ -284,13 +284,13 @@ export function getScorigamiInfo(
     const chancePct = isCurrentScorigami ? 1 : 0
     return {
       isCurrentScorigami,
-      chanceLabel: isCurrentScorigami ? '100% — Historical Scorigami!' : '0% — Already Occurred',
+      chanceLabel: isCurrentScorigami ? '100% — Unseen in Dataset!' : '0% — Already Occurred',
       chancePct,
       mostLikelyNovel: isCurrentScorigami ? key : null,
       mostLikelyLabel: isCurrentScorigami ? `${key} ✨` : key,
       whenScenario: isCurrentScorigami
-        ? `Final: Novel score #${TOTAL_UNIQUE_SCORIGAMIS + 1} in NFL history!`
-        : `Final: Occurred ${currentOccurrences}x in NFL history (last: ${lastGameSummary || `in ${lastSeenYear}`})`,
+        ? `Final: absent from the recorded dataset (unique score #${TOTAL_UNIQUE_SCORIGAMIS + 1} in it)!`
+        : `Final: occurred ${currentOccurrences}x in the recorded dataset (last: ${lastGameSummary || `in ${lastSeenYear}`})`,
       currentOccurrences,
       lastSeenYear,
       lastDate,
@@ -379,7 +379,7 @@ export function getScorigamiInfo(
   let whenScenario = ''
   if (gameState === 'pre') {
     whenScenario = top
-      ? `Pre-game projection: Occurs if final score reaches ${top.score}`
+      ? `Pre-game projection: ${top.score} is the most likely unseen final score; the chance covers every unseen score, not only this one`
       : 'Low pre-game scorigami probability'
   } else if (isCurrentScorigami) {
     if (top && top.dh === 0 && top.da === 0) {

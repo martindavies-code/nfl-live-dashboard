@@ -69,7 +69,7 @@ test('Pre-game Scorigami projection calculates realistic ~6% novelty chance and 
   assert.equal(pre.isCurrentScorigami, false)
   assert.ok(pre.chancePct > 0.04 && pre.chancePct < 0.10)
   assert.ok(pre.mostLikelyNovel !== null)
-  assert.match(pre.whenScenario, /Pre-game projection: Occurs if final score reaches/)
+  assert.match(pre.whenScenario, /Pre-game projection: .+ is the most likely unseen final score; the chance covers every unseen score, not only this one/)
   // Bug 2: Pre-game must NEVER associate 0-0's 1943 history with an unplayed matchup
   assert.equal(pre.lastGameSummary, null, 'Pre-game must not show 0-0 historical summary')
   assert.equal(pre.currentOccurrences, 0, 'Pre-game currentOccurrences must be 0')
@@ -134,16 +134,16 @@ test('Post-game non-scorigami displays historical occurrences and last year', ()
   assert.equal(postCommon.chancePct, 0)
   assert.equal(postCommon.chanceLabel, '0% — Already Occurred')
   assert.ok(postCommon.currentOccurrences > 200)
-  assert.match(postCommon.whenScenario, /Final: Occurred \d+x in NFL history/)
+  assert.match(postCommon.whenScenario, /Final: occurred \d+x in the recorded dataset/)
 })
 
 test('Post-game genuine scorigami announces historical novelty', () => {
   const postNovel = getScorigamiInfo(43, 29, 0, 'post')
   assert.equal(postNovel.isCurrentScorigami, true)
   assert.equal(postNovel.chancePct, 1)
-  assert.equal(postNovel.chanceLabel, '100% — Historical Scorigami!')
+  assert.equal(postNovel.chanceLabel, '100% — Unseen in Dataset!')
   assert.equal(postNovel.mostLikelyNovel, '43-29')
-  assert.match(postNovel.whenScenario, /Final: Novel score #\d+ in NFL history!/)
+  assert.match(postNovel.whenScenario, /Final: absent from the recorded dataset \(unique score #\d+ in it\)!/)
 })
 
 test('Historic outlier scores and defensive resilience in Scorigami engine', () => {
@@ -189,5 +189,4 @@ test('Post-game non-scorigami displays exact last game matchup and date', () => 
   assert.equal(postCommon.lastGameSummary, 'Green Bay Packers 20, New York Jets 17 on Sep 20, 2026')
   assert.match(postCommon.whenScenario, /Green Bay Packers 20, New York Jets 17 on Sep 20, 2026/)
 })
-
 
