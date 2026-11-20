@@ -599,7 +599,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                     {homeRankDetail.change !== 0 && (
                       <span
                         className={`text-xs font-mono font-bold shrink-0 ${homeRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}
-                        title={`${homeRankDetail.change > 0 ? 'Up' : 'Down'} ${Math.abs(homeRankDetail.change)} from #${homeRankDetail.previousRank ?? 'unknown'} in the previous published edition`}
+                        title={`${homeRankDetail.change > 0 ? 'Up' : 'Down'} ${Math.abs(homeRankDetail.change)} from #${homeRankDetail.previousRank ?? 'unknown'} in the previous ${latestEdition.source.publisher.split(' / ')[0]} edition`}
                       >
                         {homeRankDetail.change > 0 ? `▲+${homeRankDetail.change}` : `▼${homeRankDetail.change}`}
                       </span>
