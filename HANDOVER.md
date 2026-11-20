@@ -1,34 +1,36 @@
-# HANDOVER — 2026-11-08 mobile scroll & header fixes
+# HANDOVER - 2026-11-20 matchup card clarity and provenance pass
 
-Branch `fix/mobile-header-scroll`, single scoped change set in `src/components/Dashboard.tsx`.
-
-## What Martin asked for (WhatsApp, 8 Nov 2026)
-
-1. Mobile week selector (W9 row) should scroll away instead of staying pinned.
-2. Keep the brand (NFL Command logo) plus sound and refresh controls frozen while scrolling.
-3. Tapping the logo should take you back to the top of the page and refresh.
-4. Investigate why Chrome on Android never hides the URL bar on scroll.
-5. Live games should be sorted so close games outrank blowouts (a 12-28 Q4 blowout sat second on the board).
+Branch `fix/matchup-card-clarity`. Scoped to the hero matchup card and its shared win-probability bar, requested by Martin on WhatsApp (20 Nov 2026) after a duplication/data-journalism review of the pre-game card, with his follow-up instruction to "verify everything".
 
 ## What changed
 
-- **Mobile week nav moved out of the sticky `<header>`** into normal flow between header and `<main>`, so it scrolls away with the page. The desktop week selector is unchanged (still inline in the sticky header at `sm` and up).
-- **Sticky header now keeps only the brand bar**: logo, sound toggle, refresh (plus desktop-only controls). Unchanged mechanism (`sticky top-0 z-50`).
-- **Logo is now a real `<button>` inside the `<h1>`**: tap scrolls to top (`smooth`, or `auto` when the OS requests reduced motion) and triggers the same guarded manual refresh as the Refresh button. If a refresh is already in flight it only scrolls, so the two controls never stack duplicate requests. Screen-reader announcement on activation; 44px touch target; focus ring preserved.
+**Duplication removed (pre-game card)**
+- Deleted the "Tale of the Tape" / "Vegas Consensus" / "Broadcast & Venue" three-column panel. Every fact it held was already shown elsewhere: ranks and records (team rows), win probability (main bar), spread and total (bar strip), Scorigami forecast (Scorigami block), broadcast crew and venue (footer strip and header).
+- Removed the second matchup-tier badge, the kickoff countdown badge and the second venue mention from that panel.
+- Removed the empty pre-game score dashes; scores render only for live and final games.
+- Record-derived decimal win percentages (.333 / .778) went away with the panel.
+- One broadcast block remains: the full-width "US Announcing Crew" footer, which carries the verification badge and sources.
 
-- **Live games are now ranked by competitiveness** (`sortLiveEventsByCompetitiveness` in `src/utils/winProbability.ts`, wired into `Dashboard.tsx` in place of `sortEventsFinishedLast`). Live games sort by win-probability closeness, then score margin, then stable feed order; upcoming games keep feed order; finished games stay last. A clock-weighted margin guard (a game can never rank tighter than 2.5x-5.5x its score margin, growing by quarter) means a missing or stale win probability cannot make a blowout look competitive, and the same margin counts for more late in a game. Spotlight hero and manual pins resolve games by id/power ranking, not list order, so they are unaffected. Regression tests cover Martin's exact case plus stale-probability, missing-probability, missing-score, and feed-stability paths.
+**Truthful labels and definitions**
+- The probability bar now states its actual method instead of a bare "Vegas Moneyline" tag: "DraftKings moneyline, margin removed", "DraftKings spread estimate", or "No odds yet, home-field baseline", with a tooltip explaining the derivation and that the ESPN feed publishes no odds timestamp. Live states still say ESPN FPI / live analytic model.
+- Rank pills now disclose their source on hover: publisher, edition week and verification date, and the movement arrow names the previous rank and edition.
+- Scorigami details define the metric: chance the final score has never occurred, from a drive-simulation estimate against the 1,097 unique historical final scores (scorigamicenter.com / Pro Football Reference, verified through Sep 2026).
+- Kickoff now shows the actual date with the time ("Sun 22 Nov, 18:00 GMT" in en-GB), not just a weekday.
+- Weather only appears for open-air venues; indoor venues show "Indoors" (uses the ESPN venue `indoor` flag, now typed on `NFLCompetition.venue`).
+- Team order is consistent: matchup rows, probability bar and odds all read away-then-home (the bar used to mirror them).
+- Dropped the 25/50/75 axis clutter under the probability bar; the 50% centre tick stays.
+- "Auto Red Zone" moved out of the card to a page-level control above the spotlight, since it steers the whole dashboard's spotlighting. The multi-threat banner keeps its own toggle.
 
-## URL bar investigation (no code change possible)
+## Verified against live sources (20 Nov 2026)
+- ESPN scoreboard feed for TB at DET (Sun 22 Nov 2026, 18:00 GMT): records 3-6 and 7-2, spread DET -6, total 45.5, moneyline -257/+212. The displayed 69.2/30.8 is exactly the de-vigged DraftKings moneyline. Single book, so "Vegas consensus" was wrong and is gone.
+- Ford Field: `indoor: true` in the ESPN feed, so the old "Cloudy" note was irrelevant; now suppressed.
+- Announcer registry: Kugler/Johnston/Williams (FOX) verified 2026-11-19 for this game.
+- Power ranks TB #16 / DET #3 come from the Yahoo Sports / FanSided Week 9 edition (verified 3 Nov), the latest in the registry. The edition is now named visibly beside each rank pill ("Yahoo Sports Wk 9") and on the tooltips, so touch users see the staleness without hovering. Note: the registry has no Week 10/11 edition, so ranks are ~2.5 weeks old at kickoff; the update:power-rankings script exists if a new edition should be ingested.
+- Scorigami dataset: 1,097 unique score keys (matches TOTAL_UNIQUE_SCORIGAMIS), 18,267 summed occurrences, latest recorded game 2026-09-24. Method limits: fixed empirical per-drive outcome distribution, independent team scoring (no endgame correlation), fractional drives interpolated, regulation only (no overtime), drive counts derived from odds-implied totals pre-game. Treat the 0.1% display precision as indicative, not exact.
 
-Measured the live page (8 Nov): the document scrolls at the root (`document.scrollingElement` = HTML, no inner scroll containers, no overflow/height locks on html/body/#root, no touch/wheel handlers). Those are the app-side conditions that can block Chrome Android's toolbar auto-hide, and the app passes all of them. Toolbar hide/show is controlled by the browser itself and cannot be forced from a page, so nothing in this app can be changed to make it hide. What Martin sees on his device/browser version is for him to compare against other sites on the same phone; there are public reports of Chrome/Android toolbar auto-hide regressions, but that does not diagnose his specific setup.
-
-## Verified before merge
-
-- `npm run lint` (oxlint) clean; `tsc` + production `vite build` pass.
-- Test suite: 246/248 pass. The 2 failures are the pre-existing network-dependent `gameHighlights` tests (live YouTube lookups) - they fail identically on unmodified `main` (f39594e) and are unrelated to this change.
-- Live verification on production after deploy (mobile viewport): week bar scrolls away, brand row stays pinned, logo tap returns to top and refreshes.
+## Checks
+- `npm run lint` clean, `npm run build` (tsc + vite) passes, `npm test` 250/250.
 
 ## Watchouts
-
-- The brand cluster is now a button: nested interactive markup must never be added inside it.
-- If Martin still reports the URL bar not hiding, do not add layout hacks (100vh wrappers, scroll containers) — those make it worse. The remaining lever is a PWA manifest with `display: standalone` (installed from Add to Home screen), which has no URL bar at all. Not implemented; needs his go-ahead.
+- The smaller game cards still have their own compact "Tale of the Tape" and a countdown badge; out of scope for this pass, same treatment would apply.
+- The ESPN odds feed carries no timestamp, so no "as of" can be shown for the line; a small visible caption under the probability bar now says so (no hover needed), and the tooltip repeats it.
