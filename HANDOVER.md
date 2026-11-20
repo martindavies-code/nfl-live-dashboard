@@ -14,7 +14,7 @@ Branch `fix/matchup-card-clarity`. Scoped to the hero matchup card and its share
 **Truthful labels and definitions**
 - The probability bar now states its actual method instead of a bare "Vegas Moneyline" tag: "DraftKings moneyline, margin removed", "DraftKings spread estimate", or "No odds yet, home-field baseline", with a tooltip explaining the derivation and that the ESPN feed publishes no odds timestamp. Live states still say ESPN FPI / live analytic model.
 - Rank pills now disclose their source on hover: publisher, edition week and verification date, and the movement arrow names the previous rank and edition.
-- Scorigami details define the metric: chance the final score has never occurred, from a drive-simulation estimate against the 1,097 unique historical final scores (scorigamicenter.com / Pro Football Reference, verified through Sep 2026).
+- Scorigami details define the metric: chance the final score has never occurred, from a drive-simulation estimate against the 1,097 unique historical final scores (scorigamicenter.com / Pro Football Reference, scores verified through 24 Sep 2026). The details panel also states the model limits: independent team scoring, regulation only, indicative rather than exact.
 - Kickoff now shows the actual date with the time ("Sun 22 Nov, 18:00 GMT" in en-GB), not just a weekday.
 - Weather only appears for open-air venues; indoor venues show "Indoors" (uses the ESPN venue `indoor` flag, now typed on `NFLCompetition.venue`).
 - Team order is consistent: matchup rows, probability bar and odds all read away-then-home (the bar used to mirror them).
@@ -30,6 +30,8 @@ Branch `fix/matchup-card-clarity`. Scoped to the hero matchup card and its share
 
 ## Checks
 - `npm run lint` clean, `npm run build` (tsc + vite) passes, `npm test` 250/250.
+
+- Header chip row now wraps at all widths; at desktop the half-width column clipped the "View Field Layout" button under the intelligence panel.
 
 ## Watchouts
 - The smaller game cards still have their own compact "Tale of the Tape" and a countdown badge; out of scope for this pass, same treatment would apply.

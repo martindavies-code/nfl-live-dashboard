@@ -370,7 +370,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
         {/* Block 1: Teams & Scores (Top-Left on Desktop, 6 columns) */}
         <div className={isMultiThreat ? "flex flex-col space-y-4" : "order-1 lg:order-1 col-span-12 lg:col-span-6 flex flex-col space-y-4 sm:space-y-6"}>
           {/* Quarter & Game Clock Banner */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-y-1.5 gap-x-2 border-b border-white/[0.06] pb-2.5 sm:pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-y-1.5 gap-x-2 border-b border-white/[0.06] pb-2.5 sm:pb-3">
             <div className="flex items-center gap-2 shrink-0">
               {isHalftime ? (
                 <span className="font-mono text-xs font-extrabold text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded border border-amber-500/40 uppercase tracking-wider flex items-center gap-1.5">
@@ -948,7 +948,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 <div className="mt-2.5 pt-2 border-t border-white/[0.06] space-y-1.5 text-xs text-slate-400">
                   {!isFinal && (
                     <div className="text-slate-500">
-                      Chance the final score has never occurred in NFL history. Drive-simulation estimate against {TOTAL_UNIQUE_SCORIGAMIS.toLocaleString()} unique historical final scores (scorigamicenter.com and Pro Football Reference, verified through Sep 2026).
+                      Chance the final score has never occurred in NFL history. Drive-simulation estimate against {TOTAL_UNIQUE_SCORIGAMIS.toLocaleString()} unique historical final scores (scorigamicenter.com and Pro Football Reference, scores verified through 24 Sep 2026). The estimate treats each team's scoring as independent and covers regulation time only; it is indicative, not an exact validated probability.
                     </div>
                   )}
                   {isFinal ? (
