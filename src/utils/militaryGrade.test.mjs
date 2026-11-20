@@ -457,13 +457,13 @@ test('Edge Case Audit: Scorigami under extreme blowouts and negative clock bound
   const res73_0 = getScorigamiInfo(73, 0, 0, 'post')
   assert.equal(res73_0.isCurrentScorigami, false)
   assert.equal(res73_0.chancePct, 0)
-  assert.ok(res73_0.whenScenario.includes('Occurred'))
+  assert.ok(res73_0.whenScenario.includes('occurred'))
 
   // Unprecedented blowout: 120-10 (never occurred in NFL history)
   const res120_10 = getScorigamiInfo(120, 10, 0, 'post')
   assert.equal(res120_10.isCurrentScorigami, true)
   assert.equal(res120_10.chancePct, 1)
-  assert.ok(res120_10.whenScenario.includes('Novel score'))
+  assert.ok(res120_10.whenScenario.includes('absent from the recorded dataset'))
 
   // Negative secondsLeft and NaN handling
   const resNegClock = getScorigamiInfo(14, 10, -500, 'in')
@@ -500,5 +500,4 @@ test('Resource Audit: Web Audio synthesizer handles muted and headless execution
   assert.doesNotThrow(() => playScoreChime(false))
   assert.doesNotThrow(() => playTactileClick(false))
 })
-
 
