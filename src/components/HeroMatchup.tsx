@@ -491,7 +491,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                     {awayRankDetail.change !== 0 && (
                       <span
                         className={`text-xs font-mono font-bold shrink-0 ${awayRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}
-                        title={`${awayRankDetail.change > 0 ? 'Up' : 'Down'} ${Math.abs(awayRankDetail.change)} from #${awayRankDetail.previousRank ?? 'unknown'} in the previous published edition`}
+                        title={`${awayRankDetail.change > 0 ? 'Up' : 'Down'} ${Math.abs(awayRankDetail.change)} from #${awayRankDetail.previousRank ?? 'unknown'} in the previous ${latestEdition.source.publisher.split(' / ')[0]} edition`}
                       >
                         {awayRankDetail.change > 0 ? `▲+${awayRankDetail.change}` : `▼${awayRankDetail.change}`}
                       </span>
