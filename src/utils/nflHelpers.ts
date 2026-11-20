@@ -603,11 +603,13 @@ export function formatLocalizedKickoff(
     const d = typeof dateVal === 'string' ? new Date(dateVal) : dateVal
     if (isNaN(d.getTime())) return 'Upcoming'
 
-    const weekdayOptions: Intl.DateTimeFormatOptions = {
+    const dateOptions: Intl.DateTimeFormatOptions = {
       weekday: 'short',
+      day: 'numeric',
+      month: 'short',
     }
     if (timeZone) {
-      weekdayOptions.timeZone = timeZone
+      dateOptions.timeZone = timeZone
     }
 
     const timeOptions: Intl.DateTimeFormatOptions = {
@@ -620,11 +622,11 @@ export function formatLocalizedKickoff(
       timeOptions.timeZone = timeZone
     }
 
-    const weekdayStr = d.toLocaleDateString(undefined, weekdayOptions)
+    const dateStr = d.toLocaleDateString(undefined, dateOptions)
     let timeStr = d.toLocaleTimeString(undefined, timeOptions)
     timeStr = timeStr.replace(/\b(GMT|UTC)[+-]0+(?::?0+)?\b/g, '$1')
 
-    return `${weekdayStr} ${timeStr}`
+    return `${dateStr}, ${timeStr}`
   } catch {
     return 'Upcoming'
   }
@@ -1231,4 +1233,3 @@ export function parseWinLossRecord(recordStr?: string | null): {
 
   return { wins, losses, ties, summary, winPctString }
 }
-
