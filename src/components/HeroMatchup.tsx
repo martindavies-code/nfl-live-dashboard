@@ -34,7 +34,7 @@ import {
   Calendar,
   ExternalLink,
 } from 'lucide-react'
-import { getScorigamiInfo, getGameSecondsRemaining, TOTAL_UNIQUE_SCORIGAMIS } from '../utils/scorigami'
+import { getScorigamiInfo, getGameSecondsRemaining, TOTAL_UNIQUE_SCORIGAMIS, SCORIGAMI_DATASET_COVERAGE_END_LABEL } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
 import {
   getTeamPowerRank,
@@ -912,7 +912,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Sparkles className={`h-3.5 w-3.5 ${scorigamiInfo.isCurrentScorigami ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
-                  <span className="font-bold text-slate-300" title={isFinal ? "Final score checked against the dataset verified through 24 Sep 2026" : "Estimated chance the final score is absent from the dataset verified through 24 Sep 2026"}>
+                  <span className="font-bold text-slate-300" title={isFinal ? `Final score checked against the dataset verified through ${SCORIGAMI_DATASET_COVERAGE_END_LABEL}` : `Estimated chance the final score is absent from the dataset verified through ${SCORIGAMI_DATASET_COVERAGE_END_LABEL}`}>
                     {isFinal
                       ? (scorigamiInfo.isCurrentScorigami ? 'Final score absent from dataset' : 'Final score in dataset')
                       : (scorigamiInfo.isCurrentScorigami ? 'Live score absent from dataset' : 'Historical Scorigami Chance')}
@@ -947,7 +947,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               {showScorigamiDetails && (
                 <div className="mt-2.5 pt-2 border-t border-white/[0.06] space-y-1.5 text-xs text-slate-400">
                   <div className="text-slate-500">
-                    Dataset: {TOTAL_UNIQUE_SCORIGAMIS.toLocaleString()} unique final scores, verified through 24 Sep 2026 (scorigamicenter.com / Pro Football Reference). Games after that date are not included.
+                    Dataset: {TOTAL_UNIQUE_SCORIGAMIS.toLocaleString()} unique final scores, verified through {SCORIGAMI_DATASET_COVERAGE_END_LABEL} (scorigamicenter.com; FiveThirtyEight/nflverse data). Games after that date are not included.
                   </div>
                   {!isFinal && (
                     <div className="text-slate-500">
