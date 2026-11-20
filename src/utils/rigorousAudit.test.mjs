@@ -293,7 +293,7 @@ test('Boundary Audit: Scorigami handles massive blowouts and negative seconds re
   // Novel blowout score 110-3
   const novelBlowout = getScorigamiInfo(110, 3, 0, 'post')
   assert.equal(novelBlowout.isCurrentScorigami, true)
-  assert.equal(novelBlowout.chanceLabel, '100% — Historical Scorigami!')
+  assert.equal(novelBlowout.chanceLabel, '100% — Unseen in Dataset!')
 
   // Negative seconds remaining in live game
   const negSeconds = getScorigamiInfo(24, 21, -120, 'in')
