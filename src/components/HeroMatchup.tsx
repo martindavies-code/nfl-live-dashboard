@@ -17,9 +17,6 @@ import {
   isDarkLogoTeam,
   shouldDisplayLastPlayText,
   sanitizeClipboardField,
-  formatKickoffCountdown,
-  parseWinLossRecord,
-  resolveContrastingTeamColors,
 } from '../utils/nflHelpers'
 import {
   Flame,
@@ -35,9 +32,6 @@ import {
   Radio,
   CheckCircle2,
   Calendar,
-  Swords,
-  TrendingUp,
-  Tv,
   ExternalLink,
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining, TOTAL_UNIQUE_SCORIGAMIS } from '../utils/scorigami'
@@ -49,15 +43,13 @@ import {
   getTeamPowerRankDetail,
   getLatestPowerRankingsEdition,
 } from '../utils/powerRankings'
-import { calculateWinProbability, getBettingOddsInfo } from '../utils/winProbability'
+import { getBettingOddsInfo } from '../utils/winProbability'
 import { sanitizeUrl, FALLBACK_LOGO } from '../utils/normalizer'
 import { getGameHighlightInfo } from '../utils/gameHighlights'
 import { YouTubeIcon } from './YouTubeIcon'
 
 export interface HeroMatchupProps {
   readonly event: NFLEvent
-  readonly autoRedZone?: boolean
-  readonly onToggleAutoRedZone?: () => void
   readonly isAutoSelectedRedZone?: boolean
   readonly threatIndex?: number
   readonly totalThreats?: number
@@ -65,8 +57,6 @@ export interface HeroMatchupProps {
 
 export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
   event,
-  autoRedZone = true,
-  onToggleAutoRedZone,
   isAutoSelectedRedZone = false,
   threatIndex,
   totalThreats,
@@ -175,6 +165,12 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
     return `${name}${city}`.trim()
   }, [competition])
 
+  // Weather only informs when conditions can affect play; indoor venues say so instead
+  const isVenueIndoor = competition?.venue?.indoor === true
+  const pregameWeatherText = !isLive && !isFinal && !isVenueIndoor && typeof event?.weather?.displayValue === 'string'
+    ? event.weather.displayValue
+    : ''
+
   const formattedKickoff = useMemo(() => {
     return formatLocalizedKickoff(event?.date)
   }, [event?.date])
@@ -186,19 +182,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
   const awayRankDetail = useMemo(() => getTeamPowerRankDetail(awayAbbr), [awayAbbr])
   const homeRankDetail = useMemo(() => getTeamPowerRankDetail(homeAbbr), [homeAbbr])
   const latestEdition = useMemo(() => getLatestPowerRankingsEdition(), [])
+  // Visible edition provenance: touch users cannot hover, and the registry's latest
+  // edition can lag the current week, so the source and week sit beside the ranks.
+  const rankEditionLabel = `${latestEdition.source.publisher.split(' / ')[0]} Wk ${latestEdition.week}`
+  const rankEditionTitle = `${latestEdition.source.publisher} power rankings, Week ${latestEdition.week} edition, verified ${latestEdition.verifiedOn}`
   const matchupTier = useMemo(() => getMatchupTierInfo(awayRank, homeRank), [awayRank, homeRank])
-  const kickoffCountdown = useMemo(() => formatKickoffCountdown(event?.date), [event?.date])
-  const awayRecord = useMemo(() => parseWinLossRecord(awayComp?.records?.[0]?.summary), [awayComp?.records])
-  const homeRecord = useMemo(() => parseWinLossRecord(homeComp?.records?.[0]?.summary), [homeComp?.records])
-  const calculatedWinProb = useMemo(() => calculateWinProbability({
-    homeCompetitor: homeComp,
-    awayCompetitor: awayComp,
-    gameState: state,
-    status,
-    situation,
-    odds: competition?.odds,
-  }), [homeComp, awayComp, state, status, situation, competition?.odds])
-  const contrastingColors = useMemo(() => resolveContrastingTeamColors(homeComp, awayComp), [homeComp, awayComp])
 
   const downAndDistance = useMemo(() => {
     return formatDownAndDistance(situation)
@@ -352,27 +340,6 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2.5 text-xs text-slate-400 shrink-0">
-          {/* Interactive Auto Red Zone Toggle (Only on single hero, multi-threat banner has global toggle) */}
-          {!isMultiThreat && onToggleAutoRedZone && (
-            <button
-              onClick={onToggleAutoRedZone}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 py-1.5 sm:py-1 text-xs font-semibold border transition-all min-h-[44px] sm:min-h-[36px] ${
-                autoRedZone
-                  ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 shadow-sm'
-                  : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
-              }`}
-              title={
-                autoRedZone
-                  ? 'Auto Red Zone is ON: Automatically pins whichever matchup is driving inside the 20-yard line'
-                  : 'Auto Red Zone is OFF: Click to automatically follow active scoring threats'
-              }
-            >
-              <Flame className={`h-3.5 w-3.5 ${autoRedZone ? 'text-rose-400 fill-rose-400 animate-pulse' : 'text-slate-500'}`} />
-              <span className="hidden xs:inline">Auto Red Zone: <strong className="font-bold text-white">{autoRedZone ? 'ON' : 'OFF'}</strong></span>
-              <span className="xs:hidden">Auto RZ: <strong className="font-bold text-white">{autoRedZone ? 'ON' : 'OFF'}</strong></span>
-            </button>
-          )}
-
           {/* 1-Click Share Snapshot Button */}
           <button
             onClick={handleCopySnapshot}
@@ -443,12 +410,36 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               )}
             </div>
 
-            {venueText && (
-              <span className="flex items-center gap-1 text-xs text-slate-400 min-w-0 max-w-full sm:max-w-[280px] truncate" title={venueText}>
-                <MapPin className="h-3 w-3 text-slate-500 flex-shrink-0" />
-                <span className="truncate">{venueText}</span>
-              </span>
-            )}
+            <div className="flex items-center gap-2 min-w-0">
+              {venueText && (
+                <span className="flex items-center gap-1 text-xs text-slate-400 min-w-0 max-w-full sm:max-w-[280px] truncate" title={venueText}>
+                  <MapPin className="h-3 w-3 text-slate-500 flex-shrink-0" />
+                  <span className="truncate">{venueText}</span>
+                </span>
+              )}
+              {!isLive && !isFinal && isVenueIndoor && (
+                <span className="text-xs font-mono text-slate-500 shrink-0" title="Indoor venue: outside conditions do not affect play">
+                  Indoors
+                </span>
+              )}
+              {pregameWeatherText && (
+                <span className="text-xs font-mono text-slate-400 shrink-0" title="Open-air venue: forecast from the ESPN data feed">
+                  {pregameWeatherText}
+                </span>
+              )}
+              {!isLive && !isFinal && (
+                <button
+                  type="button"
+                  onClick={() => setShowPregameField((prev) => !prev)}
+                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400 min-h-[44px] sm:min-h-[36px] shrink-0"
+                  aria-expanded={showPregameField}
+                  aria-label={showPregameField ? "Hide field layout preview" : "View field layout preview"}
+                >
+                  <Compass className="h-3.5 w-3.5 text-sky-400" />
+                  <span>{showPregameField ? 'Hide Field Layout' : 'View Field Layout'}</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Teams Scoreboard Display */}
@@ -492,10 +483,24 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                   <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                     <span
                       className={`font-mono text-xs font-bold px-1.5 py-0.5 rounded border tabular-nums shrink-0 ${awayRankStyle.pillClass}`}
-                      title={`Published Power Rank #${awayRank}`}
+                      title={`Power rank #${awayRank} of 32: ${latestEdition.source.publisher}, Week ${latestEdition.week} edition, verified ${latestEdition.verifiedOn}`}
                       aria-label={`Power Rank #${awayRank}`}
                     >
                       #{awayRank}
+                    </span>
+                    {awayRankDetail.change !== 0 && (
+                      <span
+                        className={`text-xs font-mono font-bold shrink-0 ${awayRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                        title={`${awayRankDetail.change > 0 ? 'Up' : 'Down'} ${Math.abs(awayRankDetail.change)} from #${awayRankDetail.previousRank ?? 'unknown'} in the previous published edition`}
+                      >
+                        {awayRankDetail.change > 0 ? `▲+${awayRankDetail.change}` : `▼${awayRankDetail.change}`}
+                      </span>
+                    )}
+                    <span
+                      className="text-[10px] font-semibold text-slate-500 shrink-0"
+                      title={rankEditionTitle}
+                    >
+                      {rankEditionLabel}
                     </span>
                     <span className={`text-base sm:text-xl font-black tracking-tight leading-tight ${
                       isFinal
@@ -534,6 +539,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 </div>
               </div>
 
+              {(isLive || isFinal) && (
               <span className={`font-extrabold text-3xl sm:text-4xl tracking-tight tabular-nums shrink-0 ml-3 ${
                 isFinal
                   ? isAwayWinner
@@ -543,6 +549,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               }`}>
                 {awayScoreDisplay}
               </span>
+              )}
             </div>
 
             {/* Home Team */}
@@ -584,10 +591,24 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                   <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                     <span
                       className={`font-mono text-xs font-bold px-1.5 py-0.5 rounded border tabular-nums shrink-0 ${homeRankStyle.pillClass}`}
-                      title={`Published Power Rank #${homeRank}`}
+                      title={`Power rank #${homeRank} of 32: ${latestEdition.source.publisher}, Week ${latestEdition.week} edition, verified ${latestEdition.verifiedOn}`}
                       aria-label={`Power Rank #${homeRank}`}
                     >
                       #{homeRank}
+                    </span>
+                    {homeRankDetail.change !== 0 && (
+                      <span
+                        className={`text-xs font-mono font-bold shrink-0 ${homeRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                        title={`${homeRankDetail.change > 0 ? 'Up' : 'Down'} ${Math.abs(homeRankDetail.change)} from #${homeRankDetail.previousRank ?? 'unknown'} in the previous published edition`}
+                      >
+                        {homeRankDetail.change > 0 ? `▲+${homeRankDetail.change}` : `▼${homeRankDetail.change}`}
+                      </span>
+                    )}
+                    <span
+                      className="text-[10px] font-semibold text-slate-500 shrink-0"
+                      title={rankEditionTitle}
+                    >
+                      {rankEditionLabel}
                     </span>
                     <span className={`text-base sm:text-xl font-black tracking-tight leading-tight ${
                       isFinal
@@ -626,6 +647,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 </div>
               </div>
 
+              {(isLive || isFinal) && (
               <span className={`font-extrabold text-3xl sm:text-4xl tracking-tight tabular-nums shrink-0 ml-3 ${
                 isFinal
                   ? isHomeWinner
@@ -635,6 +657,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               }`}>
                 {homeScoreDisplay}
               </span>
+              )}
             </div>
           </div>
         </div>
@@ -809,214 +832,10 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               )}
             </div>
           ) : !isLive ? (
-            <div className="rounded-xl border border-white/[0.08] bg-[#0c1220] p-4 sm:p-5 shadow-sm space-y-4">
-              {/* Header Bar: Matchup Tier, Kickoff Countdown, and Field Radar Toggle */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-bold border ${matchupTier.badgeClass}`}>
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>{matchupTier.label}</span>
-                  </span>
-                  <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-mono font-semibold border ${
-                    kickoffCountdown.isImminent
-                      ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                      : 'bg-white/[0.05] text-slate-300 border-white/[0.08]'
-                  }`}>
-                    <Clock className="h-3 w-3 text-sky-400" />
-                    <span>{kickoffCountdown.label}</span>
-                  </span>
-                  {venueText && (
-                    <span className="text-xs text-slate-400 hidden xl:inline-flex items-center gap-1">
-                      <MapPin className="h-3 w-3 text-slate-500" />
-                      <span>{venueText}</span>
-                    </span>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowPregameField((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/[0.1] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-400 min-h-[44px] sm:min-h-[36px]"
-                  aria-expanded={showPregameField}
-                  aria-label={showPregameField ? "Hide field layout preview" : "View field layout preview"}
-                >
-                  <Compass className="h-3.5 w-3.5 text-sky-400" />
-                  <span>{showPregameField ? 'Hide Field Layout' : 'View Field Layout'}</span>
-                </button>
-              </div>
-
-              {/* 3-Column Pre-Game Tale of the Tape Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-                {/* Column 1: Tale of the Tape (Rankings & Records) */}
-                <div className="rounded-lg bg-white/[0.02] border border-white/[0.05] p-3.5 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
-                    <span className="text-xs uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
-                      <Swords className="h-3.5 w-3.5 text-amber-400" />
-                      Tale of the Tape
-                    </span>
-                    <a
-                      href={latestEdition.source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-mono text-sky-400 hover:underline inline-flex items-center gap-0.5"
-                      title={`${latestEdition.source.title} (${latestEdition.source.publisher}) — Verified ${latestEdition.verifiedOn}`}
-                    >
-                      <span>{latestEdition.source.publisher}</span>
-                      <ExternalLink className="h-2.5 w-2.5" />
-                    </a>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`font-mono text-xs px-1.5 py-0.2 rounded border tabular-nums ${awayRankStyle.pillClass}`}>
-                          #{awayRank}
-                        </span>
-                        <span className="font-bold text-white">{awayAbbr}</span>
-                        {awayRankDetail.change !== 0 && (
-                          <span className={`text-xs font-mono font-bold ${awayRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                            {awayRankDetail.change > 0 ? `▲+${awayRankDetail.change}` : `▼${awayRankDetail.change}`}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-slate-400 font-mono text-xs">
-                        {awayRecord.summary} <span className="text-slate-500">({awayRecord.winPctString})</span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`font-mono text-xs px-1.5 py-0.2 rounded border tabular-nums ${homeRankStyle.pillClass}`}>
-                          #{homeRank}
-                        </span>
-                        <span className="font-bold text-white">{homeAbbr}</span>
-                        {homeRankDetail.change !== 0 && (
-                          <span className={`text-xs font-mono font-bold ${homeRankDetail.change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                            {homeRankDetail.change > 0 ? `▲+${homeRankDetail.change}` : `▼${homeRankDetail.change}`}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-slate-400 font-mono text-xs">
-                        {homeRecord.summary} <span className="text-slate-500">({homeRecord.winPctString})</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Pre-Game Win Expectancy Mini-Bar */}
-                  <div className="space-y-1 pt-1 border-t border-white/[0.04]">
-                    <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="font-semibold text-slate-300">{awayAbbr} {calculatedWinProb.awayPct}%</span>
-                      <span className="text-xs text-slate-500 uppercase tracking-wider">Win Expectancy</span>
-                      <span className="font-semibold text-slate-300">{calculatedWinProb.homePct}% {homeAbbr}</span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden flex" role="progressbar" aria-valuenow={calculatedWinProb.awayPct} aria-valuemin={0} aria-valuemax={100} aria-label={`Win expectancy: ${awayAbbr} ${calculatedWinProb.awayPct}%, ${homeAbbr} ${calculatedWinProb.homePct}%`}>
-                      <div
-                        className="h-full transition-all duration-500"
-                        style={{
-                          width: `${calculatedWinProb.awayPct}%`,
-                          backgroundColor: contrastingColors.awayColor || '#38bdf8'
-                        }}
-                      />
-                      <div
-                        className="h-full transition-all duration-500"
-                        style={{
-                          width: `${calculatedWinProb.homePct}%`,
-                          backgroundColor: contrastingColors.homeColor || '#f97316'
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Column 2: Vegas Consensus & Market Line */}
-                <div className="rounded-lg bg-white/[0.02] border border-white/[0.05] p-3.5 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
-                    <span className="text-xs uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
-                      <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
-                      Vegas Consensus
-                    </span>
-                    <span className="text-xs font-mono text-slate-500">
-                      {bettingOdds.provider || 'Sportsbook'}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded bg-white/[0.03] p-2 border border-white/[0.04]">
-                      <span className="block text-xs font-medium text-slate-400 uppercase tracking-wider">Point Spread</span>
-                      <span className="block font-mono font-bold text-sm sm:text-base text-white mt-0.5">
-                        {bettingOdds.handicap || 'Line TBD'}
-                      </span>
-                    </div>
-                    <div className="rounded bg-white/[0.03] p-2 border border-white/[0.04]">
-                      <span className="block text-xs font-medium text-slate-400 uppercase tracking-wider">Total (Over/Under)</span>
-                      <span className="block font-mono font-bold text-sm sm:text-base text-white mt-0.5">
-                        {bettingOdds.overUnder || 'O/U TBD'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Scorigami Novelty Forecast */}
-                  <div className="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
-                    <span className="text-slate-400 flex items-center gap-1 text-xs">
-                      <Sparkles className="h-3 w-3 text-indigo-400" />
-                      Scorigami Forecast
-                    </span>
-                    <span className="font-mono text-xs font-semibold text-indigo-300">
-                      {scorigamiInfo.chanceLabel}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Column 3: Venue & Broadcast Operations */}
-                <div className="rounded-lg bg-white/[0.02] border border-white/[0.05] p-3.5 flex flex-col justify-between space-y-2.5">
-                  <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
-                    <span className="text-xs uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
-                      <Tv className="h-3.5 w-3.5 text-sky-400" />
-                      Broadcast & Venue
-                    </span>
-                    <span className="text-xs font-mono font-bold text-sky-300 bg-sky-950/60 px-1.5 py-0.2 rounded border border-sky-800/40">
-                      {broadcastDetails.usTv}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1.5 text-xs">
-                    <div>
-                      <span className="text-xs uppercase font-semibold text-slate-400 block tracking-wider">US Commentary Duo</span>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="font-bold text-white truncate">{broadcastDetails.announcers.leadDuo}</span>
-                        {broadcastDetails.announcers.verified && (
-                          <span title="Verified Broadcast Crew" className="inline-flex items-center text-emerald-400 shrink-0">
-                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {broadcastDetails.announcers.sideline && (
-                      <div className="text-xs text-slate-400 truncate">
-                        <span className="text-slate-500">Sideline: </span>
-                        <span className="text-slate-300">{broadcastDetails.announcers.sideline}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs pt-1.5 border-t border-white/[0.04] text-slate-400">
-                    <span className="truncate flex items-center gap-1">
-                      <MapPin className="h-3 w-3 text-slate-500 shrink-0" />
-                      {venueText || 'NFL Stadium'}
-                    </span>
-                    {event?.weather?.displayValue && (
-                      <span className="font-mono text-slate-300 shrink-0 ml-1">
-                        {event.weather.displayValue}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* On-Demand Field Layout Preview for Pre-Game */}
+            <div>
+              {/* Pre-game: every fact lives once above. This slot only hosts the on-demand field layout. */}
               {showPregameField && (
-                <div className="mt-4 pt-4 border-t border-white/[0.06]">
+                <div className="rounded-xl border border-white/[0.08] bg-[#0c1220] p-4 sm:p-5 shadow-sm">
                   <FieldDiagram
                     situation={situation}
                     competitors={competitors}
@@ -1093,7 +912,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
                   <Sparkles className={`h-3.5 w-3.5 ${scorigamiInfo.isCurrentScorigami ? 'text-indigo-400 animate-pulse' : 'text-slate-400'}`} />
-                  <span className="font-bold text-slate-300">
+                  <span className="font-bold text-slate-300" title="Chance the final score has never occurred in NFL history">
                     {isFinal
                       ? (scorigamiInfo.isCurrentScorigami ? '✨ Final Scorigami Achieved!' : 'Final Scorigami')
                       : (scorigamiInfo.isCurrentScorigami ? '✨ Live Scorigami in Progress' : 'Historical Scorigami Chance')}
@@ -1127,6 +946,11 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
 
               {showScorigamiDetails && (
                 <div className="mt-2.5 pt-2 border-t border-white/[0.06] space-y-1.5 text-xs text-slate-400">
+                  {!isFinal && (
+                    <div className="text-slate-500">
+                      Chance the final score has never occurred in NFL history. Drive-simulation estimate against {TOTAL_UNIQUE_SCORIGAMIS.toLocaleString()} unique historical final scores (scorigamicenter.com and Pro Football Reference, verified through Sep 2026).
+                    </div>
+                  )}
                   {isFinal ? (
                     scorigamiInfo.isCurrentScorigami ? (
                       <div className="text-emerald-300 font-medium">
@@ -1144,7 +968,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                     <>
                       {scorigamiInfo.mostLikelyNovel && (
                         <div className="flex items-center justify-between">
-                          <span>Most Likely Scorigami:</span>
+                          <span>Most likely novel score:</span>
                           <strong className="font-mono font-bold text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-700/40">
                             {scorigamiInfo.mostLikelyLabel}
                           </strong>
@@ -1154,12 +978,7 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                         <span className="font-semibold text-slate-300">When: </span>
                         {scorigamiInfo.whenScenario}
                       </div>
-                      {state === 'pre' ? (
-                        <div className="border-t border-white/[0.06] pt-1.5 text-slate-400">
-                          <span className="font-semibold text-slate-300">Target Score: </span>
-                          <span className="text-indigo-200 font-medium">Never occurred — would be a first in NFL history</span>
-                        </div>
-                      ) : scorigamiInfo.lastGameSummary ? (
+                      {state === 'pre' ? null : scorigamiInfo.lastGameSummary ? (
                         <div className="border-t border-white/[0.06] pt-1.5 text-slate-400">
                           <span className="font-semibold text-slate-300">Last Occurred: </span>
                           <strong className="text-amber-300 font-medium">{scorigamiInfo.lastGameSummary}</strong>
