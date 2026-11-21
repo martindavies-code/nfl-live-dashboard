@@ -231,8 +231,8 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     kickoffUtc: '2026-09-27T17:00Z',
   },
   '2026_REG_3_NE_JAX': {
-    videoId: 'MmmSabOctE8',
-    title: 'Tom Brady Highlights (Week 3) | Jaguars vs. Patriots | NFL',
+    videoId: 'Oi9HQlp-ysA',
+    title: 'New England Patriots vs Jacksonville Jaguars Game Highlights | 2026 NFL Season Week 3',
     kickoffUtc: '2026-09-27T17:00Z',
   },
   '2026_REG_3_MIN_TB': {
