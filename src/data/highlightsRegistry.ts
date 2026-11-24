@@ -493,8 +493,8 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     kickoffUtc: '2026-10-18T20:25Z',
   },
   '2026_REG_6_DAL_GB': {
-    videoId: '5xB0vJWbJG4',
-    title: 'Dallas Cowboys vs Green Bay Packers Game Highlights | 2026 NFL Season Week 6',
+    videoId: 'DL5svfnvWpQ',
+    title: 'Cowboys vs. Packers | NFL Week 6 Game Highlights',
     kickoffUtc: '2026-10-19T00:20Z',
   },
   '2026_REG_6_WSH_SF': {
@@ -805,7 +805,7 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
   },
 
   // =========================================================================
-  // 2026 Regular Season - Week 11 (12 Official NFL Highlights)
+  // 2026 Regular Season - Week 11 (13 Official NFL Highlights)
   // =========================================================================
   '2026_REG_11_IND_HOU': {
     videoId: 'E4M4HIAfJl4',
@@ -866,6 +866,11 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     videoId: 'ceMTl2eqYDA',
     title: 'Minnesota Vikings vs San Francisco 49ers Game Highlights | 2026 NFL Season Week 11 Mexico City Game',
     kickoffUtc: '2026-11-23T01:20Z',
+  },
+  '2026_REG_11_CIN_WSH': {
+    videoId: 'C3ZJX7on7OE',
+    title: 'Cincinnati Bengals vs Washington Commanders Game Highlights | 2026 NFL Season Week 11',
+    kickoffUtc: '2026-11-24T01:15Z',
   },
 
 }
