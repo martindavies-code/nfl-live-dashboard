@@ -231,8 +231,8 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     kickoffUtc: '2026-09-27T17:00Z',
   },
   '2026_REG_3_NE_JAX': {
-    videoId: 'MmmSabOctE8',
-    title: 'Tom Brady Highlights (Week 3) | Jaguars vs. Patriots | NFL',
+    videoId: 'Oi9HQlp-ysA',
+    title: 'New England Patriots vs Jacksonville Jaguars Game Highlights | 2026 NFL Season Week 3',
     kickoffUtc: '2026-09-27T17:00Z',
   },
   '2026_REG_3_MIN_TB': {
@@ -805,12 +805,67 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
   },
 
   // =========================================================================
-  // 2026 Regular Season - Week 11 (1 Official NFL Highlights)
+  // 2026 Regular Season - Week 11 (12 Official NFL Highlights)
   // =========================================================================
   '2026_REG_11_IND_HOU': {
     videoId: 'E4M4HIAfJl4',
     title: 'Indianapolis Colts vs Houston Texans Game Highlights | 2026 NFL Season Week 11',
     kickoffUtc: '2026-11-20T01:15Z',
+  },
+  '2026_REG_11_MIA_BUF': {
+    videoId: 'F69kepglAY0',
+    title: 'Miami Dolphins vs. Buffalo Bills Game Highlights | NFL 2026 Season Week 11',
+    kickoffUtc: '2026-11-22T18:00Z',
+  },
+  '2026_REG_11_NO_CHI': {
+    videoId: 'TAvO7hOMR70',
+    title: 'New Orleans Saints vs. Chicago Bears Game Highlights | NFL 2026 Season Week 11',
+    kickoffUtc: '2026-11-22T18:00Z',
+  },
+  '2026_REG_11_TEN_DAL': {
+    videoId: '8oWgHgf_c_w',
+    title: 'Tennessee Titans vs Dallas Cowboys Game Highlights | 2026 NFL Season Week 11',
+    kickoffUtc: '2026-11-22T18:00Z',
+  },
+  '2026_REG_11_ARI_KC': {
+    videoId: 'WwsNx--B79g',
+    title: 'Arizona Cardinals vs Kansas City Chiefs Game Highlights | 2026 NFL Season Week 11',
+    kickoffUtc: '2026-11-22T18:00Z',
+  },
+  '2026_REG_11_PIT_PHI': {
+    videoId: '9ORFm2xTKNs',
+    title: 'Pittsburgh Steelers vs. Philadelphia Eagles Game Highlights | 2026 NFL Season Week 11',
+    kickoffUtc: '2026-11-22T18:00Z',
+  },
+  '2026_REG_11_BAL_CAR': {
+    videoId: 'wdlsXc0by8U',
+    title: 'Baltimore Ravens vs. Carolina Panthers Game Highlights | 2026 NFL Season Week 11',
+    kickoffUtc: '2026-11-22T18:00Z',
+  },
+  '2026_REG_11_TB_DET': {
+    videoId: 'PWphJLZ89e4',
+    title: 'Tampa Bay Buccaneers vs Detroit Lions Game Highlights | 2026 NFL Season Week 11',
+    kickoffUtc: '2026-11-22T18:00Z',
+  },
+  '2026_REG_11_NYJ_LAC': {
+    videoId: 'gvZYsXcr_6g',
+    title: 'New York Jets vs. Los Angeles Chargers Highlights | NFL 2026 Season Week 11',
+    kickoffUtc: '2026-11-22T21:05Z',
+  },
+  '2026_REG_11_LV_DEN': {
+    videoId: 'i13fzifkiE8',
+    title: 'Las Vegas Raiders vs Denver Broncos Game Highlights | 2026 NFL Season Week 11',
+    kickoffUtc: '2026-11-22T21:25Z',
+  },
+  '2026_REG_11_JAX_NYG': {
+    videoId: 'VFJ5DTTNN9A',
+    title: 'Jacksonville Jaguars vs. New York Giants Game Highlights | NFL 2026 Season Week 11',
+    kickoffUtc: '2026-11-22T21:25Z',
+  },
+  '2026_REG_11_MIN_SF': {
+    videoId: 'ceMTl2eqYDA',
+    title: 'Minnesota Vikings vs San Francisco 49ers Game Highlights | 2026 NFL Season Week 11 Mexico City Game',
+    kickoffUtc: '2026-11-23T01:20Z',
   },
 
 }
