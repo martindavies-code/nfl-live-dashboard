@@ -493,8 +493,8 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     kickoffUtc: '2026-10-18T20:25Z',
   },
   '2026_REG_6_DAL_GB': {
-    videoId: 'DL5svfnvWpQ',
-    title: 'Cowboys vs. Packers | NFL Week 6 Game Highlights',
+    videoId: '5xB0vJWbJG4',
+    title: 'Dallas Cowboys vs Green Bay Packers Game Highlights | 2026 NFL Season Week 6',
     kickoffUtc: '2026-10-19T00:20Z',
   },
   '2026_REG_6_WSH_SF': {
