@@ -29,6 +29,7 @@ import {
   Check,
   CheckCircle2,
   Calendar,
+  ExternalLink,
 } from 'lucide-react'
 import { getScorigamiInfo, getGameSecondsRemaining, TOTAL_UNIQUE_SCORIGAMIS, SCORIGAMI_DATASET_COVERAGE_END_LABEL } from '../utils/scorigami'
 import { getGameBroadcastDetails } from '../utils/broadcastInfo'
@@ -159,7 +160,7 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   const periodAria = isOvertimeSituation(event) || (status?.period && status.period > 4)
     ? formatPeriodDisplay(status?.period ?? 5, 'aria')
     : `Quarter ${status.period}`
-  const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in ${periodAria} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''} US broadcast on ${broadcastDetails.usTv}, ${broadcastDetails.announcers.verified ? `commentary by ${broadcastDetails.announcers.leadDuo}` : 'commentary crew TBD'}.`
+  const cardAriaLabel = `${awayAbbr} at ${homeAbbr}, ${isLive ? `Live in ${periodAria} with ${status.displayClock} remaining` : isFinal ? 'Final' : formattedKickoff}. Current score: ${awayAbbr} ${awayComp?.score || 0}, ${homeAbbr} ${homeComp?.score || 0}.${isRedZone ? ' Active Red Zone scoring threat!' : ''} US broadcast on ${broadcastDetails.usTv}, ${broadcastDetails.announcers.verified ? `commentary by ${broadcastDetails.announcers.leadDuo}` : 'commentary crew not yet published'}.`
 
   return (
     <article
@@ -615,10 +616,32 @@ export const GameCard: React.FC<GameCardProps> = memo(({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1.5 text-slate-200 pt-0.5 font-medium">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-200 pt-0.5 font-medium">
             <span className={broadcastDetails.announcers.verified ? 'text-white font-semibold' : 'text-amber-300/90 italic'}>
               {broadcastDetails.announcers.leadDuo}
             </span>
+            {!broadcastDetails.announcers.verified &&
+              broadcastDetails.announcers.weekSources
+                ?.filter((s) => {
+                  try {
+                    return new URL(s.url).protocol === 'https:'
+                  } catch {
+                    return false
+                  }
+                })
+                .slice(0, 2)
+                .map((src) => (
+                  <a
+                    key={src.url}
+                    href={src.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-sky-400 hover:text-sky-300 underline underline-offset-2"
+                  >
+                    <span>{src.label}</span>
+                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                  </a>
+                ))}
           </div>
           {broadcastDetails.announcers.sideline && (
             <div className="text-xs text-slate-400">

@@ -2,27 +2,43 @@ name: Weekly NFL Announcer Audit
 
 on:
   schedule:
-    # Run Wednesday-Friday at 17:00 UTC (noon ET). The weekly pairings list
-    # (Yahoo / 506sports-derived) publishes in the days before a week's first
-    # game; Week 11's landed Wednesday 15:25 UTC, so 17:00 keeps even an
-    # on-time fire after a same-day publication. This repo's scheduled runs
-    # actually fire ~6-8h late, putting real ingestion Wednesday evening,
-    # before the first game (Thu 8pm ET; Wed 8pm ET in holiday weeks such as
-    # Thanksgiving 2026, whose games enter the audit's 72h look-ahead before
-    # Thursday).
-    - cron: '0 17 * * 3,4,5'
+    # Run Mon-Sat at 06:00 UTC (01:00 ET) and a second pass 6 hours later at 12:00 UTC (07:00 ET).
+    # Two daily passes ensure even a 6-8 hour GitHub Actions cron delay runs ahead of Wed/Thu/Fri/Sat
+    # holiday kickoffs and captures same-day network announcements.
+    - cron: '0 6 * * 1-6'
+    - cron: '0 12 * * 1-6'
   workflow_dispatch:
+    inputs:
+      weeks:
+        description: 'Number of upcoming NFL weeks to check (defaults to 2)'
+        required: false
+        default: '2'
+        type: string
+      url:
+        description: 'Optional article URL(s) to ingest (space or comma separated)'
+        required: false
+        default: ''
+        type: string
+      confirm_single_source:
+        description: 'Allow single-source manual confirmation when supplying a manual URL'
+        required: false
+        default: false
+        type: boolean
   push:
     paths:
       - 'src/data/announcerRegistry.ts'
       - 'scripts/audit-announcers.mjs'
+      - 'scripts/update-announcers.mjs'
+      - 'scripts/announcer-sources.json'
 
 permissions:
   contents: write
   actions: write
+  issues: write
 
 jobs:
   audit-announcers:
+    if: github.event_name != 'push' || github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -38,7 +54,21 @@ jobs:
         run: npm ci
 
       - name: Pre-audit - scrape announcer pairings
-        run: npm run update:announcers -- --weeks 2
+        env:
+          INPUT_WEEKS: ${{ github.event.inputs.weeks || '2' }}
+          INPUT_URL: ${{ github.event.inputs.url || '' }}
+          INPUT_CONFIRM: ${{ github.event.inputs.confirm_single_source || 'false' }}
+        run: |
+          ARGS=(--weeks "$INPUT_WEEKS" --report-file /tmp/announcer-update-report.json)
+          if [ -n "$INPUT_URL" ]; then
+            for u in ${INPUT_URL//,/ }; do
+              [ -n "$u" ] && ARGS+=(--url "$u")
+            done
+          fi
+          if [ "$INPUT_CONFIRM" = "true" ]; then
+            ARGS+=(--confirm-single-source)
+          fi
+          npm run update:announcers -- "${ARGS[@]}"
 
       - name: Commit and push registry updates
         id: commit
@@ -53,9 +83,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/data/announcerRegistry.ts
-          # [skip ci] stops this bot push re-triggering this audit workflow (which
-          # watches the registry path), so the Pages deploy is dispatched explicitly below.
-          git commit -m "chore: auto-update NFL announcer registry [skip ci]"
+          git commit -m "chore: auto-update NFL announcer registry"
           git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref_name }}
           echo "committed=true" >> "$GITHUB_OUTPUT"
 
@@ -66,4 +94,63 @@ jobs:
         run: gh workflow run deploy.yml --ref ${{ github.ref_name }}
 
       - name: Run Announcer Audit against live NFL schedule
-        run: npm run audit:announcers -- --within-hours 72 --weeks 2
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_WEEKS: ${{ github.event.inputs.weeks || '2' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set +e
+          node --experimental-strip-types scripts/audit-announcers.mjs \
+            --within-hours 72 \
+            --weeks "${INPUT_WEEKS:-2}" \
+            --update-report /tmp/announcer-update-report.json \
+            --report-file /tmp/announcer-audit-report.json
+          AUDIT_EXIT=$?
+          set -e
+
+          ISSUE_TITLE="Announcer crews missing"
+          OPEN_NUM=$(gh issue list --state open --search "\"$ISSUE_TITLE\" in:title" --json number,title --jq ".[] | select(.title == \"$ISSUE_TITLE\") | .number" | head -n 1)
+
+          if [ "$AUDIT_EXIT" -eq 0 ]; then
+            if [ -n "$OPEN_NUM" ]; then
+              gh issue close "$OPEN_NUM" --comment "✅ Announcer audit passed: every game kicking off within 72 hours now has a verified crew in \`src/data/announcerRegistry.ts\`."
+            fi
+            exit 0
+          fi
+
+          export AUDIT_EXIT
+          node -e '
+            const fs = require("node:fs");
+            const audit = fs.existsSync("/tmp/announcer-audit-report.json")
+              ? JSON.parse(fs.readFileSync("/tmp/announcer-audit-report.json", "utf8"))
+              : { missingSoon: [], errors: ["Audit exited with code " + process.env.AUDIT_EXIT] };
+            const lines = [
+              "Automated announcer audit failed (`exit " + process.env.AUDIT_EXIT + "`).",
+              "",
+              "Workflow run: " + process.env.RUN_URL,
+              "",
+            ];
+            if (audit.missingSoon && audit.missingSoon.length) {
+              lines.push("### Games within 72h missing verified crews");
+              for (const m of audit.missingSoon) {
+                const why = m.detail ? `${m.reason} — ${m.detail}` : m.reason;
+                lines.push(`- **W${m.week} ${m.away} @ ${m.home}** (${m.kickoff}, ${m.networks || "network TBD"}): ${why}`);
+              }
+              lines.push("");
+            }
+            if (audit.errors && audit.errors.length) {
+              lines.push("### Audit errors");
+              for (const e of audit.errors) lines.push(`- ${e}`);
+              lines.push("");
+            }
+            lines.push("See README.md for manual fallback instructions (`scripts/announcer-sources.json`, `workflow_dispatch` `url` input, or updating `src/data/announcerRegistry.ts`).");
+            fs.writeFileSync("/tmp/announcer-issue-body.md", lines.join("\n"));
+          '
+
+          if [ -n "$OPEN_NUM" ]; then
+            gh issue edit "$OPEN_NUM" --body-file /tmp/announcer-issue-body.md
+          else
+            gh issue create --title "$ISSUE_TITLE" --body-file /tmp/announcer-issue-body.md
+          fi
+
+          exit "$AUDIT_EXIT"

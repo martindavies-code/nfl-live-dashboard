@@ -38,15 +38,19 @@ Data is streamed directly via the [ESPN NFL Scoreboard API](https://site.api.esp
 
 ### 4. 🎙️ Fact-Checked Broadcast & Announcer Intelligence (`broadcastInfo.ts`)
 
-- **Zero-Guessing Sunday Afternoon Slates**: Sunday afternoon regional games across CBS and FOX rotate weekly (7 CBS crews and 5 FOX crews in 2026). They are **never guessed or inferred**. Until networks officially announce pairings (typically Tuesday/Wednesday of game week), unannounced matchups strictly display **"Crew TBA / Awaiting confirmation"**.
+- **Zero-Guessing Sunday Afternoon Slates**: Sunday afternoon regional games across CBS and FOX rotate weekly (7 CBS crews and 5 FOX crews in 2026). They are **never guessed or inferred**. Until networks officially announce pairings (typically Tuesday/Wednesday of game week), unannounced matchups strictly display **"Crew not yet published"** (with a link to the week's broadcast source when available).
 - **Permanent Primetime Franchise Crews**:
   - **Thursday Night Football (Prime Video)**: **Al Michaels & Kirk Herbstreit**, sideline: **Kaylee Hartung**
   - **Sunday Night Football (NBC)**: **Mike Tirico & Cris Collinsworth**, sideline: **Melissa Stark**
   - **Monday Night Football (ESPN / ABC)**: **Joe Buck & Troy Aikman**, sideline: **Lisa Salters**
 - **Automated Fetching & Audit Tooling**:
-  - `npm run fetch:announcers`: Automatically previews or ingests confirmed announcer pairings for any week (`--week <N>`). Auto-populates the 3 permanent primetime franchises and parses published weekly pairings from verified sources (`--url <article_url> --apply`).
-  - `npm run audit:announcers`: Live integrity audit comparing registry against ESPN's active schedule, alerting if any game kicking off within 48 hours lacks verified crew data.
-  - `npm test`: Enforces strict data invariants (valid full names, no concurrent double-bookings for any commentator, verified HTTPS sources, and strict week/season matching).
+  - `npm run update:announcers -- --weeks 2`: Discovers weekly pairings from manual URLs, Bing News RSS, and secondary search feeds (Awful Announcing search RSS2 / Yahoo Sports RSS / DuckDuckGo). Writes a game only when **two independent sources agree** (or one source with `--confirm-single-source`). Conflicting sources are never written.
+  - `npm run audit:announcers -- --within-hours 72 --weeks 2`: Live integrity audit comparing `src/data/announcerRegistry.ts` against ESPN's 10-day calendar schedule, failing if any game kicking off within 72 hours lacks verified crew data.
+  - `npm test`: Enforces strict data invariants (valid full names, no concurrent double-bookings for overlapping kickoffs, verified HTTPS sources, and strict week/season matching) plus parser and holiday-week calendar fixture tests.
+- **Manual Announcer Fallback & Alerting**:
+  - **Run the workflow by hand**: Open **Actions → Weekly NFL Announcer Audit → Run workflow** (or run `gh workflow run weekly-announcer-audit.yml -f weeks=2 -f url="<url1>,<url2>"`). Set `confirm_single_source` to `true` only if you have manually verified a single article and want it written without waiting for a second source.
+  - **Add a source URL**: Either pass URL(s) in the workflow's `url` input (or locally with `npm run update:announcers -- --url <url1> --url <url2>`), or edit `scripts/announcer-sources.json` (adding URLs under `byWeek["<week>"]` as plain strings or `{ "url": "...", "confirmed": true }`) and push to `main` — pushing `scripts/announcer-sources.json` automatically triggers the audit workflow.
+  - **Read the GitHub issue**: Whenever any game kicking off within 72 hours has no verified crew (or ESPN is unreachable), the workflow fails (triggering a GitHub failure email) and opens or updates a single issue titled **`Announcer crews missing`**. Each listed game includes its kickoff time, network, and the exact reason (`no pairing found`, `single source only`, `TBA crew`, `team name not parsed`, `ambiguous`, or `kickoff outside the week window`). Once verified crews are added and the audit passes, the issue closes automatically.
 - **Dual UK & US Coverage**: Derives UK television channels (Sky Sports NFL, Channel 5, 5Action), UK radio (talkSPORT 2, BBC Radio 5 Live), and studio pundits alongside US telecast crews.
 
 ### 5. 🎯 Anti-Pattern Free Editorial Design

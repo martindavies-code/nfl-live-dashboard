@@ -1,5 +1,5 @@
 import type { NFLEvent } from '../types/nfl'
-import { findVerifiedCrew, type AnnouncerSource } from '../data/announcerRegistry.ts'
+import { findVerifiedCrew, findWeekAnnouncerSources, type AnnouncerSource } from '../data/announcerRegistry.ts'
 
 export interface BroadcastAnnouncers {
   playByPlay: string
@@ -14,6 +14,8 @@ export interface BroadcastAnnouncers {
    */
   verified: boolean
   sources: AnnouncerSource[]
+  /** Source links for the same NFL week (shown when this specific game's crew is not yet published). */
+  weekSources?: AnnouncerSource[]
   verifiedOn?: string
 }
 
@@ -40,8 +42,8 @@ const TIER_1_TEAMS = new Set([
 const CREW_TBA: BroadcastAnnouncers = {
   playByPlay: 'TBA',
   analyst: 'TBA',
-  leadDuo: 'Crew TBA',
-  fullCrew: 'TBA (not yet confirmed)',
+  leadDuo: 'Crew not yet published',
+  fullCrew: 'Crew not yet published',
   verified: false,
   sources: [],
 }
@@ -240,8 +242,15 @@ export function getVerifiedAnnouncers(
     }
   }
 
-  // All other games (Sunday afternoon CBS/FOX, London games, etc.) remain TBA — names are NEVER guessed.
-  return { announcers: { ...CREW_TBA, sources: [] } }
+  // All other games (Sunday afternoon CBS/FOX, London games, etc.) remain unpublished — names are NEVER guessed.
+  const weekSources = findWeekAnnouncerSources(event?.season?.year, event?.week?.number)
+  return {
+    announcers: {
+      ...CREW_TBA,
+      sources: [],
+      ...(weekSources.length ? { weekSources } : {}),
+    },
+  }
 }
 
 /**

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node --test --experimental-strip-types src/data/*.test.mjs src/services/*.test.mjs src/utils/*.test.mjs",
+    "test": "node --test --experimental-strip-types src/data/*.test.mjs src/services/*.test.mjs src/utils/*.test.mjs scripts/*.test.mjs",
     "test:matchup": "node scripts/verify-matchup-states.mjs",
     "test:browser": "node scripts/headless-runner.mjs",
     "preview": "vite preview",

@@ -1,0 +1,5 @@
+{
+  "description": "Manual NFL announcer source URLs checked before automated search discovery. Add URLs under 'urls' (all weeks) or 'byWeek' (keyed by week number string, e.g. '13'). Entries can be plain URL strings or objects { url, label?, confirmed? }.",
+  "urls": [],
+  "byWeek": {}
+}

@@ -29,7 +29,7 @@ const NAMES_NEVER_GUESSED = [
 
 function assertTba(info) {
   assert.equal(info.announcers.verified, false)
-  assert.equal(info.announcers.leadDuo, 'Crew TBA')
+  assert.equal(info.announcers.leadDuo, 'Crew not yet published')
   assert.equal(info.announcers.playByPlay, 'TBA')
   assert.equal(info.announcers.sideline, undefined)
   assert.deepEqual(info.announcers.sources, [])
@@ -39,7 +39,7 @@ function assertTba(info) {
 }
 
 // ---------------------------------------------------------------------------
-// Network / UK coverage (unchanged behaviour) — announcers are TBA when unverified
+// Network / UK coverage (unchanged behaviour) — announcers are not yet published when unverified
 // ---------------------------------------------------------------------------
 
 test('Broadcast: Monday Night Football resolves ESPN / ABC, Sky Sports & Channel 5 — permanent crew Joe Buck & Troy Aikman', () => {
@@ -78,7 +78,7 @@ test('Broadcast: Thursday Night Football resolves Amazon Prime Video — permane
   assert.equal(info.announcers.verified, true)
 })
 
-test('Broadcast: Thursday games on CBS or FOX (Thanksgiving) NEVER guess Al Michaels — stay Crew TBA', () => {
+test('Broadcast: Thursday games on CBS or FOX (Thanksgiving) NEVER guess Al Michaels — stay Crew not yet published', () => {
   // Thanksgiving 4:30pm ET (21:30 UK) / 6:30pm ET (23:30 UK) on CBS/FOX
   const cbsThursday = getGameBroadcastDetails(
     game('CHI', 'DET', { week: 99, date: '2026-11-26T21:30:00Z', network: 'CBS', name: 'Bears at Lions' })
@@ -165,7 +165,7 @@ test('Broadcast: Null and empty event handling is fully resilient and never cras
   const empty = getGameBroadcastDetails(null)
   assert.ok(empty.ukTv)
   assert.ok(empty.ukRadio)
-  assert.equal(empty.announcers.leadDuo, 'Crew TBA')
+  assert.equal(empty.announcers.leadDuo, 'Crew not yet published')
   assert.equal(empty.announcers.verified, false)
 
   const emptyObj = getGameBroadcastDetails({})
@@ -316,3 +316,14 @@ test('Broadcast: Prime/Amazon network naming, Thursday window fallback, and inva
   assert.ok(invalidDateGame)
 })
 
+test('Broadcast: unverified game in a week with known sources shows "Crew not yet published" and links to weekSources', () => {
+  // Week 12 has verified sources in ANNOUNCER_REGISTRY, but KC vs DAL is not a Week 12 matchup
+  const info = getGameBroadcastDetails(
+    game('KC', 'DAL', { week: 12, season: 2026, date: '2026-11-29T18:00:00Z', network: 'CBS' })
+  )
+  assertTba(info)
+  assert.ok(Array.isArray(info.announcers.weekSources) && info.announcers.weekSources.length > 0)
+  for (const s of info.announcers.weekSources) {
+    assert.equal(new URL(s.url).protocol, 'https:')
+  }
+})

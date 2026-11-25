@@ -1021,15 +1021,37 @@ export const HeroMatchup: React.FC<HeroMatchupProps> = memo(({
                 ) : (
                   <span
                     className="inline-flex items-center gap-0.5 text-xs font-semibold text-amber-400 shrink-0"
-                    title="Announce team not yet confirmed by the network — names are never guessed"
+                    title="Announce team not yet published by the network — names are never guessed"
                   >
                     <Clock className="h-3 w-3" aria-hidden="true" />
                     <span>Awaiting confirmation</span>
                   </span>
                 )}
               </div>
-              <div className="text-sm font-bold text-white mt-0.5 truncate">
-                {broadcastDetails.announcers.leadDuo}
+              <div className="text-sm font-bold text-white mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span className="truncate">{broadcastDetails.announcers.leadDuo}</span>
+                {!broadcastDetails.announcers.verified &&
+                  broadcastDetails.announcers.weekSources
+                    ?.filter((s) => {
+                      try {
+                        return new URL(s.url).protocol === 'https:'
+                      } catch {
+                        return false
+                      }
+                    })
+                    .slice(0, 2)
+                    .map((src) => (
+                      <a
+                        key={src.url}
+                        href={src.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-sky-400 hover:text-sky-300 underline underline-offset-2 shrink-0"
+                      >
+                        <span>{src.label}</span>
+                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                      </a>
+                    ))}
               </div>
             </div>
           </div>

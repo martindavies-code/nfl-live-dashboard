@@ -8,7 +8,7 @@
  *  3. Entries are keyed by season + week + the two teams. A crew never carries over to another
  *     week, even for the same matchup.
  *  4. Use ESPN's team abbreviations (the Patriots are `NE` here; the UI's `FNE` is normalised).
- *  5. If a game has no entry the UI shows "Crew TBA" rather than guessing.
+ *  5. If a game has no entry the UI shows "Crew not yet published" rather than guessing.
  *
  * Weekly workflow: run `npm run audit:announcers`, find the published pairings
  * (506sports.com, network press releases, or the Akron Beacon Journal / Yahoo weekly list),
@@ -1058,7 +1058,7 @@ function matchupKey(a: string, b: string): string {
  * Strict lookup: matches by season + week + both teams.
  * If season/week are missing from the caller (e.g. lightweight event object or partial feed),
  * resolves by scheduled kickoff date or by unambiguous regular-season matchup.
- * Returns undefined (=> "Crew TBA") rather than guessing.
+ * Returns undefined (=> "Crew not yet published") rather than guessing.
  */
 export function findVerifiedCrew(
   season: number | undefined,
@@ -1086,4 +1086,23 @@ export function findVerifiedCrew(
   }
 
   return undefined
+}
+
+/**
+ * Returns unique source links already recorded for a given season and week.
+ * Used by the UI to link to the week's broadcast source when an individual game crew is not yet published.
+ */
+export function findWeekAnnouncerSources(
+  season: number | undefined,
+  week: number | undefined
+): AnnouncerSource[] {
+  if (typeof season !== 'number' || typeof week !== 'number') return []
+  const byUrl = new Map<string, AnnouncerSource>()
+  for (const g of ANNOUNCER_REGISTRY) {
+    if (g.season !== season || g.week !== week) continue
+    for (const src of g.sources) {
+      if (src.url && !byUrl.has(src.url)) byUrl.set(src.url, src)
+    }
+  }
+  return [...byUrl.values()]
 }

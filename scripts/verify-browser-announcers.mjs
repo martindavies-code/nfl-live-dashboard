@@ -52,6 +52,7 @@ preview.stdout.on('data', async (buf) => {
             l.includes('Tirico') ||
             l.includes('Michaels') ||
             l.includes('Buck') ||
+            l.includes('Crew not yet published') ||
             l.includes('Crew TBA')
           ) || 'NOT FOUND';
           const sidelineLine = lines.find((l) => l.startsWith('Sideline:')) || '';
