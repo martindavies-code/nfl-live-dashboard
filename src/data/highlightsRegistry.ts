@@ -873,6 +873,20 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     kickoffUtc: '2026-11-24T01:15Z',
   },
 
+  // =========================================================================
+  // 2026 Regular Season - Week 12 (2 Official NFL Highlights)
+  // =========================================================================
+  '2026_REG_12_GB_LAR': {
+    videoId: '__40m4hxmdA',
+    title: 'Green Bay Packers vs Los Angeles Rams Game Highlights | 2026 NFL Season Week 12',
+    kickoffUtc: '2026-11-26T01:00Z',
+  },
+  '2026_REG_12_CHI_DET': {
+    videoId: '6mDrkExeNSY',
+    title: 'Chicago Bears vs. Detroit Lions Game Highlights | 2026 NFL Season Week 12',
+    kickoffUtc: '2026-11-26T18:00Z',
+  },
+
 }
 
 /**
