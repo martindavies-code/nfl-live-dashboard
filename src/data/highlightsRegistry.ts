@@ -231,8 +231,8 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
     kickoffUtc: '2026-09-27T17:00Z',
   },
   '2026_REG_3_NE_JAX': {
-    videoId: 'Oi9HQlp-ysA',
-    title: 'New England Patriots vs Jacksonville Jaguars Game Highlights | 2026 NFL Season Week 3',
+    videoId: 'MmmSabOctE8',
+    title: 'Tom Brady Highlights (Week 3) | Jaguars vs. Patriots | NFL',
     kickoffUtc: '2026-09-27T17:00Z',
   },
   '2026_REG_3_MIN_TB': {
@@ -874,7 +874,7 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
   },
 
   // =========================================================================
-  // 2026 Regular Season - Week 12 (2 Official NFL Highlights)
+  // 2026 Regular Season - Week 12 (4 Official NFL Highlights)
   // =========================================================================
   '2026_REG_12_GB_LAR': {
     videoId: '__40m4hxmdA',
@@ -883,8 +883,18 @@ export const HIGHLIGHTS_REGISTRY: Record<string, RegisteredHighlight> = {
   },
   '2026_REG_12_CHI_DET': {
     videoId: '6mDrkExeNSY',
-    title: 'Chicago Bears vs. Detroit Lions Game Highlights | 2026 NFL Season Week 12',
+    title: 'Chicago Bears vs. Detroit Lions Thanksgiving Day Game Highlights | 2026 NFL Season Week 12',
     kickoffUtc: '2026-11-26T18:00Z',
+  },
+  '2026_REG_12_PHI_DAL': {
+    videoId: 'jXmdND-z0_8',
+    title: 'Philadelphia Eagles vs. Dallas Cowboys Thanksgiving Day Game Highlights | 2026 NFL Season Week 12',
+    kickoffUtc: '2026-11-26T21:30Z',
+  },
+  '2026_REG_12_KC_BUF': {
+    videoId: 'WDYynoHb2Bs',
+    title: 'Kansas City Chiefs vs Buffalo Bills Thanksgiving Day Game Highlights | 2026 NFL Season Week 12',
+    kickoffUtc: '2026-11-27T01:20Z',
   },
 
 }
